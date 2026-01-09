@@ -1,0 +1,119 @@
+.summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+
+.summaryItem {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    text-align: center;
+}
+
+.summaryValue {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.summaryValue.points {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.summaryLabel {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+}
+
+.predictionsList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.predictionCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+}
+
+.predictionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.matchId {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.predictionDetails {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.detailRow {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+}
+
+.label {
+    color: var(--text-muted);
+}
+
+.predictionFooter {
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.pointsEarned {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.pointsLabel {
+    color: var(--text-secondary);
+}
+
+.pointsValue {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.pendingText {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .predictionDetails {
+        grid-template-columns: 1fr;
+    }
+}

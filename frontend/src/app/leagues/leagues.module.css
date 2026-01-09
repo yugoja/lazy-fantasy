@@ -1,0 +1,81 @@
+.joinCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-xl);
+}
+
+.joinCard h3 {
+    margin-bottom: var(--space-md);
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.joinForm {
+    display: flex;
+    gap: var(--space-md);
+    max-width: 400px;
+}
+
+.joinForm input {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: monospace;
+}
+
+.leaguesGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-lg);
+}
+
+.leagueCard {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.leagueCard:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+}
+
+.leagueName {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.leagueInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.code {
+    background: var(--bg-secondary);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: var(--accent-primary);
+    letter-spacing: 0.1em;
+}
+
+.leagueAction {
+    color: var(--accent-primary);
+    font-size: 0.875rem;
+    margin-top: auto;
+}

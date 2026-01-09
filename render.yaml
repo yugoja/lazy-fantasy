@@ -1,0 +1,45 @@
+# Render Blueprint - Infrastructure as Code
+# Deploy this entire stack with: https://render.com/deploy
+
+services:
+  # Backend API Service
+  - type: web
+    name: fantasy-cricket-api
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fantasy-cricket-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+    healthCheckPath: /health
+
+  # Frontend Static Site
+  - type: web
+    name: fantasy-cricket-frontend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    rootDir: frontend
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+
+# Database
+databases:
+  - name: fantasy-cricket-db
+    databaseName: fantasy_cricket
+    region: oregon
+    plan: free

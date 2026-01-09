@@ -1,0 +1,88 @@
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import User
+from app.schemas.match import (
+    MatchResponse,
+    MatchPlayersResponse,
+    TeamResponse,
+    PlayerResponse,
+)
+from app.services.auth import get_current_user
+from app.services.match import (
+    get_upcoming_matches,
+    get_match_by_id,
+    get_match_players,
+)
+
+router = APIRouter(prefix="/matches", tags=["matches"])
+
+
+@router.get("/", response_model=list[MatchResponse])
+async def list_matches(
+    tournament_id: int | None = Query(None, description="Filter by tournament ID"),
+    include_completed: bool = Query(False, description="Include completed matches"),
+    db: Session = Depends(get_db),
+):
+    """
+    List matches.
+    
+    By default returns only upcoming (scheduled) matches.
+    Use `include_completed=true` to include completed matches.
+    Optionally filter by `tournament_id`.
+    """
+    matches = get_upcoming_matches(
+        db, 
+        tournament_id=tournament_id, 
+        include_all=include_completed
+    )
+    
+    # Convert to response format with team objects
+    result = []
+    for match in matches:
+        result.append(MatchResponse(
+            id=match.id,
+            tournament_id=match.tournament_id,
+            team_1=TeamResponse.model_validate(match.team_1),
+            team_2=TeamResponse.model_validate(match.team_2),
+            start_time=match.start_time,
+            status=match.status.value,
+        ))
+    
+    return result
+
+
+@router.get("/{match_id}/players", response_model=MatchPlayersResponse)
+async def get_players_for_match(
+    match_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Get all players from both teams in a match.
+    
+    Used for populating dropdowns in the prediction form.
+    """
+    match = get_match_by_id(db, match_id)
+    if not match:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Match not found",
+        )
+    
+    players_result = get_match_players(db, match_id)
+    if not players_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Match not found",
+        )
+    
+    team_1_players, team_2_players = players_result
+    
+    return MatchPlayersResponse(
+        match_id=match.id,
+        team_1=TeamResponse.model_validate(match.team_1),
+        team_2=TeamResponse.model_validate(match.team_2),
+        team_1_players=[PlayerResponse.model_validate(p) for p in team_1_players],
+        team_2_players=[PlayerResponse.model_validate(p) for p in team_2_players],
+    )

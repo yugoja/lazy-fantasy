@@ -1,0 +1,150 @@
+{
+  "tournament": {
+    "name": "World Cup 2025",
+    "start_date": "2025-06-01",
+    "end_date": "2025-07-15"
+  },
+  "teams": [
+    {
+      "name": "India",
+      "short_name": "IND",
+      "logo_url": null,
+      "players": [
+        {
+          "name": "Rohit Sharma",
+          "role": "Batsman"
+        },
+        {
+          "name": "Shubman Gill",
+          "role": "Batsman"
+        },
+        {
+          "name": "Virat Kohli",
+          "role": "Batsman"
+        },
+        {
+          "name": "Shreyas Iyer",
+          "role": "Batsman"
+        },
+        {
+          "name": "KL Rahul",
+          "role": "Wicketkeeper"
+        },
+        {
+          "name": "Rishabh Pant",
+          "role": "Wicketkeeper"
+        },
+        {
+          "name": "Hardik Pandya",
+          "role": "All-Rounder"
+        },
+        {
+          "name": "Ravindra Jadeja",
+          "role": "All-Rounder"
+        },
+        {
+          "name": "Axar Patel",
+          "role": "All-Rounder"
+        },
+        {
+          "name": "Kuldeep Yadav",
+          "role": "Bowler"
+        },
+        {
+          "name": "Jasprit Bumrah",
+          "role": "Bowler"
+        },
+        {
+          "name": "Mohammed Shami",
+          "role": "Bowler"
+        },
+        {
+          "name": "Mohammed Siraj",
+          "role": "Bowler"
+        },
+        {
+          "name": "Arshdeep Singh",
+          "role": "Bowler"
+        },
+        {
+          "name": "Suryakumar Yadav",
+          "role": "Batsman"
+        }
+      ]
+    },
+    {
+      "name": "Australia",
+      "short_name": "AUS",
+      "logo_url": null,
+      "players": [
+        {
+          "name": "David Warner",
+          "role": "Batsman"
+        },
+        {
+          "name": "Travis Head",
+          "role": "Batsman"
+        },
+        {
+          "name": "Steve Smith",
+          "role": "Batsman"
+        },
+        {
+          "name": "Marnus Labuschagne",
+          "role": "Batsman"
+        },
+        {
+          "name": "Glenn Maxwell",
+          "role": "All-Rounder"
+        },
+        {
+          "name": "Marcus Stoinis",
+          "role": "All-Rounder"
+        },
+        {
+          "name": "Mitchell Marsh",
+          "role": "All-Rounder"
+        },
+        {
+          "name": "Alex Carey",
+          "role": "Wicketkeeper"
+        },
+        {
+          "name": "Josh Inglis",
+          "role": "Wicketkeeper"
+        },
+        {
+          "name": "Pat Cummins",
+          "role": "Bowler"
+        },
+        {
+          "name": "Mitchell Starc",
+          "role": "Bowler"
+        },
+        {
+          "name": "Josh Hazlewood",
+          "role": "Bowler"
+        },
+        {
+          "name": "Adam Zampa",
+          "role": "Bowler"
+        },
+        {
+          "name": "Nathan Lyon",
+          "role": "Bowler"
+        },
+        {
+          "name": "Cameron Green",
+          "role": "All-Rounder"
+        }
+      ]
+    }
+  ],
+  "matches": [
+    {
+      "team_1": "India",
+      "team_2": "Australia",
+      "start_time": "2026-06-15T09:00:00Z"
+    }
+  ]
+}

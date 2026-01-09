@@ -1,0 +1,106 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import User, Team
+from app.schemas.prediction import PredictionCreate, PredictionResponse
+from app.services.auth import get_current_user
+from app.services.prediction import (
+    can_submit_prediction,
+    create_prediction,
+    get_prediction_by_user_and_match,
+    get_user_predictions,
+    update_prediction,
+    validate_prediction_players,
+)
+
+router = APIRouter(prefix="/predictions", tags=["predictions"])
+
+
+@router.post("/", response_model=PredictionResponse, status_code=status.HTTP_201_CREATED)
+async def submit_prediction(
+    prediction_data: PredictionCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Submit a prediction for a match.
+    
+    Predictions can only be submitted before the match starts (UTC).
+    If a prediction already exists for this match, it will be updated.
+    
+    **Scoring:**
+    - Winner: +10 pts
+    - Most Runs: +20 pts
+    - Most Wickets: +20 pts
+    - Player of Match: +50 pts
+    """
+    # Check if predictions are still open
+    can_submit, reason = can_submit_prediction(db, prediction_data.match_id)
+    if not can_submit:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=reason,
+        )
+    
+    # Validate winner team
+    winner_team = db.query(Team).filter(Team.id == prediction_data.predicted_winner_id).first()
+    if not winner_team:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid winner team ID",
+        )
+    
+    # Validate players
+    player_ids = [
+        prediction_data.predicted_most_runs_player_id,
+        prediction_data.predicted_most_wickets_player_id,
+        prediction_data.predicted_pom_player_id,
+    ]
+    is_valid, error = validate_prediction_players(db, prediction_data.match_id, player_ids)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error,
+        )
+    
+    # Check for existing prediction
+    existing = get_prediction_by_user_and_match(
+        db, current_user.id, prediction_data.match_id
+    )
+    
+    if existing:
+        # Update existing prediction
+        prediction = update_prediction(
+            db,
+            existing,
+            prediction_data.predicted_winner_id,
+            prediction_data.predicted_most_runs_player_id,
+            prediction_data.predicted_most_wickets_player_id,
+            prediction_data.predicted_pom_player_id,
+        )
+    else:
+        # Create new prediction
+        prediction = create_prediction(
+            db,
+            current_user.id,
+            prediction_data.match_id,
+            prediction_data.predicted_winner_id,
+            prediction_data.predicted_most_runs_player_id,
+            prediction_data.predicted_most_wickets_player_id,
+            prediction_data.predicted_pom_player_id,
+        )
+    
+    return prediction
+
+
+@router.get("/my", response_model=list[PredictionResponse])
+async def get_my_predictions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all predictions made by the current user.
+    """
+    predictions = get_user_predictions(db, current_user.id)
+    return predictions
