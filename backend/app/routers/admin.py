@@ -6,7 +6,7 @@ from app.database import get_db
 from app.models import Match, MatchStatus, Team, Tournament, Player, User
 from app.schemas.admin import MatchCreate, MatchResultCreate
 from app.schemas.match import MatchResponse, TeamResponse
-from app.services.auth import get_current_user
+from app.services.auth import get_current_admin_user
 from app.services.scoring import calculate_scores
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -15,13 +15,13 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 @router.post("/matches/", response_model=MatchResponse, status_code=status.HTTP_201_CREATED)
 async def create_match(
     match_data: MatchCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
     """
-    Create a new match (Admin).
-    
-    Note: In a production app, this should be restricted to admin users.
+    Create a new match (Admin only).
+
+    Requires admin privileges to create matches.
     """
     # Validate tournament exists
     tournament = db.query(Tournament).filter(Tournament.id == match_data.tournament_id).first()
@@ -77,11 +77,11 @@ async def create_match(
 async def set_match_result(
     match_id: int,
     result_data: MatchResultCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
     """
-    Set match results and trigger score calculation (Admin).
+    Set match results and trigger score calculation (Admin only).
     
     This endpoint:
     1. Updates the match with results
@@ -154,11 +154,11 @@ async def set_match_result(
 
 @router.get("/matches")
 async def list_all_matches(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
     """
-    List all matches with their status (Admin).
+    List all matches with their status (Admin only).
     """
     from app.models import Prediction
     
@@ -183,11 +183,11 @@ async def list_all_matches(
 @router.get("/matches/{match_id}/predictions")
 async def get_match_predictions(
     match_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
     """
-    Get all predictions for a specific match (Admin).
+    Get all predictions for a specific match (Admin only).
     """
     from app.models import Prediction
     

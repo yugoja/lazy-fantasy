@@ -96,5 +96,45 @@
 
     .heroActions {
         flex-direction: column;
+        width: 100%;
+    }
+
+    .heroActions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero {
+        padding: var(--space-lg);
+    }
+
+    .heroTitle {
+        font-size: 2rem;
+    }
+
+    .heroSubtitle {
+        font-size: 1rem;
+    }
+
+    .heroActions .btn {
+        padding: var(--space-md);
+        font-size: 1rem;
+    }
+
+    .feature {
+        padding: var(--space-lg);
+    }
+
+    .featureIcon {
+        font-size: 2rem;
+    }
+
+    .feature h3 {
+        font-size: 1rem;
+    }
+
+    .feature p {
+        font-size: 0.875rem;
     }
 }

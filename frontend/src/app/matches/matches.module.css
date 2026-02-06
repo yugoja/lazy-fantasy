@@ -4,12 +4,26 @@
     gap: var(--space-lg);
 }
 
+@media (max-width: 640px) {
+    .matchGrid {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+    }
+}
+
 .matchCard {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
     padding: var(--space-xl);
     transition: all var(--transition-normal);
+}
+
+@media (max-width: 640px) {
+    .matchCard {
+        padding: var(--space-md);
+        border-radius: var(--radius-lg);
+    }
 }
 
 .matchCard:hover {
@@ -27,6 +41,12 @@
     margin-bottom: var(--space-lg);
 }
 
+@media (max-width: 640px) {
+    .teams {
+        margin-bottom: var(--space-md);
+    }
+}
+
 .team {
     text-align: center;
     flex: 1;
@@ -41,10 +61,24 @@
     justify-content: center;
 }
 
+@media (max-width: 640px) {
+    .teamLogo {
+        font-size: 2rem;
+        height: 50px;
+    }
+}
+
 .teamLogo img {
     width: 60px;
     height: 60px;
     object-fit: contain;
+}
+
+@media (max-width: 640px) {
+    .teamLogo img {
+        width: 40px;
+        height: 40px;
+    }
 }
 
 .teamName {
@@ -53,10 +87,22 @@
     margin-bottom: var(--space-xs);
 }
 
+@media (max-width: 640px) {
+    .teamName {
+        font-size: 0.875rem;
+    }
+}
+
 .teamShort {
     font-size: 0.875rem;
     color: var(--text-muted);
     font-weight: 500;
+}
+
+@media (max-width: 640px) {
+    .teamShort {
+        font-size: 0.75rem;
+    }
 }
 
 .versus {
@@ -64,6 +110,13 @@
     font-weight: 700;
     color: var(--text-muted);
     padding: 0 var(--space-lg);
+}
+
+@media (max-width: 640px) {
+    .versus {
+        font-size: 1.2rem;
+        padding: 0 var(--space-sm);
+    }
 }
 
 .matchTime {
