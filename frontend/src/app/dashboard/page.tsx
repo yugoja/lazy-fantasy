@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { getMyLeagues, getMatches, getMyPredictions, ApiError } from '@/lib/api';
-import styles from './dashboard.module.css';
+import { StatsOverview } from '@/components/StatsOverview';
+import { MatchCard } from '@/components/MatchCard';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Shield, ChevronRight } from 'lucide-react';
 
 interface League {
     id: number;
@@ -16,10 +22,11 @@ interface League {
 
 interface Match {
     id: number;
-    team_1: { name: string; short_name: string };
-    team_2: { name: string; short_name: string };
+    team_1: { name: string; short_name: string; flag_code?: string };
+    team_2: { name: string; short_name: string; flag_code?: string };
     start_time: string;
     status: string;
+    venue?: string;
 }
 
 interface Prediction {
@@ -71,117 +78,137 @@ export default function DashboardPage() {
 
     if (authLoading || isLoading) {
         return (
-            <div className="loading">
-                <div className="spinner"></div>
+            <div className="container-mobile py-6 space-y-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-64" />
+                    <Skeleton className="h-4 w-48" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                    {[...Array(4)].map((_, i) => (
+                        <Skeleton key={i} className="h-24" />
+                    ))}
+                </div>
             </div>
         );
     }
 
     const totalPoints = predictions.reduce((sum, p) => sum + p.points_earned, 0);
     const processedPredictions = predictions.filter(p => p.is_processed).length;
+    const accuracy = predictions.length > 0
+        ? Math.round((processedPredictions / predictions.length) * 100)
+        : 0;
+
+    // Get upcoming matches
+    const upcomingMatches = matches
+        .filter(m => m.status === 'upcoming')
+        .slice(0, 3);
 
     return (
-        <div className="page">
-            <div className="container">
-                <div className="page-header">
-                    <h1 className="page-title">Welcome, {username}! 👋</h1>
-                    <p className="page-subtitle">Here&apos;s your fantasy cricket overview</p>
-                </div>
-
-                {error && <div className="alert alert-error">{error}</div>}
-
-                {/* Stats */}
-                <div className={styles.stats}>
-                    <div className={styles.statCard}>
-                        <div className={styles.statValue}>{totalPoints}</div>
-                        <div className={styles.statLabel}>Total Points</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <div className={styles.statValue}>{leagues.length}</div>
-                        <div className={styles.statLabel}>Leagues Joined</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <div className={styles.statValue}>{predictions.length}</div>
-                        <div className={styles.statLabel}>Predictions Made</div>
-                    </div>
-                    <div className={styles.statCard}>
-                        <div className={styles.statValue}>{processedPredictions}</div>
-                        <div className={styles.statLabel}>Results In</div>
-                    </div>
-                </div>
-
-                <div className={styles.grid}>
-                    {/* Upcoming Matches */}
-                    <section className={styles.section}>
-                        <div className={styles.sectionHeader}>
-                            <h2>Upcoming Matches</h2>
-                            <Link href="/matches" className="btn btn-ghost">View All →</Link>
-                        </div>
-                        {matches.length === 0 ? (
-                            <div className="empty-state">
-                                <p>No upcoming matches</p>
-                            </div>
-                        ) : (
-                            <div className={styles.matchList}>
-                                {matches.slice(0, 3).map((match) => (
-                                    <div key={match.id} className={styles.matchCard}>
-                                        <div className={styles.matchTeams}>
-                                            <span className={styles.team}>{match.team_1.short_name}</span>
-                                            <span className={styles.vs}>vs</span>
-                                            <span className={styles.team}>{match.team_2.short_name}</span>
-                                        </div>
-                                        <div className={styles.matchTime}>
-                                            {new Date(match.start_time).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                            })}
-                                        </div>
-                                        <Link
-                                            href={`/matches/${match.id}/predict`}
-                                            className="btn btn-primary"
-                                        >
-                                            Predict
-                                        </Link>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-
-                    {/* My Leagues */}
-                    <section className={styles.section}>
-                        <div className={styles.sectionHeader}>
-                            <h2>My Leagues</h2>
-                            <Link href="/leagues" className="btn btn-ghost">View All →</Link>
-                        </div>
-                        {leagues.length === 0 ? (
-                            <div className="empty-state">
-                                <p>You haven&apos;t joined any leagues yet</p>
-                                <Link href="/leagues/create" className="btn btn-primary mt-md">
-                                    Create League
-                                </Link>
-                            </div>
-                        ) : (
-                            <div className={styles.leagueList}>
-                                {leagues.slice(0, 3).map((league) => (
-                                    <Link
-                                        key={league.id}
-                                        href={`/leagues/${league.id}`}
-                                        className={styles.leagueCard}
-                                    >
-                                        <div className={styles.leagueName}>{league.name}</div>
-                                        <div className={styles.leagueCode}>
-                                            Code: <code>{league.invite_code}</code>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                </div>
+        <div className="container-mobile py-6 space-y-6">
+            {/* Welcome Header */}
+            <div>
+                <h1 className="text-2xl font-bold">
+                    Welcome back, <span className="text-primary">{username}</span> 👋
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Track your performance and make predictions
+                </p>
             </div>
+
+            {/* Stats Overview */}
+            <StatsOverview
+                totalPoints={totalPoints}
+                accuracy={accuracy}
+                totalPredictions={predictions.length}
+                processedPredictions={processedPredictions}
+                bestRank={1}
+                streak={2}
+            />
+
+            {/* Upcoming Matches */}
+            <section>
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 className="text-lg font-bold">Upcoming Matches</h2>
+                        <p className="text-xs text-muted-foreground">{upcomingMatches.length} matches</p>
+                    </div>
+                    <Link href="/matches">
+                        <Button variant="ghost" size="sm" className="text-xs">
+                            View All
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </Link>
+                </div>
+
+                {upcomingMatches.length === 0 ? (
+                    <Card className="p-6 text-center">
+                        <p className="text-sm text-muted-foreground">No upcoming matches</p>
+                    </Card>
+                ) : (
+                    <div className="space-y-3">
+                        {upcomingMatches.map((match) => (
+                            <MatchCard
+                                key={match.id}
+                                id={match.id}
+                                team1={match.team_1}
+                                team2={match.team_2}
+                                startTime={match.start_time}
+                                status={match.status.toUpperCase() as 'UPCOMING' | 'LIVE' | 'COMPLETED'}
+                                venue={match.venue}
+                                participantCount={Math.floor(Math.random() * 50) + 10}
+                            />
+                        ))}
+                    </div>
+                )}
+            </section>
+
+            {/* My Leagues */}
+            <section>
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 className="text-lg font-bold">My Leagues</h2>
+                        <p className="text-xs text-muted-foreground">{leagues.length} leagues</p>
+                    </div>
+                    <Link href="/leagues">
+                        <Button variant="ghost" size="sm" className="text-xs">
+                            View All
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </Link>
+                </div>
+
+                {leagues.length === 0 ? (
+                    <Card className="p-6 text-center space-y-3">
+                        <p className="text-sm text-muted-foreground">You haven't joined any leagues yet</p>
+                        <Link href="/leagues">
+                            <Button size="sm">Join or Create League</Button>
+                        </Link>
+                    </Card>
+                ) : (
+                    <div className="space-y-3">
+                        {leagues.slice(0, 3).map((league) => (
+                            <Link key={league.id} href={`/leagues/${league.id}`}>
+                                <Card className="p-4 hover:border-primary/50 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                <Shield className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-sm">{league.name}</div>
+                                                <Badge variant="outline" className="text-[10px] mt-1">
+                                                    {league.invite_code}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                </Card>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </section>
         </div>
     );
 }

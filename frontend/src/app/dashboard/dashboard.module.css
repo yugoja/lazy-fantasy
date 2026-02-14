@@ -1,4 +1,29 @@
-.stats {
+/* Header */
+.header {
+    margin-bottom: var(--space-2xl);
+}
+
+.greeting {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.username {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+/* Stats Grid */
+.statsGrid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--space-lg);
@@ -10,21 +35,70 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
-    text-align: center;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.statCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent-gradient);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.statCard:hover::before {
+    opacity: 1;
+}
+
+.statCard:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+}
+
+.statIcon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.statContent {
+    flex: 1;
 }
 
 .statValue {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight: 700;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: var(--space-xs);
 }
 
 .statLabel {
     color: var(--text-secondary);
     font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.statChange {
+    color: var(--success);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: var(--space-xs);
+}
+
+.statMeta {
+    color: var(--text-muted);
+    font-size: 0.75rem;
     margin-top: var(--space-xs);
 }
 
@@ -132,7 +206,7 @@
 }
 
 @media (max-width: 1024px) {
-    .stats {
+    .statsGrid {
         grid-template-columns: repeat(2, 1fr);
     }
 
@@ -142,8 +216,33 @@
 }
 
 @media (max-width: 640px) {
-    .stats {
+    .greeting {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.875rem;
+    }
+
+    .statsGrid {
         grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+    }
+
+    .statCard {
+        padding: var(--space-md);
+    }
+
+    .statIcon {
+        font-size: 1.5rem;
+    }
+
+    .statValue {
+        font-size: 1.75rem;
+    }
+
+    .statLabel {
+        font-size: 0.75rem;
     }
 
     .matchCard {

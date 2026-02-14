@@ -12,7 +12,7 @@ export default function Navbar() {
             <nav className={styles.navbar}>
                 <div className={styles.container}>
                     <Link href="/" className={styles.logo}>
-                        🏏 Fantasy Cricket
+                        🏏 CrickPredict
                     </Link>
                 </div>
             </nav>
@@ -23,7 +23,7 @@ export default function Navbar() {
         <nav className={styles.navbar}>
             <div className={styles.container}>
                 <Link href="/" className={styles.logo}>
-                    🏏 Fantasy Cricket
+                    🏏 CrickPredict
                 </Link>
 
                 <div className={styles.links}>

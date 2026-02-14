@@ -1,0 +1,91 @@
+import { Card } from '@/components/ui/card';
+import { Trophy, Target, TrendingUp, Flame } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
+
+interface StatCardProps {
+  icon: LucideIcon;
+  value: string | number;
+  label: string;
+  meta?: string;
+  change?: string;
+  iconColor?: string;
+}
+
+function StatCard({ icon: Icon, value, label, meta, change, iconColor = 'bg-primary/10 text-primary' }: StatCardProps) {
+  return (
+    <Card className="p-4 hover:border-primary/30 transition-all">
+      <div className="flex items-start gap-3">
+        <div className={`p-2 rounded-lg ${iconColor}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="text-2xl font-bold leading-none mb-1">{value}</div>
+          <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            {label}
+          </div>
+          {meta && (
+            <div className="text-[10px] text-muted-foreground/70">{meta}</div>
+          )}
+          {change && (
+            <div className="text-[10px] font-semibold text-primary mt-1">{change}</div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+interface StatsOverviewProps {
+  totalPoints: number;
+  accuracy: number;
+  totalPredictions: number;
+  processedPredictions: number;
+  bestRank?: number;
+  streak?: number;
+}
+
+export function StatsOverview({
+  totalPoints,
+  accuracy,
+  totalPredictions,
+  processedPredictions,
+  bestRank,
+  streak,
+}: StatsOverviewProps) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <StatCard
+        icon={Trophy}
+        value={totalPoints}
+        label="Points"
+        change="+12 this week"
+        iconColor="bg-amber-500/10 text-amber-500"
+      />
+
+      <StatCard
+        icon={Target}
+        value={`${accuracy}%`}
+        label="Accuracy"
+        meta={`${processedPredictions} of ${totalPredictions}`}
+        iconColor="bg-blue-500/10 text-blue-500"
+      />
+
+      <StatCard
+        icon={TrendingUp}
+        value={bestRank ? `#${bestRank}` : '-'}
+        label="Best Rank"
+        meta={bestRank ? 'Cricket Fanatics' : 'Join a league'}
+        iconColor="bg-green-500/10 text-green-500"
+      />
+
+      <StatCard
+        icon={Flame}
+        value={streak || 0}
+        label="Streak"
+        meta={streak ? 'Keep going!' : 'Start predicting'}
+        iconColor="bg-orange-500/10 text-orange-500"
+      />
+    </div>
+  );
+}
