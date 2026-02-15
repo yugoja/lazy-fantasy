@@ -42,7 +42,9 @@ async function request<T>(
             return new Promise<T>(() => {});
         }
 
-        throw new ApiError(response.status, error.detail || 'An error occurred');
+        const apiError = new ApiError(response.status, error.detail || 'An error occurred');
+        import('@sentry/nextjs').then(Sentry => Sentry.captureException(apiError)).catch(() => {});
+        throw apiError;
     }
 
     return response.json();

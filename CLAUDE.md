@@ -8,14 +8,15 @@
 ## Pending TODO
 
 ### Testing
-- [ ] Run existing backend tests (`backend/tests/`) and verify they pass with current changes
+- [x] Run existing backend tests (`backend/tests/`) and verify they pass with current changes
   - `tests/unit/test_auth.py`
   - `tests/unit/test_scoring.py`
   - `tests/integration/test_tournament_flow.py`
   - Run with: `cd backend && source venv/bin/activate && pytest`
-- [ ] Set up frontend testing infrastructure (Vitest + @testing-library/react)
-  - No test framework exists yet — need to install deps and configure
-- [ ] Write frontend tests for key flows:
+- [x] Set up frontend testing infrastructure (Vitest + @testing-library/react)
+  - Vitest 4 + happy-dom + @testing-library/react configured
+  - Run with: `cd frontend && npm run test:run`
+- [x] Write frontend tests for key flows:
   - Login/signup form submission
   - Prediction form pre-fill and submit
   - MatchCard rendering with/without `hasPredicted`
@@ -23,15 +24,19 @@
   - Leaderboard league selector and data loading
 
 ### Minor Code Quality Fixes
-- [ ] Add `aria-label="Copy invite code"` to icon-only copy button in `frontend/src/app/leagues/page.tsx` (line ~320)
-- [ ] Replace `console.error` with proper error state in:
-  - `frontend/src/app/predictions/page.tsx` (line 63)
-  - `frontend/src/app/leagues/page.tsx` (line 72)
+- [x] Add `aria-label="Copy invite code"` to icon-only copy button in `frontend/src/app/leagues/page.tsx`
+- [x] Replace `console.error` with proper error state in:
+  - `frontend/src/app/predictions/page.tsx`
+  - `frontend/src/app/leagues/page.tsx`
 
 ### Production Readiness
-- [ ] Ensure backend `.env` sets `SECRET_KEY`, `CORS_ORIGINS`, `DATABASE_URL` for production
-- [ ] Ensure frontend `.env.local` sets `NEXT_PUBLIC_API_URL` for production
-- [ ] Consider adding structured error tracking (e.g., Sentry)
+- [x] Ensure backend `.env` sets `SECRET_KEY`, `CORS_ORIGINS`, `DATABASE_URL` for production
+  - `.env.example` documents all variables; `config.py` emits a warning if `SECRET_KEY` is the insecure default
+- [x] Ensure frontend `.env.local` sets `NEXT_PUBLIC_API_URL` for production
+  - `.env.example` documents the variable with production comment
+- [x] Consider adding structured error tracking (e.g., Sentry)
+  - Sentry integrated in both backend (FastAPI) and frontend (Next.js)
+  - Opt-in via `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` env vars
 
 ## Completed (Phase 4 - commit 357711f)
 - Redesigned all pages with shadcn/ui + Tailwind (login, signup, landing, admin, set result, view predictions)
