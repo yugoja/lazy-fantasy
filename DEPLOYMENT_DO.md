@@ -86,18 +86,21 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Create .env file
-cat > .env << EOF
+cat > .env << 'ENVEOF'
 DATABASE_URL=postgresql://lazy_fantasy_db_admin:your_secure_password_here@localhost:5432/lazy_fantasy_league
-SECRET_KEY=$(openssl rand -hex 32)
-CORS_ORIGINS=http://YOUR_DROPLET_IP,https://yourdomain.com
+SECRET_KEY=GENERATE_WITH_openssl_rand_-hex_32
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
+CORS_ORIGINS=http://YOUR_DROPLET_IP
 FRONTEND_URL=http://YOUR_DROPLET_IP
-EOF
+SENTRY_DSN=
+ENVEOF
 
 # Initialize database
 python -c "from app.database import engine; from app.models import Base; Base.metadata.create_all(bind=engine)"
 
 # Seed data (optional)
-python seed_wpl.py
+python seed_t20wc.py
 
 # Setup Frontend
 cd ../frontend
@@ -132,7 +135,7 @@ WantedBy=multi-user.target
 EOF
 ```
 
-**Frontend service** (`/etc/systemd/system/fantasy-frontend.service`):
+**Frontend service** (`/etc/systemd/system/lazy-fantasy-frontend.service`):
 ```bash
 cat > /etc/systemd/system/lazy-fantasy-frontend.service << 'EOF'
 [Unit]
@@ -256,8 +259,8 @@ Certbot will automatically configure HTTPS and set up auto-renewal.
 2. Check health: `curl http://YOUR_DROPLET_IP/health`
 3. Check logs if issues:
    ```bash
-   journalctl -u fantasy-backend -f
-   journalctl -u fantasy-frontend -f
+   journalctl -u lazy-fantasy-backend -f
+   journalctl -u lazy-fantasy-frontend -f
    ```
 
 ---
@@ -270,7 +273,7 @@ When you push new code:
 ssh root@YOUR_DROPLET_IP
 
 su - lazy-fantasy
-cd /home/fantasy/app
+cd /home/lazy-fantasy/app
 git pull
 
 # Backend update
@@ -286,7 +289,7 @@ npm run build
 exit
 
 # Restart services
-systemctl restart fantasy-backend fantasy-frontend
+systemctl restart lazy-fantasy-backend lazy-fantasy-frontend
 ```
 
 ---
@@ -295,9 +298,9 @@ systemctl restart fantasy-backend fantasy-frontend
 
 | Issue | Solution |
 |-------|----------|
-| 502 Bad Gateway | Check if services are running: `systemctl status fantasy-backend` |
+| 502 Bad Gateway | Check if services are running: `systemctl status lazy-fantasy-backend` |
 | Database connection error | Check PostgreSQL: `sudo -u postgres psql -c "\l"` |
-| Frontend not loading | Check frontend logs: `journalctl -u fantasy-frontend -f` |
+| Frontend not loading | Check frontend logs: `journalctl -u lazy-fantasy-frontend -f` |
 | Can't connect to server | Check firewall: `ufw status` |
 
 ---

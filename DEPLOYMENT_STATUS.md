@@ -96,9 +96,10 @@ cat > .env << 'EOF'
 DATABASE_URL=postgresql://lazy_fantasy_db_admin:YOUR_DB_PASSWORD@localhost:5432/lazy_fantasy_league
 SECRET_KEY=6RAPACEppOYSwInC91LgNk8P6HaJyOrqBlFsyXl_uJU
 ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
 CORS_ORIGINS=http://YOUR_DROPLET_IP
 FRONTEND_URL=http://YOUR_DROPLET_IP
+SENTRY_DSN=
 EOF
 ```
 
@@ -130,6 +131,7 @@ cd ../frontend
 # Create production environment
 cat > .env.local << 'EOF'
 NEXT_PUBLIC_API_URL=http://YOUR_DROPLET_IP
+NEXT_PUBLIC_SENTRY_DSN=
 EOF
 
 npm install
