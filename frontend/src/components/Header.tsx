@@ -34,11 +34,13 @@ export default function Header() {
           </Link>
 
           {isAuthenticated && username && (
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
-                {username.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <Link href="/profile">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                  {username.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
           )}
         </div>
       </header>

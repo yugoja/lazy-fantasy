@@ -5,6 +5,7 @@ from app.database import get_db
 from app.models import User
 from app.schemas.match import (
     MatchResponse,
+    MatchDetailResponse,
     MatchPlayersResponse,
     TeamResponse,
     PlayerResponse,
@@ -51,6 +52,35 @@ async def list_matches(
         ))
     
     return result
+
+
+@router.get("/{match_id}", response_model=MatchDetailResponse)
+async def get_match_detail(
+    match_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Get detailed match info including results for completed matches.
+    """
+    match = get_match_by_id(db, match_id)
+    if not match:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Match not found",
+        )
+
+    return MatchDetailResponse(
+        id=match.id,
+        tournament_id=match.tournament_id,
+        team_1=TeamResponse.model_validate(match.team_1),
+        team_2=TeamResponse.model_validate(match.team_2),
+        start_time=match.start_time,
+        status=match.status.value,
+        winner=TeamResponse.model_validate(match.winner) if match.winner else None,
+        most_runs_player=PlayerResponse.model_validate(match.most_runs_player) if match.most_runs_player else None,
+        most_wickets_player=PlayerResponse.model_validate(match.most_wickets_player) if match.most_wickets_player else None,
+        pom_player=PlayerResponse.model_validate(match.pom_player) if match.pom_player else None,
+    )
 
 
 @router.get("/{match_id}/players", response_model=MatchPlayersResponse)

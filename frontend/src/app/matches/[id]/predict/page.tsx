@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMatchPlayers, submitPrediction, ApiError } from '@/lib/api';
+import { getMatchPlayers, getMyPredictions, submitPrediction, ApiError } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ArrowLeft, Trophy, Target, Star, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getFlagUrl } from '@/lib/utils';
 
 interface Player {
   id: number;
@@ -74,6 +74,7 @@ export default function PredictPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Form state
   const [winnerId, setWinnerId] = useState<number | null>(null);
@@ -88,15 +89,35 @@ export default function PredictPage() {
   }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
-    if (matchId) {
+    if (matchId && isAuthenticated) {
       loadMatchData();
     }
-  }, [matchId]);
+  }, [matchId, isAuthenticated]);
 
   const loadMatchData = async () => {
     try {
-      const data = await getMatchPlayers(matchId);
-      setMatchData(data);
+      const [matchResult, predictionsResult] = await Promise.allSettled([
+        getMatchPlayers(matchId),
+        getMyPredictions(),
+      ]);
+
+      if (matchResult.status === 'fulfilled') {
+        setMatchData(matchResult.value);
+      } else {
+        setError('Failed to load match data');
+      }
+
+      // Pre-fill form if user already predicted this match
+      if (predictionsResult.status === 'fulfilled') {
+        const existing = predictionsResult.value.find(p => p.match_id === matchId);
+        if (existing) {
+          setWinnerId(existing.predicted_winner_id);
+          setMostRunsId(existing.predicted_most_runs_player_id);
+          setMostWicketsId(existing.predicted_most_wickets_player_id);
+          setPomId(existing.predicted_pom_player_id);
+          setIsEditing(true);
+        }
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
@@ -224,7 +245,7 @@ export default function PredictPage() {
     <div className="container-mobile py-6 space-y-5">
       {/* Back navigation */}
       <Link
-        href="/predictions"
+        href="/matches"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -276,6 +297,7 @@ export default function PredictPage() {
         <div className="grid grid-cols-2 gap-3">
           {[matchData.team_1, matchData.team_2].map((team) => {
             const isSelected = winnerId === team.id;
+            const flagSrc = getFlagUrl(team.short_name);
             return (
               <button
                 key={team.id}
@@ -289,6 +311,14 @@ export default function PredictPage() {
                     : 'border-border bg-card'
                 )}
               >
+                {flagSrc && (
+                  <img
+                    src={flagSrc}
+                    alt={`${team.name} flag`}
+                    className="h-6 w-8 object-cover rounded-sm"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                )}
                 <span className="font-semibold text-sm">{team.short_name}</span>
                 <span className="text-xs text-muted-foreground">{team.name}</span>
                 {isSelected && (
@@ -343,7 +373,7 @@ export default function PredictPage() {
             disabled={filledCount < 4 || isSubmitting}
             size="lg"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit'}
+            {isSubmitting ? 'Submitting...' : isEditing ? 'Update Prediction' : 'Submit'}
           </Button>
         </div>
       </div>
@@ -355,9 +385,9 @@ export default function PredictPage() {
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
               <CheckCircle2 className="h-8 w-8 text-primary" />
             </div>
-            <DialogTitle className="text-xl">Prediction Submitted!</DialogTitle>
+            <DialogTitle className="text-xl">{isEditing ? 'Prediction Updated!' : 'Prediction Submitted!'}</DialogTitle>
             <DialogDescription>
-              Your predictions for {matchData.team_1.short_name} vs {matchData.team_2.short_name} have been recorded.
+              Your predictions for {matchData.team_1.short_name} vs {matchData.team_2.short_name} have been {isEditing ? 'updated' : 'recorded'}.
             </DialogDescription>
           </DialogHeader>
           <Link href="/predictions" className="w-full">

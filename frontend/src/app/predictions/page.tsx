@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMatches, getMyPredictions } from '@/lib/api';
+import { getMatches, getMyPredictions, getMyPredictionsDetailed, PredictionDetail } from '@/lib/api';
 import { MatchCard } from '@/components/MatchCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Trophy, Target, Star, Check, X } from 'lucide-react';
+import { cn, getFlagUrl } from '@/lib/utils';
 
 interface Match {
   id: number;
@@ -31,6 +34,7 @@ export default function PredictionsPage() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [detailedPredictions, setDetailedPredictions] = useState<PredictionDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -47,12 +51,14 @@ export default function PredictionsPage() {
 
   const loadData = async () => {
     try {
-      const [matchesData, predictionsData] = await Promise.all([
+      const [matchesData, predictionsData, detailedData] = await Promise.allSettled([
         getMatches(),
         getMyPredictions(),
+        getMyPredictionsDetailed(),
       ]);
-      setMatches(matchesData);
-      setPredictions(predictionsData);
+      if (matchesData.status === 'fulfilled') setMatches(matchesData.value);
+      if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
+      if (detailedData.status === 'fulfilled') setDetailedPredictions(detailedData.value);
     } catch (err) {
       console.error('Failed to load data', err);
     } finally {
@@ -77,13 +83,10 @@ export default function PredictionsPage() {
     );
   }
 
-  const predictionMatchIds = new Set(predictions.map(p => p.match_id));
   const predictionByMatch = new Map(predictions.map(p => [p.match_id, p]));
 
-  const now = new Date();
-  const upcoming = matches.filter(m => m.status === 'upcoming' || new Date(m.start_time) > now);
-  const live = matches.filter(m => m.status === 'live');
-  const completed = matches.filter(m => m.status === 'completed');
+  const upcoming = matches.filter(m => m.status === 'SCHEDULED');
+  const completed = matches.filter(m => m.status === 'COMPLETED');
 
   const renderMatches = (filteredMatches: Match[], showPoints = false) => {
     if (filteredMatches.length === 0) {
@@ -105,7 +108,7 @@ export default function PredictionsPage() {
                 team1={match.team_1}
                 team2={match.team_2}
                 startTime={match.start_time}
-                status={match.status.toUpperCase() as 'UPCOMING' | 'LIVE' | 'COMPLETED'}
+                status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'}
                 venue={match.venue}
               />
               {prediction && (
@@ -128,8 +131,155 @@ export default function PredictionsPage() {
     );
   };
 
+  const totalPoints = detailedPredictions
+    .filter(p => p.is_processed)
+    .reduce((sum, p) => sum + p.points_earned, 0);
+
+  const renderPredictionHistory = () => {
+    if (detailedPredictions.length === 0) {
+      return (
+        <Card className="p-8 text-center space-y-2">
+          <p className="text-sm text-muted-foreground">No predictions yet</p>
+          <p className="text-xs text-muted-foreground">Pick a match from the Upcoming tab to get started!</p>
+        </Card>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {/* Points Summary */}
+        {detailedPredictions.some(p => p.is_processed) && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Total Points Earned</p>
+                <p className="text-2xl font-bold">{totalPoints}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground">Predictions</p>
+                <p className="text-lg font-bold">{detailedPredictions.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Prediction Cards */}
+        {detailedPredictions.map((pred) => {
+          const flag1 = getFlagUrl(pred.team_1.short_name);
+          const flag2 = getFlagUrl(pred.team_2.short_name);
+          const isProcessed = pred.is_processed;
+
+          const categories = [
+            {
+              label: 'Winner',
+              icon: Trophy,
+              predicted: pred.predicted_winner.short_name,
+              actual: pred.actual_winner?.short_name,
+              pts: 10,
+              color: 'text-primary',
+            },
+            {
+              label: 'Most Runs',
+              icon: Target,
+              predicted: pred.predicted_most_runs_player.name,
+              actual: pred.actual_most_runs_player?.name,
+              pts: 20,
+              color: 'text-blue-400',
+            },
+            {
+              label: 'Most Wickets',
+              icon: Target,
+              predicted: pred.predicted_most_wickets_player.name,
+              actual: pred.actual_most_wickets_player?.name,
+              pts: 20,
+              color: 'text-green-400',
+            },
+            {
+              label: 'POM',
+              icon: Star,
+              predicted: pred.predicted_pom_player.name,
+              actual: pred.actual_pom_player?.name,
+              pts: 50,
+              color: 'text-yellow-400',
+            },
+          ];
+
+          return (
+            <Link key={pred.id} href={`/matches/${pred.match_id}`}>
+              <Card className="border-border bg-card hover:border-primary/30 transition-colors">
+                <CardContent className="p-4 space-y-3">
+                  {/* Match header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {flag1 && (
+                        <img src={flag1} alt="" className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      )}
+                      <span className="text-sm font-semibold">
+                        {pred.team_1.short_name} vs {pred.team_2.short_name}
+                      </span>
+                      {flag2 && (
+                        <img src={flag2} alt="" className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      )}
+                    </div>
+                    {isProcessed ? (
+                      <Badge variant={pred.points_earned > 0 ? 'default' : 'secondary'} className="text-[10px]">
+                        +{pred.points_earned} pts
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px]">Pending</Badge>
+                    )}
+                  </div>
+
+                  {/* Date */}
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(pred.start_time).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric',
+                    })}
+                    {' '}&middot; {pred.status}
+                  </p>
+
+                  {/* Prediction breakdown */}
+                  <div className="space-y-2">
+                    {categories.map((cat) => {
+                      const isCorrect = isProcessed && cat.actual && cat.predicted === cat.actual;
+                      const isWrong = isProcessed && cat.actual && cat.predicted !== cat.actual;
+
+                      return (
+                        <div key={cat.label} className="flex items-center gap-2 text-xs">
+                          <cat.icon className={cn('h-3 w-3 shrink-0', cat.color)} />
+                          <span className="text-muted-foreground w-16 shrink-0">{cat.label}</span>
+                          <span className={cn(
+                            'flex-1 truncate font-medium',
+                            isCorrect && 'text-green-400',
+                            isWrong && 'text-muted-foreground line-through',
+                          )}>
+                            {cat.predicted}
+                          </span>
+                          {isCorrect && <Check className="h-3.5 w-3.5 text-green-400 shrink-0" />}
+                          {isWrong && (
+                            <div className="flex items-center gap-1 shrink-0">
+                              <X className="h-3.5 w-3.5 text-red-400" />
+                              <span className="text-[10px] text-muted-foreground truncate max-w-20">{cat.actual}</span>
+                            </div>
+                          )}
+                          {!isProcessed && (
+                            <span className="text-[10px] text-muted-foreground shrink-0">+{cat.pts}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="container-mobile py-6 space-y-6">
+    <div className="container-mobile py-6 space-y-6 pb-24">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Match Predictions</h1>
@@ -142,10 +292,10 @@ export default function PredictionsPage() {
       <Tabs defaultValue="upcoming" className="w-full">
         <TabsList className="w-full">
           <TabsTrigger value="upcoming" className="flex-1">
-            Upcoming ({upcoming.length})
+            Upcoming
           </TabsTrigger>
-          <TabsTrigger value="live" className="flex-1">
-            Live ({live.length})
+          <TabsTrigger value="my-picks" className="flex-1">
+            My Picks ({detailedPredictions.length})
           </TabsTrigger>
           <TabsTrigger value="completed" className="flex-1">
             Done ({completed.length})
@@ -156,8 +306,8 @@ export default function PredictionsPage() {
           {renderMatches(upcoming)}
         </TabsContent>
 
-        <TabsContent value="live" className="mt-4">
-          {renderMatches(live)}
+        <TabsContent value="my-picks" className="mt-4">
+          {renderPredictionHistory()}
         </TabsContent>
 
         <TabsContent value="completed" className="mt-4">

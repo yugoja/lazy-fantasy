@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import User, Team
-from app.schemas.prediction import PredictionCreate, PredictionResponse
+from app.schemas.prediction import PredictionCreate, PredictionResponse, PredictionDetailResponse
+from app.schemas.match import TeamResponse, PlayerResponse
 from app.services.auth import get_current_user
 from app.services.prediction import (
     can_submit_prediction,
@@ -100,7 +101,40 @@ async def get_my_predictions(
     db: Session = Depends(get_db),
 ):
     """
-    Get all predictions made by the current user.
+    Get all predictions made by the current user (raw IDs).
     """
     predictions = get_user_predictions(db, current_user.id)
     return predictions
+
+
+@router.get("/my/detailed", response_model=list[PredictionDetailResponse])
+async def get_my_predictions_detailed(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all predictions with match context, player names, and actual results.
+    """
+    predictions = get_user_predictions(db, current_user.id)
+    result = []
+    for pred in predictions:
+        match = pred.match
+        result.append(PredictionDetailResponse(
+            id=pred.id,
+            match_id=pred.match_id,
+            points_earned=pred.points_earned,
+            is_processed=pred.is_processed,
+            team_1=TeamResponse.model_validate(match.team_1),
+            team_2=TeamResponse.model_validate(match.team_2),
+            start_time=match.start_time,
+            status=match.status.value,
+            predicted_winner=TeamResponse.model_validate(pred.predicted_winner),
+            predicted_most_runs_player=PlayerResponse.model_validate(pred.predicted_most_runs_player),
+            predicted_most_wickets_player=PlayerResponse.model_validate(pred.predicted_most_wickets_player),
+            predicted_pom_player=PlayerResponse.model_validate(pred.predicted_pom_player),
+            actual_winner=TeamResponse.model_validate(match.winner) if match.winner else None,
+            actual_most_runs_player=PlayerResponse.model_validate(match.most_runs_player) if match.most_runs_player else None,
+            actual_most_wickets_player=PlayerResponse.model_validate(match.most_wickets_player) if match.most_wickets_player else None,
+            actual_pom_player=PlayerResponse.model_validate(match.pom_player) if match.pom_player else None,
+        ))
+    return result

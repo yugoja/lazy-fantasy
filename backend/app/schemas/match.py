@@ -34,6 +34,20 @@ class MatchResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MatchDetailResponse(BaseModel):
+    """Schema for match detail with results."""
+    id: int
+    tournament_id: int
+    team_1: TeamResponse
+    team_2: TeamResponse
+    start_time: datetime
+    status: str
+    winner: TeamResponse | None = None
+    most_runs_player: PlayerResponse | None = None
+    most_wickets_player: PlayerResponse | None = None
+    pom_player: PlayerResponse | None = None
+
+
 class MatchPlayersResponse(BaseModel):
     """Schema for match players response."""
     match_id: int

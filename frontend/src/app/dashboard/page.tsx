@@ -59,14 +59,14 @@ export default function DashboardPage() {
 
     const loadData = async () => {
         try {
-            const [leaguesData, matchesData, predictionsData] = await Promise.all([
+            const [leaguesData, matchesData, predictionsData] = await Promise.allSettled([
                 getMyLeagues(),
                 getMatches(),
                 getMyPredictions(),
             ]);
-            setLeagues(leaguesData);
-            setMatches(matchesData);
-            setPredictions(predictionsData);
+            if (leaguesData.status === 'fulfilled') setLeagues(leaguesData.value);
+            if (matchesData.status === 'fulfilled') setMatches(matchesData.value);
+            if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.message);
@@ -100,8 +100,10 @@ export default function DashboardPage() {
 
     // Get upcoming matches
     const upcomingMatches = matches
-        .filter(m => m.status === 'upcoming')
+        .filter(m => m.status === 'SCHEDULED')
         .slice(0, 3);
+
+    const predictedMatchIds = new Set(predictions.map(p => p.match_id));
 
     return (
         <div className="container-mobile py-6 space-y-6">
@@ -121,8 +123,6 @@ export default function DashboardPage() {
                 accuracy={accuracy}
                 totalPredictions={predictions.length}
                 processedPredictions={processedPredictions}
-                bestRank={1}
-                streak={2}
             />
 
             {/* Upcoming Matches */}
@@ -153,9 +153,9 @@ export default function DashboardPage() {
                                 team1={match.team_1}
                                 team2={match.team_2}
                                 startTime={match.start_time}
-                                status={match.status.toUpperCase() as 'UPCOMING' | 'LIVE' | 'COMPLETED'}
+                                status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'}
                                 venue={match.venue}
-                                participantCount={Math.floor(Math.random() * 50) + 10}
+                                hasPredicted={predictedMatchIds.has(match.id)}
                             />
                         ))}
                     </div>

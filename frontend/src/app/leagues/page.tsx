@@ -45,7 +45,6 @@ export default function LeaguesPage() {
 
   // Create form
   const [leagueName, setLeagueName] = useState('');
-  const [maxMembers, setMaxMembers] = useState('20');
   const [createError, setCreateError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
@@ -115,7 +114,6 @@ export default function LeaguesPage() {
       setCreateOpen(false);
       setConfirmOpen(true);
       setLeagueName('');
-      setMaxMembers('20');
     } catch (err) {
       if (err instanceof ApiError) {
         setCreateError(err.message);
@@ -271,18 +269,6 @@ export default function LeaguesPage() {
                 value={leagueName}
                 onChange={(e) => setLeagueName(e.target.value)}
                 maxLength={100}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="max-members">Max Members</Label>
-              <Input
-                id="max-members"
-                type="number"
-                placeholder="20"
-                value={maxMembers}
-                onChange={(e) => setMaxMembers(e.target.value)}
-                min={2}
-                max={100}
               />
             </div>
             {createError && (

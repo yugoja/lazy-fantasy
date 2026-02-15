@@ -1,14 +1,17 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Clock } from 'lucide-react';
+import { cn, getFlagUrl } from '@/lib/utils';
 
 interface Team {
   name: string;
   short_name: string;
-  flag_code?: string; // e.g., 'ind', 'aus', 'eng'
+  flag_code?: string;
 }
 
 interface MatchCardProps {
@@ -16,11 +19,46 @@ interface MatchCardProps {
   team1: Team;
   team2: Team;
   startTime: string;
-  status: 'UPCOMING' | 'LIVE' | 'COMPLETED';
+  status: 'UPCOMING' | 'SCHEDULED' | 'LIVE' | 'COMPLETED';
   venue?: string;
-  participantCount?: number;
-  onPredict?: () => void;
+  hasPredicted?: boolean;
   className?: string;
+}
+
+function useCountdown(targetDate: string) {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const calc = () => {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setTimeLeft('Starting soon');
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 0) {
+        setTimeLeft(`${days}d ${hours}h`);
+      } else if (hours > 0) {
+        setTimeLeft(`${hours}h ${minutes}m`);
+      } else {
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft(`${minutes}m ${seconds}s`);
+      }
+    };
+
+    calc();
+    const interval = setInterval(calc, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return timeLeft;
 }
 
 export function MatchCard({
@@ -30,13 +68,13 @@ export function MatchCard({
   startTime,
   status,
   venue,
-  participantCount,
-  onPredict,
+  hasPredicted,
   className,
 }: MatchCardProps) {
   const isLive = status === 'LIVE';
   const isCompleted = status === 'COMPLETED';
-  const isUpcoming = status === 'UPCOMING';
+  const isUpcoming = status === 'UPCOMING' || status === 'SCHEDULED';
+  const countdown = useCountdown(startTime);
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -48,16 +86,14 @@ export function MatchCard({
 
   const { date, time } = formatDateTime(startTime);
 
-  // Get flag URL from flagcdn API
-  const getFlagUrl = (flagCode: string) => {
-    return `https://flagcdn.com/48x36/${flagCode}.png`;
-  };
+  const flagUrl1 = getFlagUrl(team1.short_name);
+  const flagUrl2 = getFlagUrl(team2.short_name);
 
   return (
     <Card className={cn('p-4 hover:border-primary/50 transition-colors', className)}>
       <div className="flex flex-col gap-3">
-        {/* Status Badge */}
-        <div className="flex items-center justify-between">
+        {/* Status Badge + Countdown */}
+        <div className="flex items-center gap-2">
           <Badge
             variant={isLive ? 'destructive' : isCompleted ? 'secondary' : 'default'}
             className={cn(
@@ -66,13 +102,13 @@ export function MatchCard({
             )}
           >
             {isLive && <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-destructive animate-pulse-dot" />}
-            {status}
+            {isUpcoming ? 'UPCOMING' : status}
           </Badge>
 
-          {participantCount && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Users className="h-3 w-3" />
-              <span>{participantCount}</span>
+          {isUpcoming && countdown && (
+            <div className="flex items-center gap-1.5 text-xs font-medium text-yellow-400 bg-yellow-400/10 rounded-full px-2.5 py-1 ml-auto">
+              <Clock className="h-3 w-3" />
+              <span>{countdown}</span>
             </div>
           )}
         </div>
@@ -81,11 +117,12 @@ export function MatchCard({
         <div className="flex items-center justify-between gap-2">
           {/* Team 1 */}
           <div className="flex items-center gap-2 flex-1">
-            {team1.flag_code && (
+            {flagUrl1 && (
               <img
-                src={getFlagUrl(team1.flag_code)}
+                src={flagUrl1}
                 alt={`${team1.name} flag`}
                 className="h-6 w-8 object-cover rounded-sm"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
             <span className="font-semibold text-sm truncate">{team1.short_name}</span>
@@ -97,11 +134,12 @@ export function MatchCard({
           {/* Team 2 */}
           <div className="flex items-center gap-2 flex-1 justify-end">
             <span className="font-semibold text-sm truncate">{team2.short_name}</span>
-            {team2.flag_code && (
+            {flagUrl2 && (
               <img
-                src={getFlagUrl(team2.flag_code)}
+                src={flagUrl2}
                 alt={`${team2.name} flag`}
                 className="h-6 w-8 object-cover rounded-sm"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
           </div>
@@ -118,16 +156,18 @@ export function MatchCard({
         {/* Action Button */}
         {isUpcoming && (
           <Link href={`/matches/${id}/predict`}>
-            <Button className="w-full" size="sm">
-              Make Prediction
+            <Button className={cn('w-full', hasPredicted && 'border-primary text-primary')} size="sm" variant={hasPredicted ? 'outline' : 'default'}>
+              {hasPredicted ? 'Update Prediction' : 'Make Prediction'}
             </Button>
           </Link>
         )}
 
         {isLive && (
-          <Button className="w-full" size="sm" variant="outline">
-            View Live
-          </Button>
+          <Link href={`/matches/${id}`}>
+            <Button className="w-full" size="sm" variant="outline">
+              View Live
+            </Button>
+          </Link>
         )}
 
         {isCompleted && (

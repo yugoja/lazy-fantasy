@@ -1,6 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { Trophy, Target, TrendingUp, Flame } from 'lucide-react';
-import { LucideIcon } from 'lucide-react';
+import { Trophy, Target, TrendingUp, Flame, type LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
   icon: LucideIcon;
@@ -41,8 +40,6 @@ interface StatsOverviewProps {
   accuracy: number;
   totalPredictions: number;
   processedPredictions: number;
-  bestRank?: number;
-  streak?: number;
 }
 
 export function StatsOverview({
@@ -50,8 +47,6 @@ export function StatsOverview({
   accuracy,
   totalPredictions,
   processedPredictions,
-  bestRank,
-  streak,
 }: StatsOverviewProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -59,7 +54,7 @@ export function StatsOverview({
         icon={Trophy}
         value={totalPoints}
         label="Points"
-        change="+12 this week"
+        meta={`${totalPredictions} predictions`}
         iconColor="bg-amber-500/10 text-amber-500"
       />
 
@@ -67,23 +62,23 @@ export function StatsOverview({
         icon={Target}
         value={`${accuracy}%`}
         label="Accuracy"
-        meta={`${processedPredictions} of ${totalPredictions}`}
+        meta={`${processedPredictions} of ${totalPredictions} scored`}
         iconColor="bg-blue-500/10 text-blue-500"
       />
 
       <StatCard
         icon={TrendingUp}
-        value={bestRank ? `#${bestRank}` : '-'}
-        label="Best Rank"
-        meta={bestRank ? 'Cricket Fanatics' : 'Join a league'}
+        value={totalPredictions}
+        label="Predictions"
+        meta={processedPredictions > 0 ? `${processedPredictions} completed` : 'Make your first!'}
         iconColor="bg-green-500/10 text-green-500"
       />
 
       <StatCard
         icon={Flame}
-        value={streak || 0}
-        label="Streak"
-        meta={streak ? 'Keep going!' : 'Start predicting'}
+        value={processedPredictions > 0 ? Math.round(totalPoints / processedPredictions) : 0}
+        label="Avg Points"
+        meta={processedPredictions > 0 ? 'per match' : 'Start predicting'}
         iconColor="bg-orange-500/10 text-orange-500"
       />
     </div>
