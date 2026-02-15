@@ -12,6 +12,15 @@ This test suite simulates a full tournament lifecycle:
 import pytest
 from datetime import datetime, timedelta, timezone
 
+from app.models.user import User
+
+
+def make_admin(db_session, user_id: int):
+    """Promote a user to admin in the test database."""
+    user = db_session.query(User).filter(User.id == user_id).first()
+    user.is_admin = True
+    db_session.commit()
+
 
 @pytest.mark.integration
 class TestCompleteTournamentFlow:
@@ -52,6 +61,9 @@ class TestCompleteTournamentFlow:
         response = client.post("/auth/signup", json=user2_data)
         assert response.status_code == 201
         user2_id = response.json()["id"]
+
+        # Make user1 an admin so they can create matches and set results
+        make_admin(db_session, user1_id)
 
         # Step 2: User Login
         response = client.post(
@@ -186,7 +198,8 @@ class TestCompleteTournamentFlow:
         """Test scoring when predictions are partially correct."""
         # Setup users
         user1_data = {"username": "user1", "email": "user1@test.com", "password": "pass"}
-        client.post("/auth/signup", json=user1_data)
+        signup_resp = client.post("/auth/signup", json=user1_data)
+        make_admin(db_session, signup_resp.json()["id"])
 
         response = client.post("/auth/login", data={"username": "user1", "password": "pass"})
         token = response.json()["access_token"]
@@ -244,7 +257,8 @@ class TestCompleteTournamentFlow:
         """Test that predictions cannot be made after match starts."""
         # Setup
         user_data = {"username": "user", "email": "user@test.com", "password": "pass"}
-        client.post("/auth/signup", json=user_data)
+        signup_resp = client.post("/auth/signup", json=user_data)
+        make_admin(db_session, signup_resp.json()["id"])
 
         response = client.post("/auth/login", data={"username": "user", "password": "pass"})
         token = response.json()["access_token"]
@@ -286,7 +300,8 @@ class TestCompleteTournamentFlow:
         """Test that users can update predictions before match starts."""
         # Setup
         user_data = {"username": "user", "email": "user@test.com", "password": "pass"}
-        client.post("/auth/signup", json=user_data)
+        signup_resp = client.post("/auth/signup", json=user_data)
+        make_admin(db_session, signup_resp.json()["id"])
 
         response = client.post("/auth/login", data={"username": "user", "password": "pass"})
         token = response.json()["access_token"]
@@ -325,7 +340,7 @@ class TestCompleteTournamentFlow:
             "predicted_winner_id": team2.id
         }
         response = client.post("/predictions/", json=updated_prediction, headers=headers)
-        assert response.status_code == 200
+        assert response.status_code == 201  # endpoint returns 201 for both create and update
 
         # Verify update
         response = client.get("/predictions/my", headers=headers)
@@ -344,7 +359,9 @@ class TestCompleteTournamentFlow:
                 "email": f"user{i}@test.com",
                 "password": "pass"
             }
-            client.post("/auth/signup", json=user_data)
+            signup_resp = client.post("/auth/signup", json=user_data)
+            if i == 1:
+                make_admin(db_session, signup_resp.json()["id"])
 
         # Login both users
         tokens = []

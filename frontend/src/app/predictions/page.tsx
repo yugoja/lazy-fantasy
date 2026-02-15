@@ -36,6 +36,7 @@ export default function PredictionsPage() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [detailedPredictions, setDetailedPredictions] = useState<PredictionDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -59,8 +60,8 @@ export default function PredictionsPage() {
       if (matchesData.status === 'fulfilled') setMatches(matchesData.value);
       if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
       if (detailedData.status === 'fulfilled') setDetailedPredictions(detailedData.value);
-    } catch (err) {
-      console.error('Failed to load data', err);
+    } catch {
+      setLoadError('Failed to load data');
     } finally {
       setIsLoading(false);
     }
@@ -287,6 +288,13 @@ export default function PredictionsPage() {
           Pick a match to make your predictions.
         </p>
       </div>
+
+      {/* Error */}
+      {loadError && (
+        <Card className="p-3 border-destructive/50 bg-destructive/10">
+          <p className="text-sm text-destructive">{loadError}</p>
+        </Card>
+      )}
 
       {/* Tabs */}
       <Tabs defaultValue="upcoming" className="w-full">

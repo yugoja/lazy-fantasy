@@ -34,7 +34,7 @@ class TestAuthentication:
             }
         )
         assert response.status_code == 400
-        assert "already exists" in response.json()["detail"].lower()
+        assert "already registered" in response.json()["detail"].lower()
 
     def test_signup_duplicate_email(self, client, test_user):
         """Test signup fails with duplicate email."""
@@ -47,7 +47,7 @@ class TestAuthentication:
             }
         )
         assert response.status_code == 400
-        assert "already exists" in response.json()["detail"].lower()
+        assert "already registered" in response.json()["detail"].lower()
 
     def test_login_success(self, client, test_user):
         """Test successful login."""

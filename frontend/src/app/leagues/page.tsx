@@ -51,6 +51,7 @@ export default function LeaguesPage() {
   // Created league info
   const [createdLeague, setCreatedLeague] = useState<League | null>(null);
   const [copied, setCopied] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -68,8 +69,8 @@ export default function LeaguesPage() {
     try {
       const data = await getMyLeagues();
       setLeagues(data);
-    } catch (err) {
-      console.error('Failed to load leagues', err);
+    } catch {
+      setLoadError('Failed to load leagues');
     } finally {
       setIsLoading(false);
     }
@@ -182,6 +183,13 @@ export default function LeaguesPage() {
       <Badge variant="secondary" className="text-xs">
         {leagues.length} League{leagues.length !== 1 ? 's' : ''}
       </Badge>
+
+      {/* Error */}
+      {loadError && (
+        <Card className="p-3 border-destructive/50 bg-destructive/10">
+          <p className="text-sm text-destructive">{loadError}</p>
+        </Card>
+      )}
 
       {/* League Cards */}
       {leagues.length === 0 ? (
@@ -317,6 +325,7 @@ export default function LeaguesPage() {
                     variant="outline"
                     size="icon"
                     onClick={copyInviteCode}
+                    aria-label="Copy invite code"
                   >
                     {copied ? (
                       <CheckCircle2 className="h-4 w-4 text-primary" />
