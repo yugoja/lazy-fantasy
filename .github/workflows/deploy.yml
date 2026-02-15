@@ -1,0 +1,43 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            # Pull latest code
+            su - lazy-fantasy -c '
+              cd /home/lazy-fantasy/app
+              git fetch origin main
+              git reset --hard origin/main
+
+              # Backend
+              cd backend
+              source venv/bin/activate
+              pip install -q -r requirements.txt
+
+              # Frontend
+              cd ../frontend
+              npm install --prefer-offline
+              npm run build
+            '
+
+            # Restart services
+            systemctl restart lazy-fantasy-backend lazy-fantasy-frontend
+
+            # Verify
+            sleep 3
+            systemctl is-active lazy-fantasy-backend
+            systemctl is-active lazy-fantasy-frontend
