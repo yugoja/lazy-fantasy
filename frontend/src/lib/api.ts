@@ -31,7 +31,20 @@ async function request<T>(
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
-        throw new ApiError(response.status, error.detail || 'An error occurred');
+
+        // Token expired or invalid — clear auth and redirect to login
+        if (response.status === 401 && typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login';
+            // Return a never-resolving promise to prevent callers from
+            // re-rendering with error state and firing more requests
+            return new Promise<T>(() => {});
+        }
+
+        const apiError = new ApiError(response.status, error.detail || 'An error occurred');
+        import('@sentry/nextjs').then(Sentry => Sentry.captureException(apiError)).catch(() => {});
+        throw apiError;
     }
 
     return response.json();
@@ -93,7 +106,8 @@ export async function getLeaderboard(leagueId: number) {
 
 // Matches
 export async function getMatches(tournamentId?: number) {
-    const params = tournamentId ? `?tournament_id=${tournamentId}` : '';
+    const params = new URLSearchParams({ include_completed: 'true' });
+    if (tournamentId) params.set('tournament_id', String(tournamentId));
     return request<Array<{
         id: number;
         tournament_id: number;
@@ -101,7 +115,50 @@ export async function getMatches(tournamentId?: number) {
         team_2: { id: number; name: string; short_name: string; logo_url: string | null };
         start_time: string;
         status: string;
-    }>>(`/matches/${params}`);
+    }>>(`/matches/?${params}`);
+}
+
+interface TeamInfo { id: number; name: string; short_name: string; logo_url?: string | null }
+interface PlayerInfo { id: number; name: string; team_id: number; role: string }
+
+export interface MatchDetail {
+    id: number;
+    tournament_id: number;
+    team_1: TeamInfo;
+    team_2: TeamInfo;
+    start_time: string;
+    status: string;
+    winner: TeamInfo | null;
+    most_runs_player: PlayerInfo | null;
+    most_wickets_player: PlayerInfo | null;
+    pom_player: PlayerInfo | null;
+}
+
+export async function getMatchDetail(matchId: number) {
+    return request<MatchDetail>(`/matches/${matchId}`);
+}
+
+export interface PredictionDetail {
+    id: number;
+    match_id: number;
+    points_earned: number;
+    is_processed: boolean;
+    team_1: TeamInfo;
+    team_2: TeamInfo;
+    start_time: string;
+    status: string;
+    predicted_winner: TeamInfo;
+    predicted_most_runs_player: PlayerInfo;
+    predicted_most_wickets_player: PlayerInfo;
+    predicted_pom_player: PlayerInfo;
+    actual_winner: TeamInfo | null;
+    actual_most_runs_player: PlayerInfo | null;
+    actual_most_wickets_player: PlayerInfo | null;
+    actual_pom_player: PlayerInfo | null;
+}
+
+export async function getMyPredictionsDetailed() {
+    return request<PredictionDetail[]>('/predictions/my/detailed');
 }
 
 export async function getMatchPlayers(matchId: number) {

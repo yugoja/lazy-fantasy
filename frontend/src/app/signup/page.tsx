@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signup, login as apiLogin, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import styles from '../login/auth.module.css';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Trophy } from 'lucide-react';
 
 export default function SignupPage() {
     const [username, setUsername] = useState('');
@@ -51,77 +55,87 @@ export default function SignupPage() {
     };
 
     return (
-        <div className={styles.authPage}>
-            <div className={styles.authCard}>
-                <div className={styles.authHeader}>
-                    <h1 className={styles.authTitle}>Create Account</h1>
-                    <p className={styles.authSubtitle}>Join the fantasy cricket league</p>
-                </div>
+        <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
+            <div className="container-mobile w-full max-w-sm">
+                <Card className="border-border bg-card">
+                    <CardHeader className="items-center text-center space-y-3 pb-2">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Trophy className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl">Create Account</CardTitle>
+                            <CardDescription className="mt-1">Join the fantasy cricket league</CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                        {error && (
+                            <Card className="p-3 mb-4 border-destructive/50 bg-destructive/10">
+                                <p className="text-sm text-destructive">{error}</p>
+                            </Card>
+                        )}
 
-                {error && <div className="alert alert-error">{error}</div>}
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="username">Username</Label>
+                                <Input
+                                    id="username"
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    placeholder="Choose a username"
+                                    required
+                                />
+                            </div>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label">Username</label>
-                        <input
-                            type="text"
-                            className="form-input"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Choose a username"
-                            required
-                        />
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    required
+                                />
+                            </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Email</label>
-                        <input
-                            type="email"
-                            className="form-input"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
-                            required
-                        />
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="password">Password</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Create a password"
+                                    required
+                                />
+                            </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Password</label>
-                        <input
-                            type="password"
-                            className="form-input"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Create a password"
-                            required
-                        />
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                                <Input
+                                    id="confirmPassword"
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    placeholder="Confirm your password"
+                                    required
+                                />
+                            </div>
 
-                    <div className="form-group">
-                        <label className="form-label">Confirm Password</label>
-                        <input
-                            type="password"
-                            className="form-input"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Confirm your password"
-                            required
-                        />
-                    </div>
+                            <Button type="submit" className="w-full" disabled={isLoading}>
+                                {isLoading ? 'Creating account...' : 'Create Account'}
+                            </Button>
+                        </form>
 
-                    <button
-                        type="submit"
-                        className={`btn btn-primary ${styles.authBtn}`}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? 'Creating account...' : 'Create Account'}
-                    </button>
-                </form>
-
-                <p className={styles.authFooter}>
-                    Already have an account?{' '}
-                    <Link href="/login">Sign in</Link>
-                </p>
+                        <p className="text-center text-sm text-muted-foreground mt-4">
+                            Already have an account?{' '}
+                            <Link href="/login" className="text-primary hover:underline font-medium">
+                                Sign in
+                            </Link>
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

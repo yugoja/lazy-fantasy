@@ -1,0 +1,497 @@
+[
+    {
+        "match_no": 1,
+        "date": "2026-02-07",
+        "time": "11:00 AM",
+        "teams": "Pakistan vs Netherlands",
+        "group": "Group A",
+        "venue": "Colombo",
+        "stadium": "Sinhalese Sports Club"
+    },
+    {
+        "match_no": 2,
+        "date": "2026-02-07",
+        "time": "03:00 PM",
+        "teams": "West Indies vs Scotland",
+        "group": "Group C",
+        "venue": "Kolkata",
+        "stadium": "Eden Gardens"
+    },
+    {
+        "match_no": 3,
+        "date": "2026-02-07",
+        "time": "07:00 PM",
+        "teams": "India vs USA",
+        "group": "Group A",
+        "venue": "Mumbai",
+        "stadium": "Wankhede Stadium"
+    },
+    {
+        "match_no": 4,
+        "date": "2026-02-08",
+        "time": "11:00 AM",
+        "teams": "New Zealand vs Afghanistan",
+        "group": "Group D",
+        "venue": "Chennai",
+        "stadium": "M. A. Chidambaram Stadium"
+    },
+    {
+        "match_no": 5,
+        "date": "2026-02-08",
+        "time": "03:00 PM",
+        "teams": "England vs Nepal",
+        "group": "Group C",
+        "venue": "Mumbai",
+        "stadium": "Wankhede Stadium"
+    },
+    {
+        "match_no": 6,
+        "date": "2026-02-08",
+        "time": "07:00 PM",
+        "teams": "Sri Lanka vs Ireland",
+        "group": "Group B",
+        "venue": "Colombo",
+        "stadium": "R. Premadasa Stadium"
+    },
+    {
+        "match_no": 7,
+        "date": "2026-02-09",
+        "time": "11:00 AM",
+        "teams": "Scotland vs Italy",
+        "group": "Group C",
+        "venue": "Kolkata",
+        "stadium": "Eden Gardens"
+    },
+    {
+        "match_no": 8,
+        "date": "2026-02-09",
+        "time": "03:00 PM",
+        "teams": "Zimbabwe vs Oman",
+        "group": "Group B",
+        "venue": "Colombo",
+        "stadium": "Sinhalese Sports Club"
+    },
+    {
+        "match_no": 9,
+        "date": "2026-02-09",
+        "time": "07:00 PM",
+        "teams": "South Africa vs Canada",
+        "group": "Group D",
+        "venue": "Ahmedabad",
+        "stadium": "Narendra Modi Stadium"
+    },
+    {
+        "match_no": 10,
+        "date": "2026-02-10",
+        "time": "11:00 AM",
+        "teams": "Netherlands vs Namibia",
+        "group": "Group A",
+        "venue": "Delhi",
+        "stadium": "Arun Jaitley Stadium"
+    },
+    {
+        "match_no": 11,
+        "date": "2026-02-10",
+        "time": "03:00 PM",
+        "teams": "New Zealand vs UAE",
+        "group": "Group D",
+        "venue": "Chennai",
+        "stadium": "M. A. Chidambaram Stadium"
+    },
+    {
+        "match_no": 12,
+        "date": "2026-02-10",
+        "time": "07:00 PM",
+        "teams": "Pakistan vs USA",
+        "group": "Group A",
+        "venue": "Colombo",
+        "stadium": "Sinhalese Sports Club"
+    },
+    {
+        "match_no": 13,
+        "date": "2026-02-11",
+        "time": "11:00 AM",
+        "teams": "South Africa vs Afghanistan",
+        "group": "Group D",
+        "venue": "Ahmedabad",
+        "stadium": "Narendra Modi Stadium"
+    },
+    {
+        "match_no": 14,
+        "date": "2026-02-11",
+        "time": "03:00 PM",
+        "teams": "Australia vs Ireland",
+        "group": "Group B",
+        "venue": "Colombo",
+        "stadium": "R. Premadasa Stadium"
+    },
+    {
+        "match_no": 15,
+        "date": "2026-02-11",
+        "time": "07:00 PM",
+        "teams": "England vs West Indies",
+        "group": "Group C",
+        "venue": "Mumbai",
+        "stadium": "Wankhede Stadium"
+    },
+    {
+        "match_no": 16,
+        "date": "2026-02-12",
+        "time": "11:00 AM",
+        "teams": "Sri Lanka vs Oman",
+        "group": "Group B",
+        "venue": "Kandy",
+        "stadium": "Pallekele International Stadium"
+    },
+    {
+        "match_no": 17,
+        "date": "2026-02-12",
+        "time": "03:00 PM",
+        "teams": "Nepal vs Italy",
+        "group": "Group C",
+        "venue": "Mumbai",
+        "stadium": "Wankhede Stadium"
+    },
+    {
+        "match_no": 18,
+        "date": "2026-02-12",
+        "time": "07:00 PM",
+        "teams": "India vs Namibia",
+        "group": "Group A",
+        "venue": "Delhi",
+        "stadium": "Arun Jaitley Stadium"
+    },
+    {
+        "match_no": 19,
+        "date": "2026-02-13",
+        "time": "11:00 AM",
+        "teams": "Australia vs Zimbabwe",
+        "group": "Group B",
+        "venue": "Colombo",
+        "stadium": "R. Premadasa Stadium"
+    },
+    {
+        "match_no": 20,
+        "date": "2026-02-13",
+        "time": "03:00 PM",
+        "teams": "Canada vs UAE",
+        "group": "Group D",
+        "venue": "Delhi",
+        "stadium": "Arun Jaitley Stadium"
+    },
+    {
+        "match_no": 21,
+        "date": "2026-02-13",
+        "time": "07:00 PM",
+        "teams": "USA vs Netherlands",
+        "group": "Group A",
+        "venue": "Chennai",
+        "stadium": "M. A. Chidambaram Stadium"
+    },
+    {
+        "match_no": 22,
+        "date": "2026-02-14",
+        "time": "11:00 AM",
+        "teams": "Ireland vs Oman",
+        "group": "Group B",
+        "venue": "Colombo",
+        "stadium": "Sinhalese Sports Club"
+    },
+    {
+        "match_no": 23,
+        "date": "2026-02-14",
+        "time": "03:00 PM",
+        "teams": "England vs Scotland",
+        "group": "Group C",
+        "venue": "Kolkata",
+        "stadium": "Eden Gardens"
+    },
+    {
+        "match_no": 24,
+        "date": "2026-02-14",
+        "time": "07:00 PM",
+        "teams": "New Zealand vs South Africa",
+        "group": "Group D",
+        "venue": "Ahmedabad",
+        "stadium": "Narendra Modi Stadium"
+    },
+    {
+        "match_no": 25,
+        "date": "2026-02-15",
+        "time": "11:00 AM",
+        "teams": "West Indies vs Nepal",
+        "group": "Group C",
+        "venue": "Mumbai",
+        "stadium": "Wankhede Stadium"
+    },
+    {
+        "match_no": 26,
+        "date": "2026-02-15",
+        "time": "03:00 PM",
+        "teams": "USA vs Namibia",
+        "group": "Group A",
+        "venue": "Chennai",
+        "stadium": "M. A. Chidambaram Stadium"
+    },
+    {
+        "match_no": 27,
+        "date": "2026-02-15",
+        "time": "07:00 PM",
+        "teams": "India vs Pakistan",
+        "group": "Group A",
+        "venue": "Colombo",
+        "stadium": "R. Premadasa Stadium"
+    },
+    {
+        "match_no": 28,
+        "date": "2026-02-16",
+        "time": "11:00 AM",
+        "teams": "Afghanistan vs UAE",
+        "group": "Group D",
+        "venue": "Delhi",
+        "stadium": "Arun Jaitley Stadium"
+    },
+    {
+        "match_no": 29,
+        "date": "2026-02-16",
+        "time": "03:00 PM",
+        "teams": "England vs Italy",
+        "group": "Group C",
+        "venue": "Kolkata",
+        "stadium": "Eden Gardens"
+    },
+    {
+        "match_no": 30,
+        "date": "2026-02-16",
+        "time": "07:00 PM",
+        "teams": "Australia vs Sri Lanka",
+        "group": "Group B",
+        "venue": "Kandy",
+        "stadium": "Pallekele International Stadium"
+    },
+    {
+        "match_no": 31,
+        "date": "2026-02-17",
+        "time": "11:00 AM",
+        "teams": "New Zealand vs Canada",
+        "group": "Group D",
+        "venue": "Chennai",
+        "stadium": "M. A. Chidambaram Stadium"
+    },
+    {
+        "match_no": 32,
+        "date": "2026-02-17",
+        "time": "03:00 PM",
+        "teams": "Ireland vs Zimbabwe",
+        "group": "Group B",
+        "venue": "Kandy",
+        "stadium": "Pallekele International Stadium"
+    },
+    {
+        "match_no": 33,
+        "date": "2026-02-17",
+        "time": "07:00 PM",
+        "teams": "Scotland vs Nepal",
+        "group": "Group C",
+        "venue": "Mumbai",
+        "stadium": "Wankhede Stadium"
+    },
+    {
+        "match_no": 34,
+        "date": "2026-02-18",
+        "time": "11:00 AM",
+        "teams": "South Africa vs UAE",
+        "group": "Group D",
+        "venue": "Delhi",
+        "stadium": "Arun Jaitley Stadium"
+    },
+    {
+        "match_no": 35,
+        "date": "2026-02-18",
+        "time": "03:00 PM",
+        "teams": "Pakistan vs Namibia",
+        "group": "Group A",
+        "venue": "Colombo",
+        "stadium": "Sinhalese Sports Club"
+    },
+    {
+        "match_no": 36,
+        "date": "2026-02-18",
+        "time": "07:00 PM",
+        "teams": "India vs Netherlands",
+        "group": "Group A",
+        "venue": "Ahmedabad",
+        "stadium": "Narendra Modi Stadium"
+    },
+    {
+        "match_no": 37,
+        "date": "2026-02-19",
+        "time": "11:00 AM",
+        "teams": "West Indies vs Italy",
+        "group": "Group C",
+        "venue": "Kolkata",
+        "stadium": "Eden Gardens"
+    },
+    {
+        "match_no": 38,
+        "date": "2026-02-19",
+        "time": "03:00 PM",
+        "teams": "Sri Lanka vs Zimbabwe",
+        "group": "Group B",
+        "venue": "Colombo",
+        "stadium": "R. Premadasa Stadium"
+    },
+    {
+        "match_no": 39,
+        "date": "2026-02-19",
+        "time": "07:00 PM",
+        "teams": "Afghanistan vs Canada",
+        "group": "Group D",
+        "venue": "Chennai",
+        "stadium": "M. A. Chidambaram Stadium"
+    },
+    {
+        "match_no": 40,
+        "date": "2026-02-20",
+        "time": "07:00 PM",
+        "teams": "Australia vs Oman",
+        "group": "Group B",
+        "venue": "Kandy",
+        "stadium": "Pallekele International Stadium"
+    },
+    {
+        "match_no": 41,
+        "date": "2026-02-21",
+        "time": "07:00 PM",
+        "teams": "Y2 vs Y3",
+        "group": "Super Eight",
+        "venue": "Colombo",
+        "stadium": "R. Premadasa Stadium"
+    },
+    {
+        "match_no": 42,
+        "date": "2026-02-22",
+        "time": "03:00 PM",
+        "teams": "Y1 vs Y4",
+        "group": "Super Eight",
+        "venue": "Kandy",
+        "stadium": "Pallekele International Stadium"
+    },
+    {
+        "match_no": 43,
+        "date": "2026-02-22",
+        "time": "07:00 PM",
+        "teams": "X1 vs X4",
+        "group": "Super Eight",
+        "venue": "Ahmedabad",
+        "stadium": "Narendra Modi Stadium"
+    },
+    {
+        "match_no": 44,
+        "date": "2026-02-23",
+        "time": "07:00 PM",
+        "teams": "X2 vs X3",
+        "group": "Super Eight",
+        "venue": "Mumbai",
+        "stadium": "Wankhede Stadium"
+    },
+    {
+        "match_no": 45,
+        "date": "2026-02-24",
+        "time": "07:00 PM",
+        "teams": "Y1 vs Y3",
+        "group": "Super Eight",
+        "venue": "Kandy",
+        "stadium": "Pallekele International Stadium"
+    },
+    {
+        "match_no": 46,
+        "date": "2026-02-25",
+        "time": "07:00 PM",
+        "teams": "Y2 vs Y4",
+        "group": "Super Eight",
+        "venue": "Colombo",
+        "stadium": "R. Premadasa Stadium"
+    },
+    {
+        "match_no": 47,
+        "date": "2026-02-26",
+        "time": "03:00 PM",
+        "teams": "X3 vs X4",
+        "group": "Super Eight",
+        "venue": "Ahmedabad",
+        "stadium": "Narendra Modi Stadium"
+    },
+    {
+        "match_no": 48,
+        "date": "2026-02-26",
+        "time": "07:00 PM",
+        "teams": "X1 vs X2",
+        "group": "Super Eight",
+        "venue": "Chennai",
+        "stadium": "M. A. Chidambaram Stadium"
+    },
+    {
+        "match_no": 49,
+        "date": "2026-02-27",
+        "time": "07:00 PM",
+        "teams": "Y1 vs Y2",
+        "group": "Super Eight",
+        "venue": "Colombo",
+        "stadium": "R. Premadasa Stadium"
+    },
+    {
+        "match_no": 50,
+        "date": "2026-02-28",
+        "time": "07:00 PM",
+        "teams": "Y3 vs Y4",
+        "group": "Super Eight",
+        "venue": "Kandy",
+        "stadium": "Pallekele International Stadium"
+    },
+    {
+        "match_no": 51,
+        "date": "2026-03-01",
+        "time": "03:00 PM",
+        "teams": "X2 vs X4",
+        "group": "Super Eight",
+        "venue": "Delhi",
+        "stadium": "Arun Jaitley Stadium"
+    },
+    {
+        "match_no": 52,
+        "date": "2026-03-01",
+        "time": "07:00 PM",
+        "teams": "X1 vs X3",
+        "group": "Super Eight",
+        "venue": "Kolkata",
+        "stadium": "Eden Gardens"
+    },
+    {
+        "match_no": 53,
+        "date": "2026-03-04",
+        "time": "07:00 PM",
+        "teams": "Semi-final 1",
+        "group": "Knockout",
+        "venue": "Kolkata/Colombo",
+        "stadium": "Eden Gardens / R. Premadasa"
+    },
+    {
+        "match_no": 54,
+        "date": "2026-03-05",
+        "time": "07:00 PM",
+        "teams": "Semi-final 2",
+        "group": "Knockout",
+        "venue": "Mumbai",
+        "stadium": "Wankhede Stadium"
+    },
+    {
+        "match_no": 55,
+        "date": "2026-03-08",
+        "time": "07:00 PM",
+        "teams": "Final",
+        "group": "Knockout",
+        "venue": "Ahmedabad/Colombo",
+        "stadium": "Narendra Modi Stadium / R. Premadasa"
+    }
+]

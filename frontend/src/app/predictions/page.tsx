@@ -4,144 +4,324 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyPredictions, ApiError } from '@/lib/api';
-import styles from './predictions.module.css';
+import { getMatches, getMyPredictions, getMyPredictionsDetailed, PredictionDetail } from '@/lib/api';
+import { MatchCard } from '@/components/MatchCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Trophy, Target, Star, Check, X } from 'lucide-react';
+import { cn, getFlagUrl } from '@/lib/utils';
+
+interface Match {
+  id: number;
+  team_1: { id: number; name: string; short_name: string; flag_code?: string };
+  team_2: { id: number; name: string; short_name: string; flag_code?: string };
+  start_time: string;
+  status: string;
+  venue?: string;
+}
 
 interface Prediction {
-    id: number;
-    user_id: number;
-    match_id: number;
-    predicted_winner_id: number;
-    predicted_most_runs_player_id: number;
-    predicted_most_wickets_player_id: number;
-    predicted_pom_player_id: number;
-    points_earned: number;
-    is_processed: boolean;
+  id: number;
+  match_id: number;
+  points_earned: number;
+  is_processed: boolean;
 }
 
 export default function PredictionsPage() {
-    const { isAuthenticated, isLoading: authLoading } = useAuth();
-    const router = useRouter();
-    const [predictions, setPredictions] = useState<Prediction[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [detailedPredictions, setDetailedPredictions] = useState<PredictionDetail[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-    useEffect(() => {
-        if (!authLoading && !isAuthenticated) {
-            router.push('/login');
-        }
-    }, [isAuthenticated, authLoading, router]);
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, authLoading, router]);
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            loadPredictions();
-        }
-    }, [isAuthenticated]);
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated]);
 
-    const loadPredictions = async () => {
-        try {
-            const data = await getMyPredictions();
-            setPredictions(data);
-        } catch (err) {
-            console.error('Failed to load predictions', err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  const loadData = async () => {
+    try {
+      const [matchesData, predictionsData, detailedData] = await Promise.allSettled([
+        getMatches(),
+        getMyPredictions(),
+        getMyPredictionsDetailed(),
+      ]);
+      if (matchesData.status === 'fulfilled') setMatches(matchesData.value);
+      if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
+      if (detailedData.status === 'fulfilled') setDetailedPredictions(detailedData.value);
+    } catch {
+      setLoadError('Failed to load data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    if (authLoading || isLoading) {
-        return (
-            <div className="loading">
-                <div className="spinner"></div>
-            </div>
-        );
+  if (authLoading || isLoading) {
+    return (
+      <div className="container-mobile py-6 space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <Skeleton className="h-10 w-full" />
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-48" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const predictionByMatch = new Map(predictions.map(p => [p.match_id, p]));
+
+  const upcoming = matches.filter(m => m.status === 'SCHEDULED');
+  const completed = matches.filter(m => m.status === 'COMPLETED');
+
+  const renderMatches = (filteredMatches: Match[], showPoints = false) => {
+    if (filteredMatches.length === 0) {
+      return (
+        <Card className="p-8 text-center">
+          <p className="text-sm text-muted-foreground">No matches found</p>
+        </Card>
+      );
     }
 
-    const totalPoints = predictions.reduce((sum, p) => sum + p.points_earned, 0);
-    const processedCount = predictions.filter(p => p.is_processed).length;
+    return (
+      <div className="space-y-3">
+        {filteredMatches.map((match) => {
+          const prediction = predictionByMatch.get(match.id);
+          return (
+            <div key={match.id} className="relative">
+              <MatchCard
+                id={match.id}
+                team1={match.team_1}
+                team2={match.team_2}
+                startTime={match.start_time}
+                status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'}
+                venue={match.venue}
+              />
+              {prediction && (
+                <div className="absolute top-3 right-3">
+                  {showPoints && prediction.is_processed ? (
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-xs">
+                      +{prediction.points_earned} pts
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">
+                      Predicted
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const totalPoints = detailedPredictions
+    .filter(p => p.is_processed)
+    .reduce((sum, p) => sum + p.points_earned, 0);
+
+  const renderPredictionHistory = () => {
+    if (detailedPredictions.length === 0) {
+      return (
+        <Card className="p-8 text-center space-y-2">
+          <p className="text-sm text-muted-foreground">No predictions yet</p>
+          <p className="text-xs text-muted-foreground">Pick a match from the Upcoming tab to get started!</p>
+        </Card>
+      );
+    }
 
     return (
-        <div className="page">
-            <div className="container">
-                <div className="page-header">
-                    <h1 className="page-title">My Predictions</h1>
-                    <p className="page-subtitle">Track your predictions and points</p>
-                </div>
+      <div className="space-y-3">
+        {/* Points Summary */}
+        {detailedPredictions.some(p => p.is_processed) && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Total Points Earned</p>
+                <p className="text-2xl font-bold">{totalPoints}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground">Predictions</p>
+                <p className="text-lg font-bold">{detailedPredictions.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-                {/* Stats Summary */}
-                <div className={styles.summary}>
-                    <div className={styles.summaryItem}>
-                        <div className={styles.summaryValue}>{predictions.length}</div>
-                        <div className={styles.summaryLabel}>Total</div>
-                    </div>
-                    <div className={styles.summaryItem}>
-                        <div className={styles.summaryValue}>{processedCount}</div>
-                        <div className={styles.summaryLabel}>Completed</div>
-                    </div>
-                    <div className={styles.summaryItem}>
-                        <div className={styles.summaryValue}>{predictions.length - processedCount}</div>
-                        <div className={styles.summaryLabel}>Pending</div>
-                    </div>
-                    <div className={styles.summaryItem}>
-                        <div className={`${styles.summaryValue} ${styles.points}`}>{totalPoints}</div>
-                        <div className={styles.summaryLabel}>Points Earned</div>
-                    </div>
-                </div>
+        {/* Prediction Cards */}
+        {detailedPredictions.map((pred) => {
+          const flag1 = getFlagUrl(pred.team_1.short_name);
+          const flag2 = getFlagUrl(pred.team_2.short_name);
+          const isProcessed = pred.is_processed;
 
-                {predictions.length === 0 ? (
-                    <div className="empty-state">
-                        <div className="empty-state-icon">🎯</div>
-                        <p>You haven&apos;t made any predictions yet</p>
-                        <Link href="/matches" className="btn btn-primary mt-md">
-                            View Matches
-                        </Link>
+          const categories = [
+            {
+              label: 'Winner',
+              icon: Trophy,
+              predicted: pred.predicted_winner.short_name,
+              actual: pred.actual_winner?.short_name,
+              pts: 10,
+              color: 'text-primary',
+            },
+            {
+              label: 'Most Runs',
+              icon: Target,
+              predicted: pred.predicted_most_runs_player.name,
+              actual: pred.actual_most_runs_player?.name,
+              pts: 20,
+              color: 'text-blue-400',
+            },
+            {
+              label: 'Most Wickets',
+              icon: Target,
+              predicted: pred.predicted_most_wickets_player.name,
+              actual: pred.actual_most_wickets_player?.name,
+              pts: 20,
+              color: 'text-green-400',
+            },
+            {
+              label: 'POM',
+              icon: Star,
+              predicted: pred.predicted_pom_player.name,
+              actual: pred.actual_pom_player?.name,
+              pts: 50,
+              color: 'text-yellow-400',
+            },
+          ];
+
+          return (
+            <Link key={pred.id} href={`/matches/${pred.match_id}`}>
+              <Card className="border-border bg-card hover:border-primary/30 transition-colors">
+                <CardContent className="p-4 space-y-3">
+                  {/* Match header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {flag1 && (
+                        <img src={flag1} alt="" className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      )}
+                      <span className="text-sm font-semibold">
+                        {pred.team_1.short_name} vs {pred.team_2.short_name}
+                      </span>
+                      {flag2 && (
+                        <img src={flag2} alt="" className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      )}
                     </div>
-                ) : (
-                    <div className={styles.predictionsList}>
-                        {predictions.map((prediction) => (
-                            <div key={prediction.id} className={styles.predictionCard}>
-                                <div className={styles.predictionHeader}>
-                                    <span className={styles.matchId}>Match #{prediction.match_id}</span>
-                                    <span className={`badge ${prediction.is_processed ? 'badge-success' : 'badge-warning'}`}>
-                                        {prediction.is_processed ? 'COMPLETED' : 'PENDING'}
-                                    </span>
-                                </div>
+                    {isProcessed ? (
+                      <Badge variant={pred.points_earned > 0 ? 'default' : 'secondary'} className="text-[10px]">
+                        +{pred.points_earned} pts
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px]">Pending</Badge>
+                    )}
+                  </div>
 
-                                <div className={styles.predictionDetails}>
-                                    <div className={styles.detailRow}>
-                                        <span className={styles.label}>Winner Pick:</span>
-                                        <span>Team #{prediction.predicted_winner_id}</span>
-                                    </div>
-                                    <div className={styles.detailRow}>
-                                        <span className={styles.label}>Most Runs:</span>
-                                        <span>Player #{prediction.predicted_most_runs_player_id}</span>
-                                    </div>
-                                    <div className={styles.detailRow}>
-                                        <span className={styles.label}>Most Wickets:</span>
-                                        <span>Player #{prediction.predicted_most_wickets_player_id}</span>
-                                    </div>
-                                    <div className={styles.detailRow}>
-                                        <span className={styles.label}>Player of Match:</span>
-                                        <span>Player #{prediction.predicted_pom_player_id}</span>
-                                    </div>
-                                </div>
+                  {/* Date */}
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(pred.start_time).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric',
+                    })}
+                    {' '}&middot; {pred.status}
+                  </p>
 
-                                <div className={styles.predictionFooter}>
-                                    <div className={styles.pointsEarned}>
-                                        {prediction.is_processed ? (
-                                            <>
-                                                <span className={styles.pointsLabel}>Points Earned:</span>
-                                                <span className={styles.pointsValue}>{prediction.points_earned}</span>
-                                            </>
-                                        ) : (
-                                            <span className={styles.pendingText}>Waiting for match results...</span>
-                                        )}
-                                    </div>
-                                </div>
+                  {/* Prediction breakdown */}
+                  <div className="space-y-2">
+                    {categories.map((cat) => {
+                      const isCorrect = isProcessed && cat.actual && cat.predicted === cat.actual;
+                      const isWrong = isProcessed && cat.actual && cat.predicted !== cat.actual;
+
+                      return (
+                        <div key={cat.label} className="flex items-center gap-2 text-xs">
+                          <cat.icon className={cn('h-3 w-3 shrink-0', cat.color)} />
+                          <span className="text-muted-foreground w-16 shrink-0">{cat.label}</span>
+                          <span className={cn(
+                            'flex-1 truncate font-medium',
+                            isCorrect && 'text-green-400',
+                            isWrong && 'text-muted-foreground line-through',
+                          )}>
+                            {cat.predicted}
+                          </span>
+                          {isCorrect && <Check className="h-3.5 w-3.5 text-green-400 shrink-0" />}
+                          {isWrong && (
+                            <div className="flex items-center gap-1 shrink-0">
+                              <X className="h-3.5 w-3.5 text-red-400" />
+                              <span className="text-[10px] text-muted-foreground truncate max-w-20">{cat.actual}</span>
                             </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
+                          )}
+                          {!isProcessed && (
+                            <span className="text-[10px] text-muted-foreground shrink-0">+{cat.pts}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
     );
+  };
+
+  return (
+    <div className="container-mobile py-6 space-y-6 pb-24">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold">Match Predictions</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Pick a match to make your predictions.
+        </p>
+      </div>
+
+      {/* Error */}
+      {loadError && (
+        <Card className="p-3 border-destructive/50 bg-destructive/10">
+          <p className="text-sm text-destructive">{loadError}</p>
+        </Card>
+      )}
+
+      {/* Tabs */}
+      <Tabs defaultValue="upcoming" className="w-full">
+        <TabsList className="w-full">
+          <TabsTrigger value="upcoming" className="flex-1">
+            Upcoming
+          </TabsTrigger>
+          <TabsTrigger value="my-picks" className="flex-1">
+            My Picks ({detailedPredictions.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="flex-1">
+            Done ({completed.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upcoming" className="mt-4">
+          {renderMatches(upcoming)}
+        </TabsContent>
+
+        <TabsContent value="my-picks" className="mt-4">
+          {renderPredictionHistory()}
+        </TabsContent>
+
+        <TabsContent value="completed" className="mt-4">
+          {renderMatches(completed, true)}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 }

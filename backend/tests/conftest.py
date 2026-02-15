@@ -8,7 +8,8 @@ from fastapi.testclient import TestClient
 from datetime import datetime, timedelta, timezone
 
 from app.main import app
-from app.database import get_db, Base
+from app.database import get_db
+from app.models.base import Base
 from app.models.user import User
 from app.models.tournament import Tournament
 from app.models.team import Team
@@ -94,7 +95,7 @@ def test_user2(db_session):
 @pytest.fixture
 def auth_token(test_user):
     """Generate authentication token for test user."""
-    token = create_access_token(data={"sub": test_user.username})
+    token = create_access_token(data={"sub": str(test_user.id)})
     return token
 
 

@@ -119,11 +119,11 @@ Description=Lazy Fantasy Backend
 After=network.target postgresql.service
 
 [Service]
-User=fantasy
-Group=fantasy
-WorkingDirectory=/home/fantasy/app/backend
-Environment="PATH=/home/fantasy/app/backend/venv/bin"
-ExecStart=/home/fantasy/app/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+User=lazy-fantasy
+Group=lazy-fantasy
+WorkingDirectory=/home/lazy-fantasy/app/backend
+Environment="PATH=/home/lazy-fantasy/app/backend/venv/bin"
+ExecStart=/home/lazy-fantasy/app/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=3
 
@@ -134,15 +134,15 @@ EOF
 
 **Frontend service** (`/etc/systemd/system/fantasy-frontend.service`):
 ```bash
-cat > /etc/systemd/system/fantasy-frontend.service << 'EOF'
+cat > /etc/systemd/system/lazy-fantasy-frontend.service << 'EOF'
 [Unit]
 Description=Fantasy Cricket Frontend
 After=network.target
 
 [Service]
-User=fantasy
-Group=fantasy
-WorkingDirectory=/home/fantasy/app/frontend
+User=lazy-fantasy
+Group=lazy-fantasy
+WorkingDirectory=/home/lazy-fantasy/app/frontend
 ExecStart=/usr/bin/npm start
 Restart=always
 RestartSec=3
@@ -157,12 +157,12 @@ EOF
 Enable and start services:
 ```bash
 systemctl daemon-reload
-systemctl enable fantasy-backend fantasy-frontend
-systemctl start fantasy-backend fantasy-frontend
+systemctl enable lazy-fantasy-backend lazy-fantasy-frontend
+systemctl start lazy-fantasy-backend lazy-fantasy-frontend
 
 # Check status
-systemctl status fantasy-backend
-systemctl status fantasy-frontend
+systemctl status lazy-fantasy-backend
+systemctl status lazy-fantasy-frontend
 ```
 
 ---
@@ -170,10 +170,10 @@ systemctl status fantasy-frontend
 ## Step 6: Configure Nginx
 
 ```bash
-cat > /etc/nginx/sites-available/fantasy << 'EOF'
+cat > /etc/nginx/sites-available/lazy-fantasy << 'EOF'
 server {
     listen 80;
-    server_name YOUR_DROPLET_IP;  # Or your domain
+    server_name 139.59.3.190;  # Or your domain
 
     # Frontend
     location / {
@@ -208,7 +208,7 @@ server {
 EOF
 
 # Enable site
-ln -sf /etc/nginx/sites-available/fantasy /etc/nginx/sites-enabled/
+ln -sf /etc/nginx/sites-available/lazy-fantasy /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 
 # Test and reload
@@ -222,18 +222,18 @@ nginx -t && systemctl reload nginx
 The frontend needs to know the API is now on the same domain:
 
 ```bash
-su - fantasy
-cd /home/fantasy/app/frontend
+su - lazy-fantasy
+cd /home/lazy-fantasy/app/frontend
 
 # Create production env
-echo "NEXT_PUBLIC_API_URL=http://YOUR_DROPLET_IP" > .env.local
+echo "NEXT_PUBLIC_API_URL=http://139.59.3.190" > .env.local
 
 # Rebuild
 npm run build
 exit
 
 # Restart frontend
-systemctl restart fantasy-frontend
+systemctl restart lazy-fantasy-frontend
 ```
 
 ---
@@ -269,7 +269,7 @@ When you push new code:
 ```bash
 ssh root@YOUR_DROPLET_IP
 
-su - fantasy
+su - lazy-fantasy
 cd /home/fantasy/app
 git pull
 

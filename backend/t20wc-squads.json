@@ -1,0 +1,1322 @@
+[
+    {
+        "team": "India",
+        "group": "Group A",
+        "players": [
+            {
+                "name": "Suryakumar Yadav",
+                "role": "Captain"
+            },
+            {
+                "name": "Abhishek Sharma",
+                "role": "Batter"
+            },
+            {
+                "name": "Tilak Varma",
+                "role": "Batter"
+            },
+            {
+                "name": "Sanju Samson",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Shivam Dube",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ishan Kishan",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Hardik Pandya",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Arshdeep Singh",
+                "role": "Bowler"
+            },
+            {
+                "name": "Jasprit Bumrah",
+                "role": "Bowler"
+            },
+            {
+                "name": "Mohammed Siraj",
+                "role": "Bowler"
+            },
+            {
+                "name": "Varun Chakaravarthy",
+                "role": "Bowler"
+            },
+            {
+                "name": "Kuldeep Yadav",
+                "role": "Bowler"
+            },
+            {
+                "name": "Axar Patel",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Washington Sundar",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Rinku Singh",
+                "role": "Batter"
+            }
+        ]
+    },
+    {
+        "team": "Pakistan",
+        "group": "Group A",
+        "players": [
+            {
+                "name": "Salman Ali Agha",
+                "role": "Captain"
+            },
+            {
+                "name": "Babar Azam",
+                "role": "Batter"
+            },
+            {
+                "name": "Shaheen Shah Afridi",
+                "role": "Bowler"
+            },
+            {
+                "name": "Naseem Shah",
+                "role": "Bowler"
+            },
+            {
+                "name": "Shadab Khan",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Fakhar Zaman",
+                "role": "Batter"
+            },
+            {
+                "name": "Saim Ayub",
+                "role": "Batter"
+            },
+            {
+                "name": "Mohammad Nawaz",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Abrar Ahmed",
+                "role": "Bowler"
+            },
+            {
+                "name": "Sahibzada Farhan",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Usman Khan",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Faheem Ashraf",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Khawaja Nafay",
+                "role": "Batter"
+            },
+            {
+                "name": "Usman Tariq",
+                "role": "Bowler"
+            },
+            {
+                "name": "Mohammad Salman Mirza",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "Afghanistan",
+        "group": "Group D",
+        "players": [
+            {
+                "name": "Rashid Khan",
+                "role": "Captain"
+            },
+            {
+                "name": "Rahmanullah Gurbaz",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Ibrahim Zadran",
+                "role": "Batter"
+            },
+            {
+                "name": "Mohammad Nabi",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Azmatullah Omarzai",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Gulbadin Naib",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Fazalhaq Farooqi",
+                "role": "Bowler"
+            },
+            {
+                "name": "Mujeeb Ur Rahman",
+                "role": "Bowler"
+            },
+            {
+                "name": "Noor Ahmad",
+                "role": "Bowler"
+            },
+            {
+                "name": "Naveen-ul-Haq",
+                "role": "Bowler"
+            },
+            {
+                "name": "Sediqullah Atal",
+                "role": "Batter"
+            },
+            {
+                "name": "Darwish Rasooli",
+                "role": "Batter"
+            },
+            {
+                "name": "Shahidullah Kamal",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Mohammad Ishaq",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Zia-ur-Rehman Sharifi",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "Australia",
+        "group": "Group B",
+        "players": [
+            {
+                "name": "Mitchell Marsh",
+                "role": "Captain"
+            },
+            {
+                "name": "Travis Head",
+                "role": "Batter"
+            },
+            {
+                "name": "Glenn Maxwell",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Marcus Stoinis",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Tim David",
+                "role": "Batter"
+            },
+            {
+                "name": "Josh Inglis",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Cameron Green",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Adam Zampa",
+                "role": "Bowler"
+            },
+            {
+                "name": "Josh Hazlewood",
+                "role": "Bowler"
+            },
+            {
+                "name": "Nathan Ellis",
+                "role": "Bowler"
+            },
+            {
+                "name": "Xavier Bartlett",
+                "role": "Bowler"
+            },
+            {
+                "name": "Cooper Connolly",
+                "role": "Batter"
+            },
+            {
+                "name": "Ben Dwarshuis",
+                "role": "Bowler"
+            },
+            {
+                "name": "Matthew Kuhnemann",
+                "role": "Bowler"
+            },
+            {
+                "name": "Matthew Renshaw",
+                "role": "Batter"
+            }
+        ]
+    },
+    {
+        "team": "England",
+        "group": "Group C",
+        "players": [
+            {
+                "name": "Harry Brook",
+                "role": "Captain"
+            },
+            {
+                "name": "Jos Buttler",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Phil Salt",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Will Jacks",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Sam Curran",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Jofra Archer",
+                "role": "Bowler"
+            },
+            {
+                "name": "Adil Rashid",
+                "role": "Bowler"
+            },
+            {
+                "name": "Rehan Ahmed",
+                "role": "Bowler"
+            },
+            {
+                "name": "Liam Dawson",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ben Duckett",
+                "role": "Batter"
+            },
+            {
+                "name": "Tom Banton",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Jacob Bethell",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Jamie Overton",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Josh Tongue",
+                "role": "Bowler"
+            },
+            {
+                "name": "Luke Wood",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "South Africa",
+        "group": "Group D",
+        "players": [
+            {
+                "name": "Aiden Markram",
+                "role": "Captain"
+            },
+            {
+                "name": "Quinton de Kock",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "David Miller",
+                "role": "Batter"
+            },
+            {
+                "name": "Tristan Stubbs",
+                "role": "Batter"
+            },
+            {
+                "name": "Heinrich Klaasen",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Marco Jansen",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Kagiso Rabada",
+                "role": "Bowler"
+            },
+            {
+                "name": "Anrich Nortje",
+                "role": "Bowler"
+            },
+            {
+                "name": "Keshav Maharaj",
+                "role": "Bowler"
+            },
+            {
+                "name": "Dewald Brevis",
+                "role": "Batter"
+            },
+            {
+                "name": "Kwena Maphaka",
+                "role": "Bowler"
+            },
+            {
+                "name": "Lungi Ngidi",
+                "role": "Bowler"
+            },
+            {
+                "name": "Ryan Rickelton",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "George Linde",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Corbin Bosch",
+                "role": "All-rounder"
+            }
+        ]
+    },
+    {
+        "team": "New Zealand",
+        "group": "Group D",
+        "players": [
+            {
+                "name": "Mitchell Santner",
+                "role": "Captain"
+            },
+            {
+                "name": "Finn Allen",
+                "role": "Batter"
+            },
+            {
+                "name": "Devon Conway",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Rachin Ravindra",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Daryl Mitchell",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Glenn Phillips",
+                "role": "Batter"
+            },
+            {
+                "name": "Mark Chapman",
+                "role": "Batter"
+            },
+            {
+                "name": "James Neesham",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Tim Seifert",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Lockie Ferguson",
+                "role": "Bowler"
+            },
+            {
+                "name": "Matt Henry",
+                "role": "Bowler"
+            },
+            {
+                "name": "Ish Sodhi",
+                "role": "Bowler"
+            },
+            {
+                "name": "Kyle Jamieson",
+                "role": "Bowler"
+            },
+            {
+                "name": "Jacob Duffy",
+                "role": "Bowler"
+            },
+            {
+                "name": "Michael Bracewell",
+                "role": "All-rounder"
+            }
+        ]
+    },
+    {
+        "team": "West Indies",
+        "group": "Group C",
+        "players": [
+            {
+                "name": "Shai Hope",
+                "role": "Captain/Wicketkeeper"
+            },
+            {
+                "name": "Rovman Powell",
+                "role": "Batter"
+            },
+            {
+                "name": "Brandon King",
+                "role": "Batter"
+            },
+            {
+                "name": "Nicholas Pooran",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Andre Russell",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Shimron Hetmyer",
+                "role": "Batter"
+            },
+            {
+                "name": "Sherfane Rutherford",
+                "role": "Batter"
+            },
+            {
+                "name": "Jason Holder",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Romario Shepherd",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Akeal Hosein",
+                "role": "Bowler"
+            },
+            {
+                "name": "Gudakesh Motie",
+                "role": "Bowler"
+            },
+            {
+                "name": "Alzarri Joseph",
+                "role": "Bowler"
+            },
+            {
+                "name": "Shamar Joseph",
+                "role": "Bowler"
+            },
+            {
+                "name": "Johnson Charles",
+                "role": "Batter"
+            },
+            {
+                "name": "Matthew Forde",
+                "role": "All-rounder"
+            }
+        ]
+    },
+    {
+        "team": "Sri Lanka",
+        "group": "Group B",
+        "players": [
+            {
+                "name": "Dasun Shanaka",
+                "role": "Captain"
+            },
+            {
+                "name": "Pathum Nissanka",
+                "role": "Batter"
+            },
+            {
+                "name": "Kusal Mendis",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Charith Asalanka",
+                "role": "Batter"
+            },
+            {
+                "name": "Wanindu Hasaranga",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Maheesh Theekshana",
+                "role": "Bowler"
+            },
+            {
+                "name": "Matheesha Pathirana",
+                "role": "Bowler"
+            },
+            {
+                "name": "Dunith Wellalage",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Kamindu Mendis",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Kusal Perera",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Dushmantha Chameera",
+                "role": "Bowler"
+            },
+            {
+                "name": "Janith Liyanage",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Pavan Rathnayake",
+                "role": "Batter"
+            },
+            {
+                "name": "Dushan Hemantha",
+                "role": "Bowler"
+            },
+            {
+                "name": "Pramod Madushan",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "USA",
+        "group": "Group A",
+        "players": [
+            {
+                "name": "Monank Patel",
+                "role": "Captain/Wicketkeeper"
+            },
+            {
+                "name": "Saurabh Netravalkar",
+                "role": "Bowler"
+            },
+            {
+                "name": "Andries Gous",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Harmeet Singh",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ali Khan",
+                "role": "Bowler"
+            },
+            {
+                "name": "Shayan Jahangir",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Milind Kumar",
+                "role": "Batter"
+            },
+            {
+                "name": "Shehan Jayasuriya",
+                "role": "Batter"
+            },
+            {
+                "name": "Nosthush Kenjige",
+                "role": "Bowler"
+            },
+            {
+                "name": "Shadley van Schalkwyk",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Mohammad Mohsin",
+                "role": "Bowler"
+            },
+            {
+                "name": "Saiteja Mukkamalla",
+                "role": "Batter"
+            },
+            {
+                "name": "Sanjay Krishnamurthi",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Shubham Ranjane",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ehsan Adil",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "Ireland",
+        "group": "Group B",
+        "players": [
+            {
+                "name": "Lorcan Tucker",
+                "role": "Captain/Wicketkeeper"
+            },
+            {
+                "name": "Mark Adair",
+                "role": "Bowler"
+            },
+            {
+                "name": "Harry Tector",
+                "role": "Batter"
+            },
+            {
+                "name": "Josh Little",
+                "role": "Bowler"
+            },
+            {
+                "name": "Curtis Campher",
+                "role": "All-rounder"
+            },
+            {
+                "name": "George Dockrell",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Paul Stirling",
+                "role": "Batter (Injured)"
+            },
+            {
+                "name": "Ross Adair",
+                "role": "Batter"
+            },
+            {
+                "name": "Barry McCarthy",
+                "role": "Bowler"
+            },
+            {
+                "name": "Craig Young",
+                "role": "Bowler"
+            },
+            {
+                "name": "Gareth Delany",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ben White",
+                "role": "Bowler"
+            },
+            {
+                "name": "Tim Tector",
+                "role": "Batter"
+            },
+            {
+                "name": "Matthew Humphreys",
+                "role": "Bowler"
+            },
+            {
+                "name": "Sam Topping",
+                "role": "Wicketkeeper-Batter"
+            }
+        ]
+    },
+    {
+        "team": "Scotland",
+        "group": "Group C",
+        "players": [
+            {
+                "name": "Richie Berrington",
+                "role": "Captain"
+            },
+            {
+                "name": "George Munsey",
+                "role": "Batter"
+            },
+            {
+                "name": "Brandon McMullen",
+                "role": "Batter"
+            },
+            {
+                "name": "Michael Leask",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Mark Watt",
+                "role": "Bowler"
+            },
+            {
+                "name": "Bradley Wheal",
+                "role": "Bowler"
+            },
+            {
+                "name": "Chris Greaves",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Safyaan Sharif",
+                "role": "Bowler"
+            },
+            {
+                "name": "Matthew Cross",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Bradley Currie",
+                "role": "Bowler"
+            },
+            {
+                "name": "Michael Jones",
+                "role": "Batter"
+            },
+            {
+                "name": "Tom Bruce",
+                "role": "Batter"
+            },
+            {
+                "name": "Oliver Davidson",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Finlay McCreath",
+                "role": "Batter"
+            },
+            {
+                "name": "Zainullah Ihsan",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "Netherlands",
+        "group": "Group A",
+        "players": [
+            {
+                "name": "Scott Edwards",
+                "role": "Captain/Wicketkeeper"
+            },
+            {
+                "name": "Bas de Leede",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Logan van Beek",
+                "role": "Bowler"
+            },
+            {
+                "name": "Max O'Dowd",
+                "role": "Batter"
+            },
+            {
+                "name": "Roelof van der Merwe",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Colin Ackermann",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Paul van Meekeren",
+                "role": "Bowler"
+            },
+            {
+                "name": "Fred Klaassen",
+                "role": "Bowler"
+            },
+            {
+                "name": "Aryan Dutt",
+                "role": "Bowler"
+            },
+            {
+                "name": "Michael Levitt",
+                "role": "Batter"
+            },
+            {
+                "name": "Vikramjit Singh",
+                "role": "Batter"
+            },
+            {
+                "name": "Timm van der Gugten",
+                "role": "Bowler"
+            },
+            {
+                "name": "Noah Croes",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Kyle Klein",
+                "role": "Bowler"
+            },
+            {
+                "name": "Saqib Zulfiqar",
+                "role": "All-rounder"
+            }
+        ]
+    },
+    {
+        "team": "Nepal",
+        "group": "Group C",
+        "players": [
+            {
+                "name": "Rohit Paudel",
+                "role": "Captain"
+            },
+            {
+                "name": "Kushal Bhurtel",
+                "role": "Batter"
+            },
+            {
+                "name": "Aasif Sheikh",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Dipendra Singh Airee",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Sandeep Lamichhane",
+                "role": "Bowler"
+            },
+            {
+                "name": "Kushal Malla",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Sompal Kami",
+                "role": "Bowler"
+            },
+            {
+                "name": "Karan KC",
+                "role": "Bowler"
+            },
+            {
+                "name": "Gulshan Jha",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Lalit Rajbanshi",
+                "role": "Bowler"
+            },
+            {
+                "name": "Sundeep Jora",
+                "role": "Batter"
+            },
+            {
+                "name": "Aarif Sheikh",
+                "role": "Batter"
+            },
+            {
+                "name": "Basir Ahamad",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Nandan Yadav",
+                "role": "Bowler"
+            },
+            {
+                "name": "Sher Malla",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "Italy",
+        "group": "Group C",
+        "players": [
+            {
+                "name": "Wayne Madsen",
+                "role": "Captain"
+            },
+            {
+                "name": "JJ Smuts",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Harry Manenti",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ben Manenti",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Grant Stewart",
+                "role": "Bowler"
+            },
+            {
+                "name": "Thomas Draca",
+                "role": "Bowler"
+            },
+            {
+                "name": "Marcus Campopiano",
+                "role": "Batter"
+            },
+            {
+                "name": "Gian Piero Meade",
+                "role": "Batter"
+            },
+            {
+                "name": "Zain Ali",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ali Hasan",
+                "role": "Bowler"
+            },
+            {
+                "name": "Crishan Jorge Kalugamage",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Anthony Mosca",
+                "role": "Batter"
+            },
+            {
+                "name": "Justin Mosca",
+                "role": "Batter"
+            },
+            {
+                "name": "Syed Naqvi",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Jaspreet Singh",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "Zimbabwe",
+        "group": "Group B",
+        "players": [
+            {
+                "name": "Sikandar Raza",
+                "role": "Captain"
+            },
+            {
+                "name": "Blessing Muzarabani",
+                "role": "Bowler"
+            },
+            {
+                "name": "Richard Ngarava",
+                "role": "Bowler"
+            },
+            {
+                "name": "Ryan Burl",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Brian Bennett",
+                "role": "Batter"
+            },
+            {
+                "name": "Clive Madande",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Tadiwanashe Marumani",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Wellington Masakadza",
+                "role": "Bowler"
+            },
+            {
+                "name": "Brad Evans",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Dion Myers",
+                "role": "Batter"
+            },
+            {
+                "name": "Graeme Cremer",
+                "role": "Bowler"
+            },
+            {
+                "name": "Tony Munyonga",
+                "role": "Batter"
+            },
+            {
+                "name": "Tinotenda Maposa",
+                "role": "Bowler"
+            },
+            {
+                "name": "Tashinga Musekiwa",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ben Curran",
+                "role": "Batter"
+            }
+        ]
+    },
+    {
+        "team": "Namibia",
+        "group": "Group A",
+        "players": [
+            {
+                "name": "Gerhard Erasmus",
+                "role": "Captain"
+            },
+            {
+                "name": "JJ Smit",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Jan Frylinck",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Bernard Scholtz",
+                "role": "Bowler"
+            },
+            {
+                "name": "Ruben Trumpelmann",
+                "role": "Bowler"
+            },
+            {
+                "name": "Zane Green",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Nicol Loftie-Eaton",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ben Shikongo",
+                "role": "Bowler"
+            },
+            {
+                "name": "Louren Steenkamp",
+                "role": "Batter"
+            },
+            {
+                "name": "Malan Kruger",
+                "role": "Batter"
+            },
+            {
+                "name": "Jack Brassell",
+                "role": "Bowler"
+            },
+            {
+                "name": "Jan Balt",
+                "role": "Batter"
+            },
+            {
+                "name": "Dylan Leicher",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Willem Myburgh",
+                "role": "Batter"
+            },
+            {
+                "name": "Max Heingo",
+                "role": "Bowler"
+            }
+        ]
+    },
+    {
+        "team": "Oman",
+        "group": "Group B",
+        "players": [
+            {
+                "name": "Jatinder Singh",
+                "role": "Captain"
+            },
+            {
+                "name": "Zeeshan Maqsood",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Aqib Ilyas",
+                "role": "Batter"
+            },
+            {
+                "name": "Aamir Kaleem",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Vinayak Shukla",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Mohammad Nadeem",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Sufyan Mehmood",
+                "role": "Bowler"
+            },
+            {
+                "name": "Shakeel Ahmad",
+                "role": "Bowler"
+            },
+            {
+                "name": "Hammad Mirza",
+                "role": "Batter"
+            },
+            {
+                "name": "Wasim Ali",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Karan Sonavale",
+                "role": "Batter"
+            },
+            {
+                "name": "Shah Faisal",
+                "role": "Bowler"
+            },
+            {
+                "name": "Jay Odedra",
+                "role": "Bowler"
+            },
+            {
+                "name": "Shafiq Jan",
+                "role": "Bowler"
+            },
+            {
+                "name": "Ashish Odedara",
+                "role": "Batter"
+            }
+        ]
+    },
+    {
+        "team": "Canada",
+        "group": "Group D",
+        "players": [
+            {
+                "name": "Dilpreet Bajwa",
+                "role": "Captain"
+            },
+            {
+                "name": "Navneet Dhaliwal",
+                "role": "Batter"
+            },
+            {
+                "name": "Nicholas Kirton",
+                "role": "Batter"
+            },
+            {
+                "name": "Saad Bin Zafar",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Kaleem Sana",
+                "role": "Bowler"
+            },
+            {
+                "name": "Dilon Heyliger",
+                "role": "Bowler"
+            },
+            {
+                "name": "Harsh Thaker",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Ravinderpal Singh",
+                "role": "Batter"
+            },
+            {
+                "name": "Shreyas Movva",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Ajayveer Hundal",
+                "role": "Batter"
+            },
+            {
+                "name": "Ansh Patel",
+                "role": "Bowler"
+            },
+            {
+                "name": "Jaskarandeep Buttar",
+                "role": "Bowler"
+            },
+            {
+                "name": "Kanwarpal Tathgur",
+                "role": "Batter"
+            },
+            {
+                "name": "Shivam Sharma",
+                "role": "Bowler"
+            },
+            {
+                "name": "Yuvraj Samra",
+                "role": "Batter"
+            }
+        ]
+    },
+    {
+        "team": "UAE",
+        "group": "Group D",
+        "players": [
+            {
+                "name": "Muhammad Waseem",
+                "role": "Captain"
+            },
+            {
+                "name": "Alishan Sharafu",
+                "role": "Batter"
+            },
+            {
+                "name": "Junaid Siddique",
+                "role": "Bowler"
+            },
+            {
+                "name": "Aryansh Sharma",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Dhruv Parashar",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Haider Ali",
+                "role": "Bowler"
+            },
+            {
+                "name": "Harshit Kaushik",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Mayank Kumar",
+                "role": "Bowler"
+            },
+            {
+                "name": "Muhammad Arfan",
+                "role": "Bowler"
+            },
+            {
+                "name": "Muhammad Farooq",
+                "role": "All-rounder"
+            },
+            {
+                "name": "Muhammad Jawadullah",
+                "role": "Bowler"
+            },
+            {
+                "name": "Muhammad Zohaib",
+                "role": "Batter"
+            },
+            {
+                "name": "Rohid Khan",
+                "role": "Bowler"
+            },
+            {
+                "name": "Sohaib Khan",
+                "role": "Batter"
+            },
+            {
+                "name": "Simranjeet Singh",
+                "role": "Batter"
+            }
+        ]
+    }
+]
