@@ -30,7 +30,7 @@ export default function Header() {
         <div className="container-mobile h-14 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Trophy className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg font-['Space_Grotesk']">CrickPredict</span>
+            <span className="font-bold text-lg font-['Space_Grotesk']">Lazy Fantasy</span>
           </Link>
 
           {isAuthenticated && username && (

@@ -19,7 +19,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "CrickPredict - Fantasy Cricket League",
+  title: "Lazy Fantasy - Fantasy Cricket League",
   description: "Predict match outcomes, compete with friends, and climb the leaderboard",
 };
 
