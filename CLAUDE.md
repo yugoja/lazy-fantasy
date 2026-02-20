@@ -38,6 +38,13 @@
   - Sentry integrated in both backend (FastAPI) and frontend (Next.js)
   - Opt-in via `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` env vars
 
+### Features
+- [ ] Match reminders — email or push notifications before matches lock
+- [ ] PWA support — add a manifest so users can "install" it on mobile
+- [ ] Image optimization — flag images served through Next.js `<Image>` with proper caching
+- [ ] Google SSO — login using Google single sign-on
+- [ ] Social nudge feature — prompt users to invite/challenge friends
+
 ## Completed (Phase 4 - commit 357711f)
 - Redesigned all pages with shadcn/ui + Tailwind (login, signup, landing, admin, set result, view predictions)
 - Created profile page (`/profile`)
