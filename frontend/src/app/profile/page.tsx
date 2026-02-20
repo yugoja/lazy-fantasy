@@ -154,7 +154,7 @@ export default function ProfilePage() {
               {leagues.map((league) => (
                 <Link
                   key={league.id}
-                  href={`/leagues/${league.id}`}
+                  href={`/leaderboard?league=${league.id}`}
                   className="flex items-center justify-between px-4 py-3 active:bg-secondary/50"
                 >
                   <div className="flex items-center gap-3">

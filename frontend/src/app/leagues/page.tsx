@@ -200,7 +200,7 @@ export default function LeaguesPage() {
       ) : (
         <div className="space-y-3">
           {leagues.map((league) => (
-            <Link key={league.id} href={`/leagues/${league.id}`}>
+            <Link key={league.id} href={`/leaderboard?league=${league.id}`}>
               <Card className="p-4 hover:border-primary/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">

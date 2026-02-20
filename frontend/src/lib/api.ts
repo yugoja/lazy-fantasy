@@ -77,6 +77,13 @@ export async function login(username: string, password: string) {
     return response.json() as Promise<{ access_token: string; token_type: string }>;
 }
 
+export async function googleLogin(credential: string) {
+    return request<{ access_token: string; token_type: string; username: string }>('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ credential }),
+    });
+}
+
 // Leagues
 export async function getMyLeagues() {
     return request<Array<{ id: number; name: string; invite_code: string; owner_id: number }>>('/leagues/my');

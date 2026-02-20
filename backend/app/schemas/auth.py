@@ -26,3 +26,15 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     """Schema for decoded token data."""
     user_id: int | None = None
+
+
+class GoogleAuthRequest(BaseModel):
+    """Schema for Google SSO login."""
+    credential: str
+
+
+class GoogleAuthResponse(BaseModel):
+    """Schema for Google SSO response (JWT + username for frontend login)."""
+    access_token: str
+    token_type: str = "bearer"
+    username: str

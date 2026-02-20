@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Shield, ChevronRight } from 'lucide-react';
+import { Shield, ChevronRight, Zap, Target, Trophy, Clock } from 'lucide-react';
 
 interface League {
     id: number;
@@ -104,18 +104,83 @@ export default function DashboardPage() {
         .slice(0, 3);
 
     const predictedMatchIds = new Set(predictions.map(p => p.match_id));
+    const unpredictedUpcoming = upcomingMatches.filter(m => !predictedMatchIds.has(m.id));
+
+    const heroContent = (() => {
+        if (unpredictedUpcoming.length > 0) {
+            const count = unpredictedUpcoming.length;
+            const next = unpredictedUpcoming[0];
+            const hoursUntil = Math.round(
+                (new Date(next.start_time).getTime() - Date.now()) / 36e5
+            );
+            const timeLabel = hoursUntil < 1
+                ? 'in < 1h'
+                : hoursUntil < 24
+                ? `in ${hoursUntil}h`
+                : null;
+
+            return (
+                <div className="rounded-xl bg-yellow-400/10 border border-yellow-400/20 p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-yellow-400/20 flex items-center justify-center shrink-0">
+                            <Zap className="h-5 w-5 text-yellow-400" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-base leading-tight">
+                                {count === 1 ? '1 match needs your call' : `${count} matches need your call`}
+                            </p>
+                            {timeLabel && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                    <Clock className="h-3 w-3" /> Next starts {timeLabel}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                    <Link href="/predictions">
+                        <Button size="sm" className="shrink-0 bg-yellow-400 hover:bg-yellow-500 text-black">Predict</Button>
+                    </Link>
+                </div>
+            );
+        }
+
+        if (upcomingMatches.length > 0) {
+            const next = upcomingMatches[0];
+            const hoursUntil = Math.round(
+                (new Date(next.start_time).getTime() - Date.now()) / 36e5
+            );
+            const timeLabel = hoursUntil < 24 ? `in ${hoursUntil}h` : `in ${Math.round(hoursUntil / 24)}d`;
+
+            return (
+                <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                        <Target className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div>
+                        <p className="font-bold text-base leading-tight">You&apos;re locked in</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            All predictions made · next match {timeLabel}
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="rounded-xl bg-muted/50 border border-border p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Trophy className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                    <p className="font-bold text-base leading-tight">{totalPoints} pts total</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">No upcoming matches right now</p>
+                </div>
+            </div>
+        );
+    })();
 
     return (
         <div className="container-mobile py-6 space-y-6">
-            {/* Welcome Header */}
-            <div>
-                <h1 className="text-2xl font-bold">
-                    Welcome back, <span className="text-primary">{username}</span> 👋
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                    Track your performance and make predictions
-                </p>
-            </div>
+            {heroContent}
 
             {/* Stats Overview */}
             <StatsOverview
@@ -132,7 +197,7 @@ export default function DashboardPage() {
                         <h2 className="text-lg font-bold">Upcoming Matches</h2>
                         <p className="text-xs text-muted-foreground">{upcomingMatches.length} matches</p>
                     </div>
-                    <Link href="/matches">
+                    <Link href="/predictions">
                         <Button variant="ghost" size="sm" className="text-xs">
                             View All
                             <ChevronRight className="h-4 w-4 ml-1" />
@@ -187,7 +252,7 @@ export default function DashboardPage() {
                 ) : (
                     <div className="space-y-3">
                         {leagues.slice(0, 3).map((league) => (
-                            <Link key={league.id} href={`/leagues/${league.id}`}>
+                            <Link key={league.id} href={`/leaderboard?league=${league.id}`}>
                                 <Card className="p-4 hover:border-primary/50 transition-colors">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { getMyLeagues, getLeaderboard } from '@/lib/api';
@@ -31,6 +31,7 @@ interface LeaderboardEntry {
 export default function LeaderboardPage() {
   const { isAuthenticated, username, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [leagues, setLeagues] = useState<League[]>([]);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [selectedLeagueId, setSelectedLeagueId] = useState<string>('');
@@ -54,9 +55,12 @@ export default function LeaderboardPage() {
       const data = await getMyLeagues();
       setLeagues(data);
       if (data.length > 0) {
-        const firstId = String(data[0].id);
-        setSelectedLeagueId(firstId);
-        await loadBoard(data[0].id);
+        const leagueParam = searchParams.get('league');
+        const preselect = leagueParam && data.some(l => String(l.id) === leagueParam)
+          ? leagueParam
+          : String(data[0].id);
+        setSelectedLeagueId(preselect);
+        await loadBoard(Number(preselect));
       }
     } catch {
       // handled by empty state

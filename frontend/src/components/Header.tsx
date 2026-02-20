@@ -50,7 +50,8 @@ export default function Header() {
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-bottom">
           <div className="container-mobile h-16 flex items-center justify-around">
             {navItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
+              const isActive = pathname.startsWith(item.href) ||
+              (item.href === '/predictions' && pathname.startsWith('/matches'));
               const Icon = item.icon;
 
               return (

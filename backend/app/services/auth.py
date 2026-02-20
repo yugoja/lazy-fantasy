@@ -63,6 +63,8 @@ def authenticate_user(db: Session, username: str, password: str) -> User | None:
     user = get_user_by_username(db, username)
     if not user:
         return None
+    if not user.hashed_password:
+        return None
     if not verify_password(password, user.hashed_password):
         return None
     return user
@@ -75,6 +77,24 @@ def create_user(db: Session, username: str, email: str, password: str) -> User:
         username=username,
         email=email,
         hashed_password=hashed_password,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def get_user_by_google_id(db: Session, google_id: str) -> User | None:
+    """Get user by Google ID."""
+    return db.query(User).filter(User.google_id == google_id).first()
+
+
+def create_google_user(db: Session, email: str, google_id: str, username: str) -> User:
+    """Create a new user from Google SSO (no password)."""
+    user = User(
+        username=username,
+        email=email,
+        google_id=google_id,
     )
     db.add(user)
     db.commit()

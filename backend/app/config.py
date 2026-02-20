@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     SENTRY_ENVIRONMENT: str = "development"
     SENTRY_TRACES_SAMPLE_RATE: float = 0.1
 
+    # Google SSO
+    GOOGLE_CLIENT_ID: str = ""
+
     # CORS Configuration (comma-separated origins for production)
     CORS_ORIGINS: str = "http://localhost:3000"
     FRONTEND_URL: str = "http://localhost:3000"

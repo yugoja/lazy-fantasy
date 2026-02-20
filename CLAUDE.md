@@ -42,7 +42,10 @@
 - [ ] Match reminders — email or push notifications before matches lock
 - [ ] PWA support — add a manifest so users can "install" it on mobile
 - [ ] Image optimization — flag images served through Next.js `<Image>` with proper caching
-- [ ] Google SSO — login using Google single sign-on
+- [x] Google SSO — login using Google single sign-on
+  - Backend: `google-auth` verifies ID token at `/auth/google`, finds/creates user, returns JWT
+  - Frontend: Google Identity Services button on login/signup, graceful degradation when `GOOGLE_CLIENT_ID` not set
+  - Opt-in via `GOOGLE_CLIENT_ID` (backend) / `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (frontend)
 - [ ] Social nudge feature — prompt users to invite/challenge friends
 
 ## Completed (Phase 4 - commit 357711f)
