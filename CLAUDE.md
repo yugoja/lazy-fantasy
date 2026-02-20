@@ -40,7 +40,11 @@
 
 ### Features
 - [ ] Match reminders — email or push notifications before matches lock
-- [ ] PWA support — add a manifest so users can "install" it on mobile
+- [x] PWA support — add a manifest so users can "install" it on mobile
+  - `manifest.json` with app name, icons, standalone display, dark theme
+  - Minimal service worker (`sw.js`) satisfies Chrome install requirement
+  - Apple Web App meta tags for iOS "Add to Home Screen"
+  - 192x192 and 512x512 icons generated from `logo.png`
 - [ ] Image optimization — flag images served through Next.js `<Image>` with proper caching
 - [x] Google SSO — login using Google single sign-on
   - Backend: `google-auth` verifies ID token at `/auth/google`, finds/creates user, returns JWT

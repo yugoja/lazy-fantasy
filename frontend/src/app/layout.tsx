@@ -22,6 +22,15 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Lazy Fantasy - Fantasy Cricket League",
   description: "Predict match outcomes, compete with friends, and climb the leaderboard",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Lazy Fantasy",
+  },
+  icons: {
+    apple: "/icons/icon-192x192.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -40,6 +49,9 @@ export default function RootLayout({
     <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable}`}>
       <body className={inter.className}>
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
+        <Script id="sw-register" strategy="afterInteractive">
+          {`if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');`}
+        </Script>
         <AuthProvider>
           <Header />
           <main className="pb-20">{children}</main>
