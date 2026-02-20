@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -118,9 +119,11 @@ export function MatchCard({
           {/* Team 1 */}
           <div className="flex items-center gap-2 flex-1">
             {flagUrl1 && (
-              <img
+              <Image
                 src={flagUrl1}
                 alt={`${team1.name} flag`}
+                width={32}
+                height={24}
                 className="h-6 w-8 object-cover rounded-sm"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
@@ -135,9 +138,11 @@ export function MatchCard({
           <div className="flex items-center gap-2 flex-1 justify-end">
             <span className="font-semibold text-sm truncate">{team2.short_name}</span>
             {flagUrl2 && (
-              <img
+              <Image
                 src={flagUrl2}
                 alt={`${team2.name} flag`}
+                width={32}
+                height={24}
                 className="h-6 w-8 object-cover rounded-sm"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />

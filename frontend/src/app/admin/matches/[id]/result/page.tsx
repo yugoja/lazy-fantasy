@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getMatchPlayers, API_BASE } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
@@ -240,9 +241,11 @@ export default function SetResultPage() {
                                     )}
                                 >
                                     {flagSrc && (
-                                        <img
+                                        <Image
                                             src={flagSrc}
                                             alt={`${team.name} flag`}
+                                            width={32}
+                                            height={24}
                                             className="h-6 w-8 object-cover rounded-sm"
                                             onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                         />

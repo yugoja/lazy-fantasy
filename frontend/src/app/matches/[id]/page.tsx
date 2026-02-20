@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getMatchDetail, MatchDetail } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
@@ -128,9 +129,11 @@ export default function MatchDetailPage() {
             {/* Team 1 */}
             <div className="flex flex-col items-center gap-2 flex-1">
               {flag1 && (
-                <img
+                <Image
                   src={flag1}
                   alt={`${match.team_1.name} flag`}
+                  width={56}
+                  height={40}
                   className="h-10 w-14 object-cover rounded"
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
@@ -147,9 +150,11 @@ export default function MatchDetailPage() {
             {/* Team 2 */}
             <div className="flex flex-col items-center gap-2 flex-1">
               {flag2 && (
-                <img
+                <Image
                   src={flag2}
                   alt={`${match.team_2.name} flag`}
+                  width={56}
+                  height={40}
                   className="h-10 w-14 object-cover rounded"
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />

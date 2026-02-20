@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getMatchPlayers, getMyPredictions, submitPrediction, ApiError } from '@/lib/api';
 import { Card } from '@/components/ui/card';
@@ -312,9 +313,11 @@ export default function PredictPage() {
                 )}
               >
                 {flagSrc && (
-                  <img
+                  <Image
                     src={flagSrc}
                     alt={`${team.name} flag`}
+                    width={32}
+                    height={24}
                     className="h-6 w-8 object-cover rounded-sm"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />

@@ -45,7 +45,9 @@
   - Minimal service worker (`sw.js`) satisfies Chrome install requirement
   - Apple Web App meta tags for iOS "Add to Home Screen"
   - 192x192 and 512x512 icons generated from `logo.png`
-- [ ] Image optimization — flag images served through Next.js `<Image>` with proper caching
+- [x] Image optimization — flag images served through Next.js `<Image>` with proper caching
+  - All 9 `<img>` tags replaced with `next/image` `<Image>` across 5 files
+  - Automatic lazy loading, WebP/AVIF conversion, and CLS prevention via explicit width/height
 - [x] Google SSO — login using Google single sign-on
   - Backend: `google-auth` verifies ID token at `/auth/google`, finds/creates user, returns JWT
   - Frontend: Google Identity Services button on login/signup, graceful degradation when `GOOGLE_CLIENT_ID` not set

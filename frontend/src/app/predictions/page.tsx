@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getMatches, getMyPredictions, getMyPredictionsDetailed, PredictionDetail } from '@/lib/api';
 import { MatchCard } from '@/components/MatchCard';
@@ -213,13 +214,13 @@ export default function PredictionsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {flag1 && (
-                        <img src={flag1} alt="" className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        <Image src={flag1} alt="" width={24} height={16} className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       )}
                       <span className="text-sm font-semibold">
                         {pred.team_1.short_name} vs {pred.team_2.short_name}
                       </span>
                       {flag2 && (
-                        <img src={flag2} alt="" className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        <Image src={flag2} alt="" width={24} height={16} className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       )}
                     </div>
                     {isProcessed ? (
