@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, ApiError } from '@/lib/api';
+import { getMyLeagues, getMyPredictionsDetailed, PredictionDetail } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const { isAuthenticated, isLoading: authLoading, username, logout } = useAuth();
   const router = useRouter();
   const [leagues, setLeagues] = useState<League[]>([]);
+  const [predictions, setPredictions] = useState<PredictionDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -51,14 +52,36 @@ export default function ProfilePage() {
 
   const loadLeagues = async () => {
     try {
-      const data = await getMyLeagues();
-      setLeagues(data);
+      const [leaguesData, predictionsData] = await Promise.allSettled([
+        getMyLeagues(),
+        getMyPredictionsDetailed(),
+      ]);
+      if (leaguesData.status === 'fulfilled') setLeagues(leaguesData.value);
+      if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
     } catch {
-      // silently fail - leagues are non-critical
+      // silently fail - non-critical
     } finally {
       setIsLoading(false);
     }
   };
+
+  const processed = predictions.filter(p => p.is_processed);
+  const totalPoints = processed.reduce((sum, p) => sum + p.points_earned, 0);
+  const correctWins = processed.filter(p => p.actual_winner && p.predicted_winner.id === p.actual_winner.id).length;
+  const accuracy = processed.length > 0 ? Math.round((correctWins / processed.length) * 100) : 0;
+
+  // Streak: consecutive correct winner picks from most recent processed match
+  const sortedProcessed = [...processed].sort(
+    (a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
+  );
+  let streak = 0;
+  for (const p of sortedProcessed) {
+    if (p.actual_winner && p.predicted_winner.id === p.actual_winner.id) {
+      streak++;
+    } else {
+      break;
+    }
+  }
 
   const initials = username
     ? username.substring(0, 2).toUpperCase()
@@ -104,9 +127,9 @@ export default function ProfilePage() {
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: 'Points', value: '--', icon: Trophy, color: 'text-primary' },
-          { label: 'Accuracy', value: '--', icon: Target, color: 'text-accent' },
-          { label: 'Streak', value: '--', icon: Flame, color: 'text-orange-400' },
+          { label: 'Points', value: String(totalPoints), icon: Trophy, color: 'text-primary' },
+          { label: 'Accuracy', value: processed.length > 0 ? `${accuracy}%` : '0%', icon: Target, color: 'text-accent' },
+          { label: 'Streak', value: String(streak), icon: Flame, color: 'text-orange-400' },
         ].map((stat) => (
           <Card key={stat.label} className="border-border bg-card">
             <CardContent className="flex flex-col items-center gap-1 p-3">

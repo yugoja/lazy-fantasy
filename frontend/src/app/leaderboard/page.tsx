@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -28,7 +28,7 @@ interface LeaderboardEntry {
   rank: number;
 }
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
   const { isAuthenticated, username, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -264,5 +264,25 @@ export default function LeaderboardPage() {
         </>
       )}
     </div>
+  );
+}
+
+function LeaderboardFallback() {
+  return (
+    <div className="container-mobile py-6 space-y-6">
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-32 w-full" />
+      {[...Array(5)].map((_, i) => (
+        <Skeleton key={i} className="h-16" />
+      ))}
+    </div>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <Suspense fallback={<LeaderboardFallback />}>
+      <LeaderboardContent />
+    </Suspense>
   );
 }

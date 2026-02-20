@@ -15,7 +15,8 @@ from fastapi.testclient import TestClient
 from datetime import datetime, timedelta, timezone
 
 from app.main import app
-from app.database import get_db, Base
+from app.database import get_db
+from app.models import Base
 
 # Use a test database
 TEST_DB = "sqlite:///./quick_test.db"
@@ -76,6 +77,12 @@ def run_complete_flow():
         })
         assert response.status_code == 201, f"Signup failed: {response.text}"
 
+        # Make player1 an admin
+        from app.models.user import User
+        admin_user = session.query(User).filter(User.username == "player1").first()
+        admin_user.is_admin = True
+        session.commit()
+
         response = client.post("/auth/signup", json={
             "username": "player2",
             "email": "player2@test.com",
@@ -122,13 +129,13 @@ def run_complete_flow():
             "start_time": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
         }
         response = client.post("/admin/matches/", json=match_data, headers=headers1)
-        assert response.status_code == 201
+        assert response.status_code == 201, f"Create match failed: {response.text}"
         match_id = response.json()["id"]
 
         # Step 7: Get players for predictions
         print("✓ Fetching match players...")
-        response = client.get(f"/matches/{match_id}/players")
-        assert response.status_code == 200
+        response = client.get(f"/matches/{match_id}/players", headers=headers1)
+        assert response.status_code == 200, f"Get players failed: {response.text}"
         match_data = response.json()
         team1_players = match_data["team_1_players"]
         team2_players = match_data["team_2_players"]
@@ -144,7 +151,7 @@ def run_complete_flow():
             "predicted_pom_player_id": team1_players[0]["id"]
         }
         response = client.post("/predictions/", json=prediction1, headers=headers1)
-        assert response.status_code == 201
+        assert response.status_code == 201, f"Prediction 1 failed: {response.text}"
 
         # Player 2 - only winner correct
         prediction2 = {
@@ -155,7 +162,7 @@ def run_complete_flow():
             "predicted_pom_player_id": team2_players[1]["id"]
         }
         response = client.post("/predictions/", json=prediction2, headers=headers2)
-        assert response.status_code == 201
+        assert response.status_code == 201, f"Prediction 2 failed: {response.text}"
 
         # Step 9: Set match results
         print("✓ Setting match results...")
@@ -166,13 +173,13 @@ def run_complete_flow():
             "result_pom_player_id": team1_players[0]["id"]
         }
         response = client.post(f"/admin/matches/{match_id}/result", json=result, headers=headers1)
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Set result failed: {response.text}"
         print(f"  Processed {response.json()['predictions_processed']} predictions")
 
         # Step 10: Check leaderboard
         print("✓ Checking leaderboard...")
         response = client.get(f"/leagues/{league_id}/leaderboard", headers=headers1)
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Leaderboard failed: {response.text}"
         leaderboard = response.json()
 
         print("\n📊 Final Leaderboard:")
