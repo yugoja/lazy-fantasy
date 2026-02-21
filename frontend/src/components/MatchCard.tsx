@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock } from 'lucide-react';
+import { Clock, Lock, Users } from 'lucide-react';
 import { cn, getFlagUrl } from '@/lib/utils';
 
 interface Team {
@@ -24,6 +24,7 @@ interface MatchCardProps {
   venue?: string;
   hasPredicted?: boolean;
   pointsEarned?: number;
+  lineupAnnounced?: boolean;
   className?: string;
 }
 
@@ -37,7 +38,7 @@ function useCountdown(targetDate: string) {
       const diff = target - now;
 
       if (diff <= 0) {
-        setTimeLeft('Starting soon');
+        setTimeLeft('Locked');
         return;
       }
 
@@ -72,6 +73,7 @@ export function MatchCard({
   venue,
   hasPredicted,
   pointsEarned,
+  lineupAnnounced,
   className,
 }: MatchCardProps) {
   const isLive = status === 'LIVE';
@@ -120,9 +122,21 @@ export function MatchCard({
             </Badge>
           )}
 
+          {lineupAnnounced && isUpcoming && (
+            <Badge variant="outline" className="bg-green-600/10 text-green-400 border-green-600/30 text-[10px]">
+              <Users className="h-2.5 w-2.5 mr-1" />
+              XI
+            </Badge>
+          )}
+
           {isUpcoming && countdown && (
-            <div className="flex items-center gap-1.5 text-xs font-medium text-yellow-400 bg-yellow-400/10 rounded-full px-2.5 py-1 ml-auto">
-              <Clock className="h-3 w-3" />
+            <div className={cn(
+              'flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-1 ml-auto',
+              countdown === 'Locked'
+                ? 'text-red-400 bg-red-400/10'
+                : 'text-yellow-400 bg-yellow-400/10'
+            )}>
+              {countdown === 'Locked' ? <Lock className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
               <span>{countdown}</span>
             </div>
           )}

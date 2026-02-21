@@ -122,6 +122,7 @@ export async function getMatches(tournamentId?: number) {
         team_2: { id: number; name: string; short_name: string; logo_url: string | null };
         start_time: string;
         status: string;
+        lineup_announced: boolean;
     }>>(`/matches/?${params}`);
 }
 

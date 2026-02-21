@@ -30,6 +30,7 @@ class MatchResponse(BaseModel):
     team_2: TeamResponse
     start_time: datetime
     status: str
+    lineup_announced: bool = False
 
     model_config = {"from_attributes": True}
 

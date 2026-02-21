@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
+from sqlalchemy import func
+
 from app.database import get_db
-from app.models import User
+from app.models import User, MatchLineup
 from app.schemas.match import (
     MatchResponse,
     MatchDetailResponse,
@@ -39,6 +41,15 @@ async def list_matches(
         include_all=include_completed
     )
     
+    # Get match IDs that have lineups set (single query)
+    match_ids = [m.id for m in matches]
+    lineup_match_ids = set()
+    if match_ids:
+        rows = db.query(MatchLineup.match_id).filter(
+            MatchLineup.match_id.in_(match_ids)
+        ).distinct().all()
+        lineup_match_ids = {r[0] for r in rows}
+
     # Convert to response format with team objects
     result = []
     for match in matches:
@@ -49,8 +60,9 @@ async def list_matches(
             team_2=TeamResponse.model_validate(match.team_2),
             start_time=match.start_time,
             status=match.status.value,
+            lineup_announced=match.id in lineup_match_ids,
         ))
-    
+
     return result
 
 

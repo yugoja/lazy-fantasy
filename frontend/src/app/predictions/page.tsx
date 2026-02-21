@@ -21,6 +21,7 @@ interface Match {
   start_time: string;
   status: string;
   venue?: string;
+  lineup_announced: boolean;
 }
 
 interface Prediction {
@@ -115,6 +116,7 @@ export default function PredictionsPage() {
                 venue={match.venue}
                 hasPredicted={!!prediction}
                 pointsEarned={showPoints && prediction?.is_processed ? prediction.points_earned : undefined}
+                lineupAnnounced={match.lineup_announced}
               />
             </div>
           );

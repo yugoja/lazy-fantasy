@@ -27,6 +27,7 @@ interface Match {
     start_time: string;
     status: string;
     venue?: string;
+    lineup_announced: boolean;
 }
 
 interface Prediction {
@@ -222,6 +223,7 @@ export default function DashboardPage() {
                                 status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'}
                                 venue={match.venue}
                                 hasPredicted={predictedMatchIds.has(match.id)}
+                                lineupAnnounced={match.lineup_announced}
                             />
                         ))}
                     </div>
