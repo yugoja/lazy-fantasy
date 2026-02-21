@@ -172,7 +172,7 @@ async def list_all_matches(
             "tournament_id": match.tournament_id,
             "team_1": {"id": match.team_1.id, "name": match.team_1.name, "short_name": match.team_1.short_name},
             "team_2": {"id": match.team_2.id, "name": match.team_2.name, "short_name": match.team_2.short_name},
-            "start_time": match.start_time.isoformat(),
+            "start_time": match.start_time.isoformat() if match.start_time.tzinfo else match.start_time.isoformat() + "+00:00",
             "status": match.status.value,
             "prediction_count": prediction_count,
         })

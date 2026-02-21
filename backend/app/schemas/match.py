@@ -1,5 +1,5 @@
-from datetime import datetime
-from pydantic import BaseModel
+from datetime import datetime, timezone
+from pydantic import BaseModel, field_serializer
 
 
 class TeamResponse(BaseModel):
@@ -33,6 +33,12 @@ class MatchResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_serializer("start_time")
+    def serialize_start_time(self, v: datetime) -> str:
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.isoformat()
+
 
 class MatchDetailResponse(BaseModel):
     """Schema for match detail with results."""
@@ -46,6 +52,12 @@ class MatchDetailResponse(BaseModel):
     most_runs_player: PlayerResponse | None = None
     most_wickets_player: PlayerResponse | None = None
     pom_player: PlayerResponse | None = None
+
+    @field_serializer("start_time")
+    def serialize_start_time(self, v: datetime) -> str:
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.isoformat()
 
 
 class MatchPlayersResponse(BaseModel):
