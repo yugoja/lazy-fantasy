@@ -23,6 +23,7 @@ interface MatchCardProps {
   status: 'UPCOMING' | 'SCHEDULED' | 'LIVE' | 'COMPLETED';
   venue?: string;
   hasPredicted?: boolean;
+  pointsEarned?: number;
   className?: string;
 }
 
@@ -70,6 +71,7 @@ export function MatchCard({
   status,
   venue,
   hasPredicted,
+  pointsEarned,
   className,
 }: MatchCardProps) {
   const isLive = status === 'LIVE';
@@ -93,7 +95,7 @@ export function MatchCard({
   return (
     <Card className={cn('p-4 hover:border-primary/50 transition-colors', className)}>
       <div className="flex flex-col gap-3">
-        {/* Status Badge + Countdown */}
+        {/* Status Badge + Predicted + Countdown */}
         <div className="flex items-center gap-2">
           <Badge
             variant={isLive ? 'destructive' : isCompleted ? 'secondary' : 'default'}
@@ -105,6 +107,18 @@ export function MatchCard({
             {isLive && <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-destructive animate-pulse-dot" />}
             {isUpcoming ? 'UPCOMING' : status}
           </Badge>
+
+          {pointsEarned !== undefined && (
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-[10px]">
+              +{pointsEarned} pts
+            </Badge>
+          )}
+
+          {hasPredicted && pointsEarned === undefined && (
+            <Badge variant="outline" className="text-[10px]">
+              Predicted
+            </Badge>
+          )}
 
           {isUpcoming && countdown && (
             <div className="flex items-center gap-1.5 text-xs font-medium text-yellow-400 bg-yellow-400/10 rounded-full px-2.5 py-1 ml-auto">

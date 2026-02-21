@@ -105,7 +105,7 @@ export default function PredictionsPage() {
         {filteredMatches.map((match) => {
           const prediction = predictionByMatch.get(match.id);
           return (
-            <div key={match.id} className="relative">
+            <div key={match.id}>
               <MatchCard
                 id={match.id}
                 team1={match.team_1}
@@ -113,20 +113,9 @@ export default function PredictionsPage() {
                 startTime={match.start_time}
                 status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'}
                 venue={match.venue}
+                hasPredicted={!!prediction}
+                pointsEarned={showPoints && prediction?.is_processed ? prediction.points_earned : undefined}
               />
-              {prediction && (
-                <div className="absolute top-3 right-3">
-                  {showPoints && prediction.is_processed ? (
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-xs">
-                      +{prediction.points_earned} pts
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-xs">
-                      Predicted
-                    </Badge>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
