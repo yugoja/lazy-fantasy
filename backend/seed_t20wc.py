@@ -1,7 +1,7 @@
 """
 Seed script for ICC Men's T20 World Cup 2026 data.
-Reads fixtures from seed_t20wc.json, creates tournament, teams, players, and group-stage matches.
-Super Eight and Knockout matches are skipped (teams TBD).
+Reads fixtures from seed_t20wc.json, creates tournament, teams, players, and group-stage + Super Eight matches.
+Knockout matches are skipped (teams TBD).
 """
 import sys
 import json
@@ -228,13 +228,13 @@ def seed_t20wc():
             db.commit()
             print(f"  {short_name:>4} {team_name} — {len(squad)} players")
 
-        # Create Group Stage Matches (skip Super Eight / Knockout — teams TBD)
-        print("\nCreating group stage matches...")
+        # Create Group Stage + Super Eight Matches (skip Knockout — teams TBD)
+        print("\nCreating group stage + Super Eight matches...")
         match_count = 0
         skipped = 0
 
         for fixture in fixtures:
-            if fixture["group"] in ("Super Eight", "Knockout"):
+            if fixture["group"] == "Knockout":
                 skipped += 1
                 continue
 

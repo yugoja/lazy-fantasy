@@ -363,7 +363,7 @@
         "match_no": 41,
         "date": "2026-02-21",
         "time": "07:00 PM",
-        "teams": "Y2 vs Y3",
+        "teams": "New Zealand vs Pakistan",
         "group": "Super Eight",
         "venue": "Colombo",
         "stadium": "R. Premadasa Stadium"
@@ -372,16 +372,16 @@
         "match_no": 42,
         "date": "2026-02-22",
         "time": "03:00 PM",
-        "teams": "Y1 vs Y4",
+        "teams": "England vs Sri Lanka",
         "group": "Super Eight",
         "venue": "Kandy",
-        "stadium": "Pallekele International Stadium"
+        "stadium": "Pallekele International Cricket Stadium"
     },
     {
         "match_no": 43,
         "date": "2026-02-22",
         "time": "07:00 PM",
-        "teams": "X1 vs X4",
+        "teams": "India vs South Africa",
         "group": "Super Eight",
         "venue": "Ahmedabad",
         "stadium": "Narendra Modi Stadium"
@@ -390,7 +390,7 @@
         "match_no": 44,
         "date": "2026-02-23",
         "time": "07:00 PM",
-        "teams": "X2 vs X3",
+        "teams": "Zimbabwe vs West Indies",
         "group": "Super Eight",
         "venue": "Mumbai",
         "stadium": "Wankhede Stadium"
@@ -399,16 +399,16 @@
         "match_no": 45,
         "date": "2026-02-24",
         "time": "07:00 PM",
-        "teams": "Y1 vs Y3",
+        "teams": "England vs Pakistan",
         "group": "Super Eight",
         "venue": "Kandy",
-        "stadium": "Pallekele International Stadium"
+        "stadium": "Pallekele International Cricket Stadium"
     },
     {
         "match_no": 46,
         "date": "2026-02-25",
         "time": "07:00 PM",
-        "teams": "Y2 vs Y4",
+        "teams": "New Zealand vs Sri Lanka",
         "group": "Super Eight",
         "venue": "Colombo",
         "stadium": "R. Premadasa Stadium"
@@ -417,7 +417,7 @@
         "match_no": 47,
         "date": "2026-02-26",
         "time": "03:00 PM",
-        "teams": "X3 vs X4",
+        "teams": "West Indies vs South Africa",
         "group": "Super Eight",
         "venue": "Ahmedabad",
         "stadium": "Narendra Modi Stadium"
@@ -426,7 +426,7 @@
         "match_no": 48,
         "date": "2026-02-26",
         "time": "07:00 PM",
-        "teams": "X1 vs X2",
+        "teams": "India vs Zimbabwe",
         "group": "Super Eight",
         "venue": "Chennai",
         "stadium": "M. A. Chidambaram Stadium"
@@ -435,7 +435,7 @@
         "match_no": 49,
         "date": "2026-02-27",
         "time": "07:00 PM",
-        "teams": "Y1 vs Y2",
+        "teams": "England vs New Zealand",
         "group": "Super Eight",
         "venue": "Colombo",
         "stadium": "R. Premadasa Stadium"
@@ -444,16 +444,16 @@
         "match_no": 50,
         "date": "2026-02-28",
         "time": "07:00 PM",
-        "teams": "Y3 vs Y4",
+        "teams": "Pakistan vs Sri Lanka",
         "group": "Super Eight",
         "venue": "Kandy",
-        "stadium": "Pallekele International Stadium"
+        "stadium": "Pallekele International Cricket Stadium"
     },
     {
         "match_no": 51,
         "date": "2026-03-01",
         "time": "03:00 PM",
-        "teams": "X2 vs X4",
+        "teams": "Zimbabwe vs South Africa",
         "group": "Super Eight",
         "venue": "Delhi",
         "stadium": "Arun Jaitley Stadium"
@@ -462,7 +462,7 @@
         "match_no": 52,
         "date": "2026-03-01",
         "time": "07:00 PM",
-        "teams": "X1 vs X3",
+        "teams": "India vs West Indies",
         "group": "Super Eight",
         "venue": "Kolkata",
         "stadium": "Eden Gardens"
