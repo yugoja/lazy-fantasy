@@ -40,6 +40,7 @@ interface MatchData {
   team_2: Team;
   team_1_players: Player[];
   team_2_players: Player[];
+  lineup_announced: boolean;
 }
 
 function getInitials(name: string) {
@@ -255,9 +256,14 @@ export default function PredictPage() {
 
       {/* Match Header */}
       <div>
-        <h1 className="text-xl font-bold">
-          {matchData.team_1.name} vs {matchData.team_2.name}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold">
+            {matchData.team_1.name} vs {matchData.team_2.name}
+          </h1>
+          {matchData.lineup_announced && (
+            <Badge className="bg-green-600 text-[10px]">Playing XI</Badge>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground mt-1">
           {new Date(Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </p>

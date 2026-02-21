@@ -106,13 +106,14 @@ async def get_players_for_match(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Match not found",
         )
-    
-    team_1_players, team_2_players = players_result
-    
+
+    team_1_players, team_2_players, lineup_announced = players_result
+
     return MatchPlayersResponse(
         match_id=match.id,
         team_1=TeamResponse.model_validate(match.team_1),
         team_2=TeamResponse.model_validate(match.team_2),
         team_1_players=[PlayerResponse.model_validate(p) for p in team_1_players],
         team_2_players=[PlayerResponse.model_validate(p) for p in team_2_players],
+        lineup_announced=lineup_announced,
     )

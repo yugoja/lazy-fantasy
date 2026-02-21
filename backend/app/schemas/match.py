@@ -55,3 +55,4 @@ class MatchPlayersResponse(BaseModel):
     team_2: TeamResponse
     team_1_players: list[PlayerResponse]
     team_2_players: list[PlayerResponse]
+    lineup_announced: bool = False

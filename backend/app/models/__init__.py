@@ -7,6 +7,7 @@ from app.models.team import Team
 from app.models.player import Player
 from app.models.match import Match, MatchStatus
 from app.models.prediction import Prediction
+from app.models.match_lineup import MatchLineup
 
 __all__ = [
     "Base",
@@ -19,4 +20,5 @@ __all__ = [
     "Match",
     "MatchStatus",
     "Prediction",
+    "MatchLineup",
 ]

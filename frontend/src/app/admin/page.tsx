@@ -150,12 +150,19 @@ export default function AdminPage() {
                     </Badge>
                   </div>
                   <div className="flex gap-2">
+                    <Link href={`/admin/matches/${match.id}/lineup`} className="flex-1">
+                      <Button variant="secondary" size="sm" className="w-full text-xs">
+                        Set Lineup
+                      </Button>
+                    </Link>
                     <Link href={`/admin/matches/${match.id}/result`} className="flex-1">
                       <Button size="sm" className="w-full text-xs">
                         Set Result
                       </Button>
                     </Link>
-                    <Link href={`/admin/matches/${match.id}/predictions`} className="flex-1">
+                  </div>
+                  <div>
+                    <Link href={`/admin/matches/${match.id}/predictions`}>
                       <Button variant="outline" size="sm" className="w-full text-xs">
                         View Predictions
                       </Button>

@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Match, MatchStatus, Team, Tournament, Player, User
-from app.schemas.admin import MatchCreate, MatchResultCreate
-from app.schemas.match import MatchResponse, TeamResponse
+from app.models import Match, MatchStatus, Team, Tournament, Player, User, MatchLineup
+from app.schemas.admin import MatchCreate, MatchResultCreate, SetLineupRequest
+from app.schemas.match import MatchResponse, TeamResponse, PlayerResponse
 from app.services.auth import get_current_admin_user
 from app.services.scoring import calculate_scores
 
@@ -228,5 +228,121 @@ async def get_match_predictions(
         "team_2": {"id": match.team_2.id, "name": match.team_2.name, "short_name": match.team_2.short_name},
         "status": match.status.value,
         "predictions": result,
+    }
+
+
+@router.get("/matches/{match_id}/squad")
+async def get_match_squad(
+    match_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Get full squad for both teams in a match (Admin only). Ignores lineup filtering."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Match not found",
+        )
+
+    team_1_players = db.query(Player).filter(Player.team_id == match.team_1_id).all()
+    team_2_players = db.query(Player).filter(Player.team_id == match.team_2_id).all()
+
+    return {
+        "match_id": match_id,
+        "team_1": {"id": match.team_1.id, "name": match.team_1.name, "short_name": match.team_1.short_name},
+        "team_2": {"id": match.team_2.id, "name": match.team_2.name, "short_name": match.team_2.short_name},
+        "team_1_players": [PlayerResponse.model_validate(p).model_dump() for p in team_1_players],
+        "team_2_players": [PlayerResponse.model_validate(p).model_dump() for p in team_2_players],
+    }
+
+
+@router.get("/matches/{match_id}/lineup")
+async def get_match_lineup(
+    match_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Get current lineup for a match (Admin only)."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Match not found",
+        )
+
+    lineup_rows = db.query(MatchLineup).filter(MatchLineup.match_id == match_id).all()
+    player_ids = [row.player_id for row in lineup_rows]
+
+    return {"match_id": match_id, "player_ids": player_ids}
+
+
+@router.post("/matches/{match_id}/lineup")
+async def set_match_lineup(
+    match_id: int,
+    lineup_data: SetLineupRequest,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Set playing XI for a match (Admin only).
+
+    Accepts 22 player IDs (11 per team). Validates all players belong to
+    one of the two match teams and that exactly 11 are selected per team.
+    """
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Match not found",
+        )
+
+    if len(lineup_data.player_ids) != 22:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Expected 22 players (11 per team), got {len(lineup_data.player_ids)}",
+        )
+
+    if len(set(lineup_data.player_ids)) != 22:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Duplicate player IDs found",
+        )
+
+    valid_team_ids = {match.team_1_id, match.team_2_id}
+    players = db.query(Player).filter(Player.id.in_(lineup_data.player_ids)).all()
+
+    if len(players) != 22:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Some player IDs are invalid",
+        )
+
+    team_1_count = sum(1 for p in players if p.team_id == match.team_1_id)
+    team_2_count = sum(1 for p in players if p.team_id == match.team_2_id)
+    invalid_count = sum(1 for p in players if p.team_id not in valid_team_ids)
+
+    if invalid_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Some players don't belong to either match team",
+        )
+
+    if team_1_count != 11 or team_2_count != 11:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Need exactly 11 per team. Got {team_1_count} for {match.team_1.short_name} and {team_2_count} for {match.team_2.short_name}",
+        )
+
+    # Upsert: delete existing, insert new
+    db.query(MatchLineup).filter(MatchLineup.match_id == match_id).delete()
+    for pid in lineup_data.player_ids:
+        db.add(MatchLineup(match_id=match_id, player_id=pid))
+    db.commit()
+
+    return {
+        "match_id": match_id,
+        "player_ids": lineup_data.player_ids,
+        "message": "Lineup set successfully",
     }
 

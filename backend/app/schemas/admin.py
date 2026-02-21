@@ -16,3 +16,8 @@ class MatchResultCreate(BaseModel):
     result_most_runs_player_id: int
     result_most_wickets_player_id: int
     result_pom_player_id: int
+
+
+class SetLineupRequest(BaseModel):
+    """Schema for setting match playing XI."""
+    player_ids: list[int]
