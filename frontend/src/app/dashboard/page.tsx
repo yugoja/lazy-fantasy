@@ -98,9 +98,10 @@ export default function DashboardPage() {
         ? Math.round((processedPredictions / predictions.length) * 100)
         : 0;
 
-    // Get upcoming matches
+    // Get upcoming matches (scheduled and start time in the future)
+    const now = new Date();
     const upcomingMatches = matches
-        .filter(m => m.status === 'SCHEDULED')
+        .filter(m => m.status === 'SCHEDULED' && new Date(m.start_time) > now)
         .slice(0, 3);
 
     const predictedMatchIds = new Set(predictions.map(p => p.match_id));

@@ -87,7 +87,8 @@ export default function PredictionsPage() {
 
   const predictionByMatch = new Map(predictions.map(p => [p.match_id, p]));
 
-  const upcoming = matches.filter(m => m.status === 'SCHEDULED');
+  const now = new Date();
+  const upcoming = matches.filter(m => m.status === 'SCHEDULED' && new Date(m.start_time) > now);
   const completed = matches.filter(m => m.status === 'COMPLETED');
 
   const renderMatches = (filteredMatches: Match[], showPoints = false) => {
