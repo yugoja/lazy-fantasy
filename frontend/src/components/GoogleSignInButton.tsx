@@ -31,7 +31,7 @@ declare global {
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-export default function GoogleSignInButton({ onError }: { onError?: (msg: string) => void }) {
+export default function GoogleSignInButton({ onError, redirectTo }: { onError?: (msg: string) => void; redirectTo?: string }) {
     const buttonRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const { login } = useAuth();
@@ -41,7 +41,7 @@ export default function GoogleSignInButton({ onError }: { onError?: (msg: string
             try {
                 const result = await googleLogin(response.credential);
                 login(result.access_token, result.username);
-                router.push('/dashboard');
+                router.push(redirectTo || '/dashboard');
             } catch (err) {
                 if (err instanceof ApiError) {
                     onError?.(err.message);
@@ -50,7 +50,7 @@ export default function GoogleSignInButton({ onError }: { onError?: (msg: string
                 }
             }
         },
-        [login, router, onError],
+        [login, router, onError, redirectTo],
     );
 
     useEffect(() => {

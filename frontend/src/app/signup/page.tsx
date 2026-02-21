@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signup, login as apiLogin, ApiError } from '@/lib/api';
@@ -19,8 +19,15 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [redirectTo, setRedirectTo] = useState('/dashboard');
     const router = useRouter();
     const { login } = useAuth();
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect');
+        if (redirect) setRedirectTo(redirect);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,7 +50,7 @@ export default function SignupPage() {
             // Auto login after signup
             const loginResponse = await apiLogin(username, password);
             login(loginResponse.access_token, username);
-            router.push('/dashboard');
+            router.push(redirectTo);
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.message);
@@ -75,7 +82,7 @@ export default function SignupPage() {
                             </Card>
                         )}
 
-                        <GoogleSignInButton onError={setError} />
+                        <GoogleSignInButton onError={setError} redirectTo={redirectTo} />
 
                         <div className="relative my-4">
                             <div className="absolute inset-0 flex items-center">
@@ -142,7 +149,7 @@ export default function SignupPage() {
 
                         <p className="text-center text-sm text-muted-foreground mt-4">
                             Already have an account?{' '}
-                            <Link href="/login" className="text-primary hover:underline font-medium">
+                            <Link href={redirectTo !== '/dashboard' ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'} className="text-primary hover:underline font-medium">
                                 Sign in
                             </Link>
                         </p>

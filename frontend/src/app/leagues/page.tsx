@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { getMyLeagues, joinLeague, createLeague, ApiError } from '@/lib/api';
@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Shield, ChevronRight, LogIn, Plus, Copy, CheckCircle2 } from 'lucide-react';
+import { Shield, ChevronRight, LogIn, Plus, Copy, CheckCircle2, Share2 } from 'lucide-react';
 
 interface League {
   id: number;
@@ -28,8 +28,17 @@ interface League {
 }
 
 export default function LeaguesPage() {
+  return (
+    <Suspense>
+      <LeaguesContent />
+    </Suspense>
+  );
+}
+
+function LeaguesContent() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [leagues, setLeagues] = useState<League[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,19 +60,38 @@ export default function LeaguesPage() {
   // Created league info
   const [createdLeague, setCreatedLeague] = useState<League | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedLeagueId, setCopiedLeagueId] = useState<number | null>(null);
   const [loadError, setLoadError] = useState('');
+
+  const getInviteLink = (code: string) => {
+    if (typeof window === 'undefined') return code;
+    return `${window.location.origin}/leagues?join=${code}`;
+  };
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/login');
+      const joinCode = searchParams.get('join');
+      const redirect = joinCode
+        ? `/login?redirect=${encodeURIComponent(`/leagues?join=${joinCode}`)}`
+        : '/login';
+      router.push(redirect);
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, router, searchParams]);
 
   useEffect(() => {
     if (isAuthenticated) {
       loadLeagues();
     }
   }, [isAuthenticated]);
+
+  // Auto-open join dialog if ?join=CODE is in URL
+  useEffect(() => {
+    const code = searchParams.get('join');
+    if (code && isAuthenticated) {
+      setJoinCode(code.toUpperCase());
+      setJoinOpen(true);
+    }
+  }, [searchParams, isAuthenticated]);
 
   const loadLeagues = async () => {
     try {
@@ -126,9 +154,12 @@ export default function LeaguesPage() {
     }
   };
 
-  const copyInviteCode = () => {
-    if (createdLeague) {
-      navigator.clipboard.writeText(createdLeague.invite_code);
+  const copyInviteLink = (code: string, leagueId?: number) => {
+    navigator.clipboard.writeText(getInviteLink(code));
+    if (leagueId) {
+      setCopiedLeagueId(leagueId);
+      setTimeout(() => setCopiedLeagueId(null), 2000);
+    } else {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -200,27 +231,39 @@ export default function LeaguesPage() {
       ) : (
         <div className="space-y-3">
           {leagues.map((league) => (
-            <Link key={league.id} href={`/leaderboard?league=${league.id}`}>
-              <Card className="p-4 hover:border-primary/50 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Shield className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm">{league.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-[10px]">
-                        {league.invite_code}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-primary text-xs font-medium">
-                    Board
-                    <ChevronRight className="h-4 w-4" />
+            <Card key={league.id} className="p-4 hover:border-primary/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm">{league.name}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="text-[10px]">
+                      {league.invite_code}
+                    </Badge>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        copyInviteLink(league.invite_code, league.id);
+                      }}
+                      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                      aria-label="Copy invite link"
+                    >
+                      {copiedLeagueId === league.id ? (
+                        <><CheckCircle2 className="h-3 w-3 text-primary" /> Copied!</>
+                      ) : (
+                        <><Share2 className="h-3 w-3" /> Share</>
+                      )}
+                    </button>
                   </div>
                 </div>
-              </Card>
-            </Link>
+                <Link href={`/leaderboard?league=${league.id}`} className="flex items-center gap-1 text-primary text-xs font-medium">
+                  Board
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </Card>
           ))}
         </div>
       )}
@@ -312,20 +355,20 @@ export default function LeaguesPage() {
                 </p>
               </div>
 
-              {/* Copy Button */}
+              {/* Copy Link */}
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Invite Link</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     readOnly
-                    value={createdLeague.invite_code}
-                    className="text-sm"
+                    value={getInviteLink(createdLeague.invite_code)}
+                    className="text-sm text-xs"
                   />
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={copyInviteCode}
-                    aria-label="Copy invite code"
+                    onClick={() => copyInviteLink(createdLeague.invite_code)}
+                    aria-label="Copy invite link"
                   >
                     {copied ? (
                       <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -337,7 +380,7 @@ export default function LeaguesPage() {
               </div>
 
               <p className="text-xs text-muted-foreground text-center">
-                Share this to invite friends to <strong>{createdLeague.name}</strong>
+                Share this link to invite friends to <strong>{createdLeague.name}</strong>
               </p>
             </div>
           )}

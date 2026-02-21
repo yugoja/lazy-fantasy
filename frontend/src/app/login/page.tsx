@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { login as apiLogin, ApiError } from '@/lib/api';
@@ -17,8 +17,15 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [redirectTo, setRedirectTo] = useState('/dashboard');
     const router = useRouter();
     const { login } = useAuth();
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect');
+        if (redirect) setRedirectTo(redirect);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,7 +35,7 @@ export default function LoginPage() {
         try {
             const response = await apiLogin(username, password);
             login(response.access_token, username);
-            router.push('/dashboard');
+            router.push(redirectTo);
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.message);
@@ -60,7 +67,7 @@ export default function LoginPage() {
                             </Card>
                         )}
 
-                        <GoogleSignInButton onError={setError} />
+                        <GoogleSignInButton onError={setError} redirectTo={redirectTo} />
 
                         <div className="relative my-4">
                             <div className="absolute inset-0 flex items-center">
@@ -103,7 +110,7 @@ export default function LoginPage() {
 
                         <p className="text-center text-sm text-muted-foreground mt-4">
                             Don&apos;t have an account?{' '}
-                            <Link href="/signup" className="text-primary hover:underline font-medium">
+                            <Link href={redirectTo !== '/dashboard' ? `/signup?redirect=${encodeURIComponent(redirectTo)}` : '/signup'} className="text-primary hover:underline font-medium">
                                 Sign up
                             </Link>
                         </p>
