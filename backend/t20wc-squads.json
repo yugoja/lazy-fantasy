@@ -40,7 +40,7 @@
                 "role": "Bowler"
             },
             {
-                "name": "Mohammed Siraj",
+                "name": "Harshit Rana",
                 "role": "Bowler"
             },
             {
@@ -350,8 +350,8 @@
                 "role": "Batter"
             },
             {
-                "name": "Heinrich Klaasen",
-                "role": "Wicketkeeper-Batter"
+                "name": "Jason Smith",
+                "role": "All-rounder"
             },
             {
                 "name": "Marco Jansen",
@@ -456,7 +456,7 @@
                 "role": "Bowler"
             },
             {
-                "name": "Michael Bracewell",
+                "name": "Cole McConchie",
                 "role": "All-rounder"
             }
         ]
@@ -478,11 +478,11 @@
                 "role": "Batter"
             },
             {
-                "name": "Nicholas Pooran",
-                "role": "Wicketkeeper-Batter"
+                "name": "Quentin Sampson",
+                "role": "Bowler"
             },
             {
-                "name": "Andre Russell",
+                "name": "Roston Chase",
                 "role": "All-rounder"
             },
             {
@@ -510,7 +510,7 @@
                 "role": "Bowler"
             },
             {
-                "name": "Alzarri Joseph",
+                "name": "Jayden Seales",
                 "role": "Bowler"
             },
             {
