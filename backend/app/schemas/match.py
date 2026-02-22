@@ -69,3 +69,10 @@ class MatchPlayersResponse(BaseModel):
     team_1_players: list[PlayerResponse]
     team_2_players: list[PlayerResponse]
     lineup_announced: bool = False
+    start_time: datetime
+
+    @field_serializer("start_time")
+    def serialize_start_time(self, v: datetime) -> str:
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.isoformat()

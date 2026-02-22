@@ -41,6 +41,7 @@ interface MatchData {
   team_1_players: Player[];
   team_2_players: Player[];
   lineup_announced: boolean;
+  start_time: string;
 }
 
 function getInitials(name: string) {
@@ -265,7 +266,8 @@ export default function PredictPage() {
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          {new Date(Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          {new Date(matchData.start_time).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          {' '}&middot; {new Date(matchData.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
         </p>
       </div>
 

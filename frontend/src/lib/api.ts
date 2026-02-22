@@ -177,6 +177,7 @@ export async function getMatchPlayers(matchId: number) {
         team_1_players: Array<{ id: number; name: string; team_id: number; role: string }>;
         team_2_players: Array<{ id: number; name: string; team_id: number; role: string }>;
         lineup_announced: boolean;
+        start_time: string;
     }>(`/matches/${matchId}/players`);
 }
 

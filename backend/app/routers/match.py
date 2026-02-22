@@ -128,4 +128,5 @@ async def get_players_for_match(
         team_1_players=[PlayerResponse.model_validate(p) for p in team_1_players],
         team_2_players=[PlayerResponse.model_validate(p) for p in team_2_players],
         lineup_announced=lineup_announced,
+        start_time=match.start_time,
     )

@@ -585,10 +585,18 @@
             },
             {
                 "name": "Dushan Hemantha",
-                "role": "Bowler"
+                "role": "All-rounder"
             },
             {
                 "name": "Pramod Madushan",
+                "role": "Bowler"
+            },
+            {
+                "name": "Kamil Mishara",
+                "role": "Wicketkeeper-Batter"
+            },
+            {
+                "name": "Dilshan Madushanka",
                 "role": "Bowler"
             }
         ]
