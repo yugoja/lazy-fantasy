@@ -80,6 +80,7 @@ export function MatchCard({
   const isCompleted = status === 'COMPLETED';
   const isUpcoming = status === 'UPCOMING' || status === 'SCHEDULED';
   const countdown = useCountdown(startTime);
+  const isLocked = countdown === 'Locked';
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -187,7 +188,7 @@ export function MatchCard({
         </div>
 
         {/* Action Button */}
-        {isUpcoming && (
+        {isUpcoming && !isLocked && (
           <Link href={`/matches/${id}/predict`}>
             <Button className={cn('w-full', hasPredicted && 'border-primary text-primary')} size="sm" variant={hasPredicted ? 'outline' : 'default'}>
               {hasPredicted ? 'Update Prediction' : 'Make Prediction'}

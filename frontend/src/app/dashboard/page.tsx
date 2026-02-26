@@ -106,12 +106,16 @@ export default function DashboardPage() {
         .slice(0, 3);
 
     const predictedMatchIds = new Set(predictions.map(p => p.match_id));
-    const unpredictedUpcoming = upcomingMatches.filter(m => !predictedMatchIds.has(m.id));
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+    const unpredictedToday = upcomingMatches.filter(
+        m => !predictedMatchIds.has(m.id) && new Date(m.start_time) >= todayStart && new Date(m.start_time) <= todayEnd
+    );
 
     const heroContent = (() => {
-        if (unpredictedUpcoming.length > 0) {
-            const count = unpredictedUpcoming.length;
-            const next = unpredictedUpcoming[0];
+        if (unpredictedToday.length > 0) {
+            const count = unpredictedToday.length;
+            const next = unpredictedToday[0];
             const hoursUntil = Math.round(
                 (new Date(next.start_time).getTime() - Date.now()) / 36e5
             );

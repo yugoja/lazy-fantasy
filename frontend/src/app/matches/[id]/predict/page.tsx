@@ -105,7 +105,12 @@ export default function PredictPage() {
       ]);
 
       if (matchResult.status === 'fulfilled') {
-        setMatchData(matchResult.value);
+        const data = matchResult.value;
+        if (new Date(data.start_time) <= new Date()) {
+          router.push('/predictions');
+          return;
+        }
+        setMatchData(data);
       } else {
         setError('Failed to load match data');
       }
