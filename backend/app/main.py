@@ -1,4 +1,5 @@
 import sentry_sdk
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,6 +7,8 @@ from app.config import settings
 from app.database import engine
 from app.models import Base
 from app.routers import auth, league, match, prediction, admin
+from app.routers import notifications
+from app.services.scheduler import start_scheduler, stop_scheduler
 
 if settings.SENTRY_DSN:
     sentry_sdk.init(
@@ -18,11 +21,20 @@ if settings.SENTRY_DSN:
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
+    stop_scheduler()
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Fantasy Cricket League",
     description="Backend API for Fantasy Cricket League MVP",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 # CORS configuration (configurable via environment)
@@ -40,6 +52,7 @@ app.include_router(league.router)
 app.include_router(match.router)
 app.include_router(prediction.router)
 app.include_router(admin.router)
+app.include_router(notifications.router)
 
 
 @app.get("/")

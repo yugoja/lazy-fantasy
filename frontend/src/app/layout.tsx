@@ -4,6 +4,8 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/Header";
+import InstallPrompt from "@/components/InstallPrompt";
+import NotificationPermission from "@/components/NotificationPermission";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "sonner";
 
@@ -55,6 +57,8 @@ export default function RootLayout({
         <AuthProvider>
           <Header />
           <main className="pb-20">{children}</main>
+          <InstallPrompt />
+          <NotificationPermission />
           <Toaster position="top-center" richColors />
         </AuthProvider>
       </body>

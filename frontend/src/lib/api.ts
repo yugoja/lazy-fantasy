@@ -169,6 +169,17 @@ export async function getMyPredictionsDetailed() {
     return request<PredictionDetail[]>('/predictions/my/detailed');
 }
 
+export async function getVapidPublicKey() {
+    return request<{ public_key: string }>('/notifications/vapid-public-key');
+}
+
+export async function subscribePush(endpoint: string, auth: string, p256dh: string) {
+    return request<{ status: string }>('/notifications/push/subscribe', {
+        method: 'POST',
+        body: JSON.stringify({ endpoint, auth, p256dh }),
+    });
+}
+
 export async function getMatchPlayers(matchId: number) {
     return request<{
         match_id: number;

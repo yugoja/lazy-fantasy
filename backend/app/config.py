@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     # Google SSO
     GOOGLE_CLIENT_ID: str = ""
 
+    # Resend (email reminders)
+    RESEND_API_KEY: str = ""
+
+    # Web Push / VAPID (push notifications)
+    VAPID_PUBLIC_KEY: str = ""
+    VAPID_PRIVATE_KEY: str = ""
+    VAPID_CLAIMS_EMAIL: str = ""
+
     # CORS Configuration (comma-separated origins for production)
     CORS_ORIGINS: str = "http://localhost:3000"
     FRONTEND_URL: str = "http://localhost:3000"
