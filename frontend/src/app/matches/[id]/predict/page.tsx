@@ -419,15 +419,55 @@ export default function PredictPage() {
       {/* Success Dialog */}
       <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader className="items-center text-center">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
-              <CheckCircle2 className="h-8 w-8 text-primary" />
+          {/* Animated icon */}
+          <div className="flex justify-center mt-2 mb-1">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+              <div className="relative h-16 w-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <CheckCircle2 className="h-8 w-8 text-primary" />
+              </div>
             </div>
-            <DialogTitle className="text-xl">{isEditing ? 'Prediction Updated!' : 'Prediction Submitted!'}</DialogTitle>
+          </div>
+
+          <DialogHeader className="items-center text-center pb-0">
+            <DialogTitle className="text-xl">
+              {isEditing ? 'Prediction Updated!' : "You're locked in!"}
+            </DialogTitle>
             <DialogDescription>
-              Your predictions for {matchData.team_1.short_name} vs {matchData.team_2.short_name} have been {isEditing ? 'updated' : 'recorded'}.
+              {matchData.team_1.short_name} vs {matchData.team_2.short_name}
             </DialogDescription>
           </DialogHeader>
+
+          {/* Summary card */}
+          <div className="rounded-lg border border-border bg-muted/30 divide-y divide-border text-sm">
+            {(() => {
+              const winnerTeam = winnerId === matchData.team_1.id ? matchData.team_1 : matchData.team_2;
+              const runsPlayer = allPlayers.find(p => p.id === mostRunsId);
+              const wicketsPlayer = allPlayers.find(p => p.id === mostWicketsId);
+              const pomPlayer = allPlayers.find(p => p.id === pomId);
+              const rows = [
+                { icon: <Trophy className="h-3.5 w-3.5 text-primary" />, label: 'Winner', value: winnerTeam?.short_name, pts: 10 },
+                { icon: <Target className="h-3.5 w-3.5 text-primary" />, label: 'Top Bat', value: runsPlayer?.name.split(' ').pop(), pts: 20 },
+                { icon: <Target className="h-3.5 w-3.5 text-primary" />, label: 'Top Bowl', value: wicketsPlayer?.name.split(' ').pop(), pts: 20 },
+                { icon: <Star className="h-3.5 w-3.5 text-primary" />, label: 'MOTM', value: pomPlayer?.name.split(' ').pop(), pts: 50 },
+              ];
+              return rows.map((row) => (
+                <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    {row.icon}
+                    <span className="text-xs">{row.label}</span>
+                  </div>
+                  <span className="font-medium">{row.value}</span>
+                  <span className="text-xs text-muted-foreground">+{row.pts} pts</span>
+                </div>
+              ));
+            })()}
+            <div className="flex items-center justify-between px-4 py-2.5 bg-primary/5">
+              <span className="text-xs text-muted-foreground">Potential total</span>
+              <span className="font-bold text-primary">Up to 100 pts</span>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-3">
             <a
               href={`https://wa.me/?text=${encodeURIComponent(buildShareText(matchData.team_1.short_name, matchData.team_2.short_name, matchData.start_time))}`}

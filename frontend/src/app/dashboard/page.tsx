@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Shield, ChevronRight, Zap, Target, Trophy, Clock } from 'lucide-react';
+import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 
 interface League {
     id: number;
@@ -186,6 +187,10 @@ export default function DashboardPage() {
 
     return (
         <div className="container-mobile py-6 space-y-6">
+            <OnboardingChecklist
+                hasPredicted={predictions.length > 0}
+                hasLeague={leagues.length > 0}
+            />
             {heroContent}
 
             {/* Stats Overview */}

@@ -19,7 +19,7 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [redirectTo, setRedirectTo] = useState('/dashboard');
+    const [redirectTo, setRedirectTo] = useState('/predictions');
     const router = useRouter();
     const { login } = useAuth();
 
@@ -149,7 +149,7 @@ export default function SignupPage() {
 
                         <p className="text-center text-sm text-muted-foreground mt-4">
                             Already have an account?{' '}
-                            <Link href={redirectTo !== '/dashboard' ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'} className="text-primary hover:underline font-medium">
+                            <Link href={redirectTo !== '/predictions' ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'} className="text-primary hover:underline font-medium">
                                 Sign in
                             </Link>
                         </p>
