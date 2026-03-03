@@ -17,7 +17,7 @@ async function registerPushSubscription(vapidPublicKey: string): Promise<void> {
   const registration = await navigator.serviceWorker.ready;
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer,
   });
   const { endpoint, keys } = subscription.toJSON() as {
     endpoint: string;
