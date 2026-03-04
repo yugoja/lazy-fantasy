@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trophy } from 'lucide-react';
+import { Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface League {
@@ -37,6 +37,7 @@ function LeaderboardContent() {
   const [selectedLeagueId, setSelectedLeagueId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [boardLoading, setBoardLoading] = useState(false);
+  const [prevRanks, setPrevRanks] = useState<Record<number, number>>({});
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -73,7 +74,20 @@ function LeaderboardContent() {
     setBoardLoading(true);
     try {
       const data = await getLeaderboard(leagueId);
-      setEntries(data.entries);
+      const entries = data.entries;
+
+      // Load previously stored ranks for this league
+      const storageKey = `leaderboard-ranks-${leagueId}`;
+      const stored = localStorage.getItem(storageKey);
+      const prev: Record<number, number> = stored ? JSON.parse(stored) : {};
+      setPrevRanks(prev);
+
+      // Save current ranks for next visit
+      const current: Record<number, number> = {};
+      entries.forEach((e: LeaderboardEntry) => { current[e.user_id] = e.rank; });
+      localStorage.setItem(storageKey, JSON.stringify(current));
+
+      setEntries(entries);
     } catch {
       setEntries([]);
     } finally {
@@ -223,6 +237,8 @@ function LeaderboardContent() {
             <div className="divide-y divide-border">
               {entries.map((entry) => {
                 const isCurrentUser = entry.username === username;
+                const prev = prevRanks[entry.user_id];
+                const delta = prev != null ? prev - entry.rank : null;
                 return (
                   <div
                     key={entry.user_id}
@@ -252,9 +268,25 @@ function LeaderboardContent() {
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className="font-bold text-sm">{entry.total_points}</div>
-                      <div className="text-[10px] text-muted-foreground">pts</div>
+                    <div className="flex items-center gap-2">
+                      {delta !== null && delta !== 0 && (
+                        <div className={cn(
+                          'flex items-center gap-0.5 text-[10px] font-medium',
+                          delta > 0 ? 'text-green-500' : 'text-red-500'
+                        )}>
+                          {delta > 0
+                            ? <TrendingUp className="h-3 w-3" />
+                            : <TrendingDown className="h-3 w-3" />}
+                          {Math.abs(delta)}
+                        </div>
+                      )}
+                      {delta === 0 && (
+                        <Minus className="h-3 w-3 text-muted-foreground/50" />
+                      )}
+                      <div className="text-right">
+                        <div className="font-bold text-sm">{entry.total_points}</div>
+                        <div className="text-[10px] text-muted-foreground">pts</div>
+                      </div>
                     </div>
                   </div>
                 );
