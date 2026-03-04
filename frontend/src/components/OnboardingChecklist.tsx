@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isPushSupported, enablePushNotifications, isIOS, isStandalone } from '@/lib/push';
 
 const STORAGE_KEY = 'onboarding-dismissed';
 
@@ -17,12 +18,16 @@ export function OnboardingChecklist({
   hasLeague: boolean;
 }) {
   const [notifGranted, setNotifGranted] = useState(false);
+  const [pushSupported, setPushSupported] = useState(true);
+  const [iosNonStandalone, setIosNonStandalone] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     if (localStorage.getItem(STORAGE_KEY)) setDismissed(true);
+    setPushSupported(isPushSupported());
+    setIosNonStandalone(isIOS() && !isStandalone());
     if (typeof Notification !== 'undefined') {
       setNotifGranted(Notification.permission === 'granted');
     }
@@ -34,12 +39,12 @@ export function OnboardingChecklist({
   };
 
   const handleEnableNotifications = async () => {
-    if (typeof Notification === 'undefined') return;
-    const perm = await Notification.requestPermission();
-    setNotifGranted(perm === 'granted');
+    const ok = await enablePushNotifications();
+    setNotifGranted(ok);
   };
 
-  const allDone = hasPredicted && hasLeague && notifGranted;
+  const allDone =
+    hasPredicted && hasLeague && (notifGranted || (!pushSupported && !iosNonStandalone));
 
   if (!mounted || dismissed || allDone) return null;
 
@@ -66,20 +71,41 @@ export function OnboardingChecklist({
         </Link>
       ),
     },
-    {
-      done: notifGranted,
-      label: 'Enable match reminders',
-      action: (
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs h-7 shrink-0"
-          onClick={handleEnableNotifications}
-        >
-          Enable
-        </Button>
-      ),
-    },
+    ...(pushSupported
+      ? [
+          {
+            done: notifGranted,
+            label: 'Enable match reminders',
+            action: (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs h-7 shrink-0"
+                onClick={handleEnableNotifications}
+              >
+                Enable
+              </Button>
+            ),
+          },
+        ]
+      : iosNonStandalone
+        ? [
+            {
+              done: false,
+              label: 'Install app for reminders',
+              action: (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-7 shrink-0"
+                  onClick={() => window.dispatchEvent(new Event('show-ios-install'))}
+                >
+                  How?
+                </Button>
+              ),
+            },
+          ]
+        : []),
   ];
 
   const completedCount = steps.filter((s) => s.done).length;

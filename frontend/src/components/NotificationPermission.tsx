@@ -2,29 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { getVapidPublicKey, subscribePush } from '@/lib/api';
+import { getVapidPublicKey } from '@/lib/api';
+import { registerPushSubscription } from '@/lib/push';
 
 const PROMPTED_KEY = 'push-permission-prompted';
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = atob(base64);
-  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
-}
-
-async function registerPushSubscription(vapidPublicKey: string): Promise<void> {
-  const registration = await navigator.serviceWorker.ready;
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer,
-  });
-  const { endpoint, keys } = subscription.toJSON() as {
-    endpoint: string;
-    keys: { auth: string; p256dh: string };
-  };
-  await subscribePush(endpoint, keys.auth, keys.p256dh);
-}
 
 export default function NotificationPermission() {
   const { isAuthenticated } = useAuth();

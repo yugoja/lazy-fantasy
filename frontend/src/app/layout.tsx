@@ -5,6 +5,7 @@ import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/Header";
 import InstallPrompt from "@/components/InstallPrompt";
+import IOSInstallPrompt from "@/components/IOSInstallPrompt";
 import NotificationPermission from "@/components/NotificationPermission";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "sonner";
@@ -58,6 +59,7 @@ export default function RootLayout({
           <Header />
           <main className="pb-20">{children}</main>
           <InstallPrompt />
+          <IOSInstallPrompt />
           <NotificationPermission />
           <Toaster position="top-center" richColors />
         </AuthProvider>
