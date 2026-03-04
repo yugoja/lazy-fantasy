@@ -274,7 +274,12 @@ export default function PredictionsPage() {
                   )}>
                     {cat.predicted}
                   </span>
-                  {isCorrect && <Check className="h-3.5 w-3.5 text-green-400 shrink-0" />}
+                  {isCorrect && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Check className="h-3.5 w-3.5 text-green-400" />
+                      <span className="text-[10px] font-semibold text-green-400">+{cat.pts}</span>
+                    </div>
+                  )}
                   {isWrong && (
                     <div className="flex items-center gap-1 shrink-0">
                       <X className="h-3.5 w-3.5 text-red-400" />
@@ -316,19 +321,93 @@ export default function PredictionsPage() {
       );
     }
 
+    const processed = detailedPredictions.filter(p => p.is_processed);
+    const maxPoints = processed.length * 100;
+
+    const categoryStats = [
+      {
+        label: 'Winner',
+        icon: Trophy,
+        color: 'text-primary',
+        bgColor: 'bg-primary',
+        pts: 10,
+        correct: processed.filter(p => p.actual_winner && p.predicted_winner.short_name === p.actual_winner.short_name).length,
+      },
+      {
+        label: 'Most Runs',
+        icon: Target,
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-400',
+        pts: 20,
+        correct: processed.filter(p => p.actual_most_runs_player && p.predicted_most_runs_player.name === p.actual_most_runs_player.name).length,
+      },
+      {
+        label: 'Most Wickets',
+        icon: Target,
+        color: 'text-green-400',
+        bgColor: 'bg-green-400',
+        pts: 20,
+        correct: processed.filter(p => p.actual_most_wickets_player && p.predicted_most_wickets_player.name === p.actual_most_wickets_player.name).length,
+      },
+      {
+        label: 'POM',
+        icon: Star,
+        color: 'text-yellow-400',
+        bgColor: 'bg-yellow-400',
+        pts: 50,
+        correct: processed.filter(p => p.actual_pom_player && p.predicted_pom_player.name === p.actual_pom_player.name).length,
+      },
+    ];
+
+    const totalCorrect = categoryStats.reduce((s, c) => s + c.correct, 0);
+    const totalPossibleCorrect = processed.length * 4;
+
     return (
       <div className="space-y-4">
         {/* Points Summary */}
-        {detailedPredictions.some(p => p.is_processed) && (
+        {processed.length > 0 && (
           <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-muted-foreground">Total Points Earned</p>
-                <p className="text-2xl font-bold">{totalPoints}</p>
+            <CardContent className="p-4 space-y-4">
+              {/* Total score */}
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total Points</p>
+                  <p className="text-3xl font-bold tracking-tight">{totalPoints}<span className="text-base font-normal text-muted-foreground">/{maxPoints}</span></p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Accuracy</p>
+                  <p className="text-lg font-bold">{totalCorrect}/{totalPossibleCorrect}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] text-muted-foreground">Predictions</p>
-                <p className="text-lg font-bold">{detailedPredictions.length}</p>
+
+              {/* Overall progress bar */}
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: maxPoints > 0 ? `${(totalPoints / maxPoints) * 100}%` : '0%' }}
+                />
+              </div>
+
+              {/* Per-category breakdown */}
+              <div className="grid grid-cols-2 gap-3">
+                {categoryStats.map((cat) => {
+                  const pct = processed.length > 0 ? (cat.correct / processed.length) * 100 : 0;
+                  return (
+                    <div key={cat.label} className="space-y-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <cat.icon className={cn('h-3 w-3', cat.color)} />
+                        <span className="text-[10px] text-muted-foreground">{cat.label}</span>
+                        <span className="text-[10px] font-semibold ml-auto">{cat.correct}/{processed.length}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={cn('h-full rounded-full transition-all', cat.bgColor)}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
