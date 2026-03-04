@@ -64,7 +64,9 @@
 - [x] Onboarding flow — 3-step checklist card on dashboard (predict, join league, enable notifications); auto-completes, dismissible via localStorage
 - [x] Signup redirects to /predictions instead of /dashboard for new users
 - [x] Prediction confirmation — animated pulsing icon + summary card showing all 4 picks with points earned + "Up to 100 pts" total
-- [ ] Done tab enhancements — show points breakdown more visually (progress bars, correct/wrong counts per category)
+- [x] Done tab enhancements — show points breakdown more visually (progress bars, correct/wrong counts per category)
+  - Summary card: total points progress bar, per-category accuracy bars (Winner/Runs/Wickets/POM), overall accuracy count
+  - Per-prediction cards: points earned shown next to each correct category
 
 ### League Features
 - [ ] League activity feed — see what others predicted after the match locks

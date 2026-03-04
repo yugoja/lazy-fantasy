@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trophy, Users, Target, BarChart3 } from 'lucide-react';
+import { Trophy, Users, Target, BarChart3, CheckCircle2, Swords } from 'lucide-react';
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -32,26 +32,36 @@ export default function Home() {
 
   return (
     <div className="min-h-[100dvh] bg-background">
-      {/* Hero Section */}
-      <section className="container-mobile pt-16 pb-12 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs text-muted-foreground mb-6">
-          <Trophy className="h-3.5 w-3.5 text-primary" />
-          <span>ICC T20 World Cup 2026</span>
+
+      {/* Hero */}
+      <section className="container-mobile pt-14 pb-10 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs text-primary font-medium mb-6">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          </span>
+          ICC T20 World Cup 2026 · Live Now
         </div>
 
-        <h1 className="text-3xl font-bold tracking-tight mb-3">
-          Your Fantasy Cricket
-          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent"> League Awaits</span>
+        <h1 className="text-3xl font-bold tracking-tight mb-3 leading-tight">
+          Your mates think they
+          <br />
+          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            know cricket.
+          </span>
         </h1>
 
-        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8 leading-relaxed">
-          Predict match outcomes, compete with friends in private leagues,
-          and climb the leaderboard. Free to play.
+        <p className="text-base text-muted-foreground max-w-sm mx-auto mb-2 leading-relaxed">
+          Prove them wrong.
+        </p>
+        <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-8 leading-relaxed">
+          Predict every T20 World Cup match, play in a private league with your crew, and
+          settle the group chat debate — who actually knows cricket?
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/signup">
-            <Button size="lg" className="w-full sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto font-semibold">
               Start Playing Free
             </Button>
           </Link>
@@ -63,34 +73,88 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works — 3 Steps */}
-      <section className="container-mobile py-12">
-        <div className="text-center mb-8">
-          <h2 className="text-xl font-bold mb-2">How It Works</h2>
-          <p className="text-sm text-muted-foreground">
-            Three steps to get in the game
-          </p>
+      {/* What You Predict — mock prediction card */}
+      <section className="container-mobile py-10">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold mb-1">What you predict</h2>
+          <p className="text-sm text-muted-foreground">Four picks per match. Up to 100 pts.</p>
         </div>
 
-        <div className="space-y-4">
+        <Card className="border-border bg-card overflow-hidden">
+          {/* Match header */}
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🇮🇳</span>
+              <span className="text-sm font-semibold">India</span>
+            </div>
+            <span className="text-xs text-muted-foreground font-medium">vs</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">Australia</span>
+              <span className="text-lg">🇦🇺</span>
+            </div>
+          </div>
+
+          <CardContent className="p-4 space-y-3">
+            {[
+              { label: 'Match Winner', example: 'India', pts: 25, done: true },
+              { label: 'Top Batter', example: 'Virat Kohli', pts: 25, done: true },
+              { label: 'Top Bowler', example: 'Jasprit Bumrah', pts: 25, done: false },
+              { label: 'Player of the Match', example: 'Rohit Sharma', pts: 25, done: false },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <CheckCircle2
+                    className={`h-4 w-4 shrink-0 ${row.done ? 'text-primary' : 'text-muted-foreground/30'}`}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">{row.label}</p>
+                    <p className={`text-sm font-medium truncate ${row.done ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                      {row.done ? row.example : '—'}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs text-primary font-semibold shrink-0">+{row.pts} pts</span>
+              </div>
+            ))}
+
+            <div className="pt-2 border-t border-border flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">Max this match</span>
+              <span className="text-sm font-bold text-primary">100 pts</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <p className="text-center text-xs text-muted-foreground mt-3">
+          Predictions lock when the match starts. No cheeky last-minute changes. 😏
+        </p>
+      </section>
+
+      {/* How It Works */}
+      <section className="container-mobile py-10">
+        <div className="text-center mb-6">
+          <h2 className="text-xl font-bold mb-1">How It Works</h2>
+          <p className="text-sm text-muted-foreground">Ready in under 2 minutes</p>
+        </div>
+
+        <div className="space-y-3">
           {[
             {
               step: '1',
               icon: Users,
-              title: 'Create a League',
-              desc: 'Sign up, create a private league, and share the invite code with your friends.',
+              title: 'Create a league & invite your crew',
+              desc: 'Sign up, name your league, and share a code. Your mates join — no app installs needed.',
             },
             {
               step: '2',
               icon: Target,
-              title: 'Predict Every Match',
-              desc: 'Before each T20 World Cup match, predict the winner, top batsman, top bowler, and player of the match.',
+              title: 'Predict before every match',
+              desc: 'Pick the winner, top batter, top bowler, and player of the match. Four picks. One shot at glory.',
             },
             {
               step: '3',
               icon: BarChart3,
-              title: 'Climb the Leaderboard',
-              desc: 'Earn points for correct predictions. Track your rank against friends and see who knows cricket best.',
+              title: 'Watch the leaderboard heat up',
+              desc: 'Points update after every match. Trash talk freely. The real World Cup is in your group chat.',
             },
           ].map((item) => (
             <Card key={item.step} className="border-border bg-card">
@@ -99,7 +163,7 @@ export default function Home() {
                   <item.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold mb-1">{item.title}</h3>
+                  <h3 className="text-sm font-semibold mb-0.5">{item.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
                 </div>
               </CardContent>
@@ -108,20 +172,50 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="container-mobile py-12 pb-16 text-center">
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-6 space-y-4">
-            <h2 className="text-lg font-bold">Ready to Prove Your Cricket Knowledge?</h2>
-            <p className="text-sm text-muted-foreground">
-              The T20 World Cup is on. Join your friends and start predicting.
-            </p>
-            <Link href="/signup">
-              <Button size="lg">Get Started Now</Button>
-            </Link>
+      {/* More sports coming */}
+      <section className="container-mobile py-6">
+        <Card className="border-border bg-card">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground text-center mb-3 font-medium uppercase tracking-wider">More sports coming soon</p>
+            <div className="flex items-center justify-center gap-6">
+              <div className="flex items-center gap-2 opacity-50">
+                <span className="text-2xl">🏎️</span>
+                <div>
+                  <p className="text-sm font-semibold">Formula 1</p>
+                  <p className="text-xs text-muted-foreground">2026 Season</p>
+                </div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="flex items-center gap-2 opacity-50">
+                <span className="text-2xl">⚽</span>
+                <div>
+                  <p className="text-sm font-semibold">Football</p>
+                  <p className="text-xs text-muted-foreground">World Cup 2026</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </section>
+
+      {/* Bottom CTA */}
+      <section className="container-mobile py-10 pb-16 text-center">
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-6 space-y-3">
+            <Swords className="h-8 w-8 text-primary mx-auto" />
+            <h2 className="text-lg font-bold">The World Cup is live.</h2>
+            <p className="text-sm text-muted-foreground">
+              Your group chat needs settling. Create a league, share the code, and let the
+              banter begin.
+            </p>
+            <Link href="/signup">
+              <Button size="lg" className="font-semibold">Challenge Your Mates</Button>
+            </Link>
+            <p className="text-xs text-muted-foreground">Free to play. Always.</p>
+          </CardContent>
+        </Card>
+      </section>
+
     </div>
   );
 }
