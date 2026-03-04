@@ -1,4 +1,6 @@
-from sqlalchemy import Integer, String, ForeignKey
+from datetime import datetime
+
+from sqlalchemy import DateTime, Integer, String, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -11,6 +13,9 @@ class League(Base):
     name: Mapped[str] = mapped_column(String(100))
     invite_code: Mapped[str] = mapped_column(String(6), unique=True, index=True)
     owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now()
+    )
 
     # Relationships
     owner = relationship("User", back_populates="owned_leagues")

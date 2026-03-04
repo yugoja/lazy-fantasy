@@ -12,6 +12,10 @@ This test suite simulates a full tournament lifecycle:
 import pytest
 from datetime import datetime, timedelta, timezone
 
+from app.models.league import League, LeagueMember
+from app.models.match import Match, MatchStatus
+from app.models.player import Player
+from app.models.prediction import Prediction
 from app.models.user import User
 
 
@@ -475,3 +479,175 @@ class TestCompleteTournamentFlow:
         # User 2: 3 matches * 10 points = 30
         assert entries[1]["username"] == "user2"
         assert entries[1]["total_points"] == 30
+
+    def test_league_scoped_scoring_excludes_pre_creation_matches(
+        self, client, db_session, test_tournament, test_teams
+    ):
+        """
+        Test that league leaderboards only count predictions for matches
+        that started after the league was created.
+
+        Flow:
+        1. Two users sign up
+        2. A match is played and scored BEFORE the league exists
+        3. League is created (with created_at = "now")
+        4. A second match is played and scored AFTER the league exists
+        5. Leaderboard should only reflect points from the second match
+        """
+        team1, team2 = test_teams
+        team1_players = (
+            db_session.query(Player).filter(Player.team_id == team1.id).all()
+        )
+        team2_players = (
+            db_session.query(Player).filter(Player.team_id == team2.id).all()
+        )
+
+        # --- Step 1: Create two users ---
+        user1_data = {
+            "username": "scoped1",
+            "email": "scoped1@test.com",
+            "password": "pass",
+        }
+        user2_data = {
+            "username": "scoped2",
+            "email": "scoped2@test.com",
+            "password": "pass",
+        }
+        resp1 = client.post("/auth/signup", json=user1_data)
+        user1_id = resp1.json()["id"]
+        make_admin(db_session, user1_id)
+
+        resp2 = client.post("/auth/signup", json=user2_data)
+        user2_id = resp2.json()["id"]
+
+        # Login both
+        tok1 = client.post(
+            "/auth/login", data={"username": "scoped1", "password": "pass"}
+        ).json()["access_token"]
+        tok2 = client.post(
+            "/auth/login", data={"username": "scoped2", "password": "pass"}
+        ).json()["access_token"]
+        headers1 = {"Authorization": f"Bearer {tok1}"}
+        headers2 = {"Authorization": f"Bearer {tok2}"}
+
+        # --- Step 2: Pre-league match (started 3 days ago) ---
+        old_match = Match(
+            tournament_id=test_tournament.id,
+            team_1_id=team1.id,
+            team_2_id=team2.id,
+            start_time=datetime.now(timezone.utc) - timedelta(days=3),
+            status=MatchStatus.COMPLETED,
+            result_winner_id=team1.id,
+            result_most_runs_player_id=team1_players[0].id,
+            result_most_wickets_player_id=team2_players[4].id,
+            result_pom_player_id=team1_players[0].id,
+        )
+        db_session.add(old_match)
+        db_session.commit()
+        db_session.refresh(old_match)
+
+        # User 1 had a perfect prediction on the old match (100 pts)
+        old_pred = Prediction(
+            user_id=user1_id,
+            match_id=old_match.id,
+            predicted_winner_id=team1.id,
+            predicted_most_runs_player_id=team1_players[0].id,
+            predicted_most_wickets_player_id=team2_players[4].id,
+            predicted_pom_player_id=team1_players[0].id,
+            points_earned=100,
+        )
+        db_session.add(old_pred)
+        db_session.commit()
+
+        # --- Step 3: Create league NOW ---
+        resp = client.post(
+            "/leagues/", json={"name": "Scoped League"}, headers=headers1
+        )
+        assert resp.status_code == 201
+        league_id = resp.json()["id"]
+        invite_code = resp.json()["invite_code"]
+
+        # User 2 joins
+        client.post(
+            "/leagues/join",
+            json={"invite_code": invite_code},
+            headers=headers2,
+        )
+
+        # --- Step 4: Post-league match (starts in the future) ---
+        new_match_data = {
+            "tournament_id": test_tournament.id,
+            "team_1_id": team1.id,
+            "team_2_id": team2.id,
+            "start_time": (
+                datetime.now(timezone.utc) + timedelta(hours=2)
+            ).isoformat(),
+        }
+        resp = client.post(
+            "/admin/matches/", json=new_match_data, headers=headers1
+        )
+        assert resp.status_code == 201
+        new_match_id = resp.json()["id"]
+
+        # Get player IDs from API
+        resp = client.get(f"/matches/{new_match_id}/players")
+        api_t1_players = resp.json()["team_1_players"]
+        api_t2_players = resp.json()["team_2_players"]
+
+        # User 1 predicts winner only correctly (10 pts)
+        client.post(
+            "/predictions/",
+            json={
+                "match_id": new_match_id,
+                "predicted_winner_id": team1.id,
+                "predicted_most_runs_player_id": api_t2_players[0]["id"],
+                "predicted_most_wickets_player_id": api_t1_players[4]["id"],
+                "predicted_pom_player_id": api_t2_players[0]["id"],
+            },
+            headers=headers1,
+        )
+
+        # User 2 predicts everything correctly (100 pts)
+        client.post(
+            "/predictions/",
+            json={
+                "match_id": new_match_id,
+                "predicted_winner_id": team1.id,
+                "predicted_most_runs_player_id": api_t1_players[0]["id"],
+                "predicted_most_wickets_player_id": api_t2_players[4]["id"],
+                "predicted_pom_player_id": api_t1_players[0]["id"],
+            },
+            headers=headers2,
+        )
+
+        # Set result for the new match
+        client.post(
+            f"/admin/matches/{new_match_id}/result",
+            json={
+                "result_winner_id": team1.id,
+                "result_most_runs_player_id": api_t1_players[0]["id"],
+                "result_most_wickets_player_id": api_t2_players[4]["id"],
+                "result_pom_player_id": api_t1_players[0]["id"],
+            },
+            headers=headers1,
+        )
+
+        # --- Step 5: Verify leaderboard only counts post-creation match ---
+        resp = client.get(
+            f"/leagues/{league_id}/leaderboard", headers=headers1
+        )
+        assert resp.status_code == 200
+        entries = sorted(
+            resp.json()["entries"], key=lambda x: x["rank"]
+        )
+
+        assert len(entries) == 2
+
+        # User 2 should be #1 with 100 pts (perfect on new match)
+        assert entries[0]["username"] == "scoped2"
+        assert entries[0]["total_points"] == 100
+
+        # User 1 should be #2 with only 10 pts (winner-only on new match)
+        # The 100 pts from the old match should NOT count
+        assert entries[1]["username"] == "scoped1"
+        assert entries[1]["total_points"] == 10

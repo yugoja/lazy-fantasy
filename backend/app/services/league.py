@@ -4,7 +4,7 @@ import string
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models import League, LeagueMember, User, Prediction
+from app.models import League, LeagueMember, Match, User, Prediction
 
 
 def generate_invite_code(length: int = 6) -> str:
@@ -82,7 +82,12 @@ def get_league_leaderboard(
     """
     Get leaderboard for a league.
     Returns list of (user_id, username, total_points) sorted by points descending.
+    Only counts predictions for matches that started after the league was created.
     """
+    league = db.query(League).filter(League.id == league_id).first()
+    if not league:
+        return []
+
     # Get all members of the league
     members = (
         db.query(LeagueMember.user_id)
@@ -90,17 +95,32 @@ def get_league_leaderboard(
         .subquery()
     )
 
-    # Calculate total points per user
+    # Subquery: eligible predictions (match started after league creation)
+    eligible_predictions = (
+        db.query(Prediction.user_id, Prediction.points_earned)
+        .join(Match, Prediction.match_id == Match.id)
+        .filter(Match.start_time >= league.created_at)
+        .subquery()
+    )
+
+    # Calculate total points per user from eligible predictions only
     results = (
         db.query(
             User.id,
             User.username,
-            func.coalesce(func.sum(Prediction.points_earned), 0).label("total_points"),
+            func.coalesce(func.sum(eligible_predictions.c.points_earned), 0).label(
+                "total_points"
+            ),
         )
         .join(members, User.id == members.c.user_id)
-        .outerjoin(Prediction, User.id == Prediction.user_id)
+        .outerjoin(
+            eligible_predictions,
+            User.id == eligible_predictions.c.user_id,
+        )
         .group_by(User.id, User.username)
-        .order_by(func.coalesce(func.sum(Prediction.points_earned), 0).desc())
+        .order_by(
+            func.coalesce(func.sum(eligible_predictions.c.points_earned), 0).desc()
+        )
         .all()
     )
 
