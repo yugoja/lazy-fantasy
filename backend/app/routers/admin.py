@@ -277,6 +277,61 @@ async def get_match_lineup(
     return {"match_id": match_id, "player_ids": player_ids}
 
 
+@router.get("/matches/{match_id}/previous-lineup")
+async def get_previous_lineup(
+    match_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Return player IDs from the most recent prior lineup for each team in this match.
+    Used to pre-fill the lineup form so admins only need to make small adjustments.
+    """
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+
+    # Current squad player IDs (to filter out any stale IDs from old matches)
+    current_squad_ids = {
+        p.id for p in db.query(Player).filter(
+            Player.team_id.in_([match.team_1_id, match.team_2_id])
+        ).all()
+    }
+
+    def last_lineup_for_team(team_id: int) -> list[int]:
+        """Find the most recent completed match for this team that has a lineup."""
+        prior_matches = (
+            db.query(Match)
+            .filter(
+                Match.id != match_id,
+                Match.start_time < match.start_time,
+                (Match.team_1_id == team_id) | (Match.team_2_id == team_id),
+            )
+            .order_by(Match.start_time.desc())
+            .all()
+        )
+        for m in prior_matches:
+            rows = db.query(MatchLineup).filter(MatchLineup.match_id == m.id).all()
+            if rows:
+                # Return only players that belong to this team
+                return [
+                    r.player_id for r in rows
+                    if r.player_id in current_squad_ids
+                    and db.query(Player).filter(Player.id == r.player_id, Player.team_id == team_id).first()
+                ]
+        return []
+
+    team_1_ids = last_lineup_for_team(match.team_1_id)
+    team_2_ids = last_lineup_for_team(match.team_2_id)
+
+    return {
+        "match_id": match_id,
+        "player_ids": team_1_ids + team_2_ids,
+        "team_1_count": len(team_1_ids),
+        "team_2_count": len(team_2_ids),
+    }
+
+
 @router.post("/matches/{match_id}/lineup")
 async def set_match_lineup(
     match_id: int,

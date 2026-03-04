@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Users, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle2, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Player {
@@ -54,6 +54,7 @@ export default function SetLineupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [prefilledFromPrev, setPrefilledFromPrev] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -85,6 +86,16 @@ export default function SetLineupPage() {
         const lineup: { player_ids: number[] } = await lineupRes.json();
         if (lineup.player_ids.length > 0) {
           setSelectedIds(new Set(lineup.player_ids));
+        } else {
+          // No lineup yet — try to pre-fill from previous match
+          const prevRes = await fetch(`${API_BASE}/admin/matches/${matchId}/previous-lineup`, { headers });
+          if (prevRes.ok) {
+            const prev: { player_ids: number[] } = await prevRes.json();
+            if (prev.player_ids.length > 0) {
+              setSelectedIds(new Set(prev.player_ids));
+              setPrefilledFromPrev(true);
+            }
+          }
         }
       }
     } catch {
@@ -234,6 +245,13 @@ export default function SetLineupPage() {
           {squadData.team_1.name} vs {squadData.team_2.name}
         </p>
       </div>
+
+      {prefilledFromPrev && (
+        <Card className="p-3 border-blue-500/30 bg-blue-500/10 flex items-center gap-2">
+          <History className="h-4 w-4 text-blue-400 shrink-0" />
+          <p className="text-sm text-blue-400">Pre-filled from last match — adjust as needed</p>
+        </Card>
+      )}
 
       {error && (
         <Card className="p-3 border-destructive/50 bg-destructive/10">
