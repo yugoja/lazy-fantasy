@@ -2,29 +2,56 @@ name: Deploy to DigitalOcean
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
-      - name: Deploy via SSH
+      - name: Set environment
+        id: env
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "env=prod" >> "$GITHUB_OUTPUT"
+            echo "app_dir=/home/lazy-fantasy/app" >> "$GITHUB_OUTPUT"
+            echo "backend_svc=lazy-fantasy-backend" >> "$GITHUB_OUTPUT"
+            echo "frontend_svc=lazy-fantasy-frontend" >> "$GITHUB_OUTPUT"
+            echo "db_name=lazy_fantasy_league" >> "$GITHUB_OUTPUT"
+          else
+            echo "env=staging" >> "$GITHUB_OUTPUT"
+            echo "app_dir=/home/lazy-fantasy/staging" >> "$GITHUB_OUTPUT"
+            echo "backend_svc=lazy-fantasy-staging-backend" >> "$GITHUB_OUTPUT"
+            echo "frontend_svc=lazy-fantasy-staging-frontend" >> "$GITHUB_OUTPUT"
+            echo "db_name=lazy_fantasy_staging" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy ${{ steps.env.outputs.env }}
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DROPLET_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
           script: |
             set -e
+            ENV="${{ steps.env.outputs.env }}"
+            APP_DIR="${{ steps.env.outputs.app_dir }}"
+            BACKEND_SVC="${{ steps.env.outputs.backend_svc }}"
+            FRONTEND_SVC="${{ steps.env.outputs.frontend_svc }}"
+            DB_NAME="${{ steps.env.outputs.db_name }}"
+
+            echo "==> Deploying $ENV"
 
             # Pull latest code and rebuild
-            su - lazy-fantasy -c '
-              export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            su - lazy-fantasy -c "
+              export NVM_DIR=\"\$HOME/.nvm\"
+              [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"
 
-              cd /home/lazy-fantasy/app
-              git fetch origin main
-              git reset --hard origin/main
+              cd $APP_DIR
+              git fetch origin ${{ github.ref_name }}
+              git reset --hard origin/${{ github.ref_name }}
 
               # Backend
               cd backend
@@ -35,12 +62,23 @@ jobs:
               cd ../frontend
               npm install --prefer-offline
               npm run build
-            '
+            "
+
+            # Run pending migrations
+            if [ -d "$APP_DIR/backend/migrations" ]; then
+              for sql_file in "$APP_DIR/backend/migrations"/*.sql; do
+                [ -f "$sql_file" ] || continue
+                echo "Running migration: $(basename "$sql_file")"
+                sudo -u postgres psql -d "$DB_NAME" -f "$sql_file" 2>&1 | head -5
+              done
+            fi
 
             # Restart services
-            systemctl restart lazy-fantasy-backend lazy-fantasy-frontend
+            systemctl restart "$BACKEND_SVC" "$FRONTEND_SVC"
 
             # Verify
             sleep 3
-            systemctl is-active lazy-fantasy-backend
-            systemctl is-active lazy-fantasy-frontend
+            systemctl is-active "$BACKEND_SVC" && echo "✓ $BACKEND_SVC running" || exit 1
+            systemctl is-active "$FRONTEND_SVC" && echo "✓ $FRONTEND_SVC running" || exit 1
+
+            echo "==> $ENV deploy complete!"

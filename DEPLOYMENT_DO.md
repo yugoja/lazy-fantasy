@@ -328,3 +328,86 @@ usermod -aG sudo deploy
 | Total | **$6/month** |
 
 Always-on, no cold starts, full control! 🚀
+
+---
+
+## Staging Environment
+
+A staging environment runs on the same droplet at zero extra cost — separate database, separate ports, accessed via `:8080`.
+
+| Component | Production | Staging |
+|-----------|-----------|---------|
+| Backend port | 8000 | 8001 |
+| Frontend port | 3000 | 3001 |
+| Nginx port | 80 | 8080 |
+| Working dir | `/home/lazy-fantasy/app` | `/home/lazy-fantasy/staging` |
+| Database | `lazy_fantasy_league` | `lazy_fantasy_staging` |
+| Access URL | `http://IP` | `http://IP:8080` |
+| Sentry env | `production` | `staging` |
+
+### First-time setup
+
+Run the bootstrap script from your local machine:
+
+```bash
+ssh root@YOUR_DROPLET_IP 'bash -s' < infra/setup-staging.sh
+```
+
+This creates the staging directory, database, `.env` files, systemd services, updates nginx, and opens UFW port 8080.
+
+### Deploy workflow (GitHub Actions)
+
+Deployments are triggered automatically via GitHub Actions (`.github/workflows/deploy.yml`):
+
+| Branch | Environment | URL |
+|--------|-------------|-----|
+| `staging` | Staging | `http://YOUR_DROPLET_IP:8080` |
+| `main` | Production | `http://YOUR_DROPLET_IP` |
+
+```bash
+# Deploy to staging
+git checkout staging
+git merge main       # or cherry-pick specific commits
+git push origin staging
+# GitHub Actions deploys → verify at http://YOUR_DROPLET_IP:8080
+
+# Promote to production
+git checkout main
+git merge staging
+git push origin main
+# GitHub Actions deploys → verify at http://YOUR_DROPLET_IP
+```
+
+**Required GitHub secrets** (Settings → Secrets → Actions):
+- `DROPLET_IP` — droplet IP address
+- `SSH_PRIVATE_KEY` — SSH private key for root access
+
+**Manual fallback** (if CI is down):
+```bash
+./deploy.sh staging   # or: ./deploy.sh prod
+```
+
+### Nginx config
+
+The nginx config lives at `infra/nginx.conf` and covers both production and staging server blocks. To update nginx after editing:
+
+```bash
+scp infra/nginx.conf root@YOUR_DROPLET_IP:/etc/nginx/sites-available/lazy-fantasy
+ssh root@YOUR_DROPLET_IP 'nginx -t && systemctl reload nginx'
+```
+
+### Useful commands
+
+```bash
+# Check staging services
+ssh root@YOUR_DROPLET_IP 'systemctl status lazy-fantasy-staging-backend lazy-fantasy-staging-frontend'
+
+# Staging logs
+ssh root@YOUR_DROPLET_IP 'journalctl -u lazy-fantasy-staging-backend -f'
+
+# Health check
+curl http://YOUR_DROPLET_IP:8080/health
+
+# Connect to staging database
+ssh root@YOUR_DROPLET_IP 'sudo -u postgres psql lazy_fantasy_staging'
+```
