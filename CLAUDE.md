@@ -61,14 +61,16 @@
 - [ ] Pre-match banter — show aggregate predictions (e.g. "60% of your league picked India") after predictions lock
 
 ### UX Improvements
-- [ ] Onboarding flow — first-time users land on a cold dashboard; add guided steps or empty state with clear CTAs
-- [ ] Prediction confirmation — more satisfying feedback after submitting (animation, summary card)
+- [x] Onboarding flow — 3-step checklist card on dashboard (predict, join league, enable notifications); auto-completes, dismissible via localStorage
+- [x] Signup redirects to /predictions instead of /dashboard for new users
+- [x] Prediction confirmation — animated pulsing icon + summary card showing all 4 picks with points earned + "Up to 100 pts" total
 - [ ] Done tab enhancements — show points breakdown more visually (progress bars, correct/wrong counts per category)
 
 ### League Features
 - [ ] League activity feed — see what others predicted after the match locks
 - [ ] Head-to-head — compare your predictions vs a specific friend in a league
 - [ ] Mini leaderboard on match card — show user's current rank in context while predicting
+- [ ] Leaderboard rank history in DB — currently tracked in localStorage (resets on new device/browser); persist rank snapshots in backend after each match result so deltas are accurate across devices
 
 ## Completed (Phase 4 - commit 357711f)
 - Redesigned all pages with shadcn/ui + Tailwind (login, signup, landing, admin, set result, view predictions)
