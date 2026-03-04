@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -11,6 +11,7 @@ const DISMISSED_KEY = 'pwa-install-dismissed';
 
 export default function InstallPrompt() {
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -22,16 +23,23 @@ export default function InstallPrompt() {
 
     const handler = (e: Event) => {
       e.preventDefault();
-      setPromptEvent(e as BeforeInstallPromptEvent);
-      setVisible(true);
+      const evt = e as BeforeInstallPromptEvent;
+      promptRef.current = evt;
+      setPromptEvent(evt);
+    };
+
+    const showAfterPrediction = () => {
+      if (promptRef.current) setVisible(true);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
     window.addEventListener('appinstalled', handleInstalled);
+    window.addEventListener('prediction-submitted', showAfterPrediction);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', handleInstalled);
+      window.removeEventListener('prediction-submitted', showAfterPrediction);
     };
   }, []);
 

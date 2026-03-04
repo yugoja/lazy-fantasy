@@ -181,6 +181,7 @@ export default function PredictPage() {
         predicted_pom_player_id: pomId,
       });
       setShowSuccess(true);
+      window.dispatchEvent(new Event('prediction-submitted'));
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
