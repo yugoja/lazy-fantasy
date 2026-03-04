@@ -73,7 +73,10 @@ export default function AdminPage() {
     );
   }
 
-  const scheduledMatches = matches.filter(m => m.status === 'SCHEDULED');
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const scheduledMatches = matches
+    .filter(m => m.status === 'SCHEDULED' && new Date(m.start_time) >= todayStart)
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
   const completedMatches = matches.filter(m => m.status === 'COMPLETED');
 
   return (
