@@ -9,7 +9,13 @@ set -euo pipefail
 STAGING_DIR="/home/lazy-fantasy/staging"
 REPO_URL="https://github.com/yugoja/lazy-fantasy.git"
 APP_USER="lazy-fantasy"
-DROPLET_IP="139.59.3.190"
+
+# Pass IP as first argument or set DROPLET_IP env var
+DROPLET_IP="${1:-${DROPLET_IP:-}}"
+if [[ -z "$DROPLET_IP" ]]; then
+    echo "Error: droplet IP required. Usage: bash setup-staging.sh <DROPLET_IP>"
+    exit 1
+fi
 
 echo "==> Setting up staging environment"
 

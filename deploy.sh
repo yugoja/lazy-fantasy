@@ -9,7 +9,11 @@
 set -euo pipefail
 
 # ─── Configuration ───────────────────────────────────────────────────────────
-DROPLET_HOST="${DROPLET_HOST:-root@139.59.3.190}"
+DROPLET_HOST="${DROPLET_HOST:-}"
+if [[ -z "$DROPLET_HOST" ]]; then
+    echo "Error: set DROPLET_HOST env var. E.g. DROPLET_HOST=root@1.2.3.4 ./deploy.sh staging"
+    exit 1
+fi
 APP_USER="lazy-fantasy"
 
 # Environment-specific settings
