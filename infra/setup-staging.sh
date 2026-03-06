@@ -76,7 +76,11 @@ echo "   ✓ Backend venv + DB tables ready"
 
 # ─── 6. Build staging frontend ───────────────────────────────────────────────
 echo "── Building staging frontend ──"
-sudo -u "$APP_USER" bash -c "cd $STAGING_DIR/frontend && npm install && npm run build"
+sudo -u "$APP_USER" bash -c '
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    cd '"$STAGING_DIR/frontend"' && npm install && npm run build
+'
 echo "   ✓ Frontend built"
 
 # ─── 7. Create systemd services ──────────────────────────────────────────────
@@ -100,7 +104,15 @@ RestartSec=3
 WantedBy=multi-user.target
 EOF
 
-cat > /etc/systemd/system/lazy-fantasy-staging-frontend.service << 'EOF'
+# Resolve npm path from nvm for lazy-fantasy user
+NPM_PATH=$(sudo -u "$APP_USER" bash -c '
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    which npm
+')
+NODE_PATH=$(dirname "$NPM_PATH")
+
+cat > /etc/systemd/system/lazy-fantasy-staging-frontend.service << EOF
 [Unit]
 Description=Lazy Fantasy Staging Frontend
 After=network.target
@@ -109,11 +121,12 @@ After=network.target
 User=lazy-fantasy
 Group=lazy-fantasy
 WorkingDirectory=/home/lazy-fantasy/staging/frontend
-ExecStart=/usr/bin/npm start
+ExecStart=${NPM_PATH} start
 Restart=always
 RestartSec=3
 Environment="NODE_ENV=production"
 Environment="PORT=3001"
+Environment="PATH=${NODE_PATH}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 [Install]
 WantedBy=multi-user.target

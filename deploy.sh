@@ -62,7 +62,11 @@ else
 fi
 
 echo "── Installing frontend dependencies + building ──"
-sudo -u "$APP_USER" bash -c "cd $APP_DIR/frontend && npm install --production=false && npm run build"
+sudo -u "$APP_USER" bash -c '
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    cd '"$APP_DIR/frontend"' && npm install --production=false && npm run build
+'
 
 echo "── Restarting services ──"
 systemctl restart "$BACKEND_SVC" "$FRONTEND_SVC"
