@@ -148,8 +148,19 @@ echo "   ✓ Staging services created and started"
 echo "── Adding staging nginx server block ──"
 cat > /etc/nginx/sites-available/lazy-fantasy-staging << 'NGINXEOF'
 server {
-    listen 8080;
-    server_name _;
+    listen 80;
+    server_name staging.lazyfantasy.app;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name staging.lazyfantasy.app;
+
+    ssl_certificate /etc/letsencrypt/live/staging.lazyfantasy.app/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/staging.lazyfantasy.app/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
     location ~ ^/(auth|matches|leagues|predictions|admin|health|notifications|f1|docs|openapi\.json) {
         proxy_pass http://127.0.0.1:8001;

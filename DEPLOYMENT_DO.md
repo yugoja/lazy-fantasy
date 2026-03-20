@@ -342,7 +342,7 @@ A staging environment runs on the same droplet at zero extra cost — separate d
 | Nginx port | 80 | 8080 |
 | Working dir | `/home/lazy-fantasy/app` | `/home/lazy-fantasy/staging` |
 | Database | `lazy_fantasy_league` | `lazy_fantasy_staging` |
-| Access URL | `http://IP` | `http://IP:8080` |
+| Access URL | `https://lazyfantasy.app` | `https://staging.lazyfantasy.app` |
 | Sentry env | `production` | `staging` |
 
 ### First-time setup
