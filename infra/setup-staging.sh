@@ -53,8 +53,8 @@ DATABASE_URL=postgresql://lazy_fantasy_db_admin:${DB_PASSWORD}@localhost:5432/la
 SECRET_KEY=$(openssl rand -hex 32)
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=10080
-CORS_ORIGINS=http://${DROPLET_IP}:8080
-FRONTEND_URL=http://${DROPLET_IP}:8080
+CORS_ORIGINS=https://staging.lazyfantasy.app
+FRONTEND_URL=https://staging.lazyfantasy.app
 SENTRY_DSN=
 SENTRY_ENVIRONMENT=staging
 ENVEOF
@@ -64,7 +64,7 @@ echo "   ✓ Created $STAGING_DIR/backend/.env"
 # ─── 4. Frontend .env.local for staging ──────────────────────────────────────
 echo "── Creating staging frontend .env.local ──"
 cat > "$STAGING_DIR/frontend/.env.local" << ENVEOF
-NEXT_PUBLIC_API_URL=http://${DROPLET_IP}:8080
+NEXT_PUBLIC_API_URL=https://staging.lazyfantasy.app
 ENVEOF
 chown "$APP_USER:$APP_USER" "$STAGING_DIR/frontend/.env.local"
 echo "   ✓ Created $STAGING_DIR/frontend/.env.local"
