@@ -144,18 +144,36 @@ systemctl start lazy-fantasy-staging-backend lazy-fantasy-staging-frontend
 
 echo "   ✓ Staging services created and started"
 
-# ─── 8. Install nginx config ─────────────────────────────────────────────────
-echo "── Updating nginx config ──"
-# Copy the nginx config from the repo (or use the one already on disk)
-if [ -f "$STAGING_DIR/infra/nginx.conf" ]; then
-    cp "$STAGING_DIR/infra/nginx.conf" /etc/nginx/sites-available/lazy-fantasy
-    ln -sf /etc/nginx/sites-available/lazy-fantasy /etc/nginx/sites-enabled/
-    rm -f /etc/nginx/sites-enabled/default
-    nginx -t && systemctl reload nginx
-    echo "   ✓ Nginx config updated"
-else
-    echo "   ⚠ infra/nginx.conf not found in repo — update nginx manually"
-fi
+# ─── 8. Add staging nginx server block (separate file, never touches prod) ───
+echo "── Adding staging nginx server block ──"
+cat > /etc/nginx/sites-available/lazy-fantasy-staging << 'NGINXEOF'
+server {
+    listen 8080;
+    server_name _;
+
+    location ~ ^/(auth|matches|leagues|predictions|admin|health|notifications|f1|docs|openapi\.json) {
+        proxy_pass http://127.0.0.1:8001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+NGINXEOF
+ln -sf /etc/nginx/sites-available/lazy-fantasy-staging /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+echo "   ✓ Staging nginx block added (prod config untouched)"
 
 # ─── 9. Open UFW port for staging ────────────────────────────────────────────
 echo "── Opening UFW port 8080 ──"
