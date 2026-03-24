@@ -11,10 +11,16 @@ class Prediction(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     match_id: Mapped[int] = mapped_column(Integer, ForeignKey("matches.id"))
     predicted_winner_id: Mapped[int] = mapped_column(Integer, ForeignKey("teams.id"))
-    predicted_most_runs_player_id: Mapped[int] = mapped_column(
+    predicted_most_runs_team1_player_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("players.id")
     )
-    predicted_most_wickets_player_id: Mapped[int] = mapped_column(
+    predicted_most_runs_team2_player_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("players.id")
+    )
+    predicted_most_wickets_team1_player_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("players.id")
+    )
+    predicted_most_wickets_team2_player_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("players.id")
     )
     predicted_pom_player_id: Mapped[int] = mapped_column(
@@ -27,11 +33,17 @@ class Prediction(Base):
     user = relationship("User", back_populates="predictions")
     match = relationship("Match", back_populates="predictions")
     predicted_winner = relationship("Team", foreign_keys=[predicted_winner_id])
-    predicted_most_runs_player = relationship(
-        "Player", foreign_keys=[predicted_most_runs_player_id]
+    predicted_most_runs_team1_player = relationship(
+        "Player", foreign_keys=[predicted_most_runs_team1_player_id]
     )
-    predicted_most_wickets_player = relationship(
-        "Player", foreign_keys=[predicted_most_wickets_player_id]
+    predicted_most_runs_team2_player = relationship(
+        "Player", foreign_keys=[predicted_most_runs_team2_player_id]
+    )
+    predicted_most_wickets_team1_player = relationship(
+        "Player", foreign_keys=[predicted_most_wickets_team1_player_id]
+    )
+    predicted_most_wickets_team2_player = relationship(
+        "Player", foreign_keys=[predicted_most_wickets_team2_player_id]
     )
     predicted_pom_player = relationship("Player", foreign_keys=[predicted_pom_player_id])
 

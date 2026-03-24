@@ -31,8 +31,8 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Fantasy Cricket League",
-    description="Backend API for Fantasy Cricket League MVP",
+    title="Lazy Fantasy",
+    description="Backend API for Lazy Fantasy — Cricket predictions",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -58,7 +58,7 @@ app.include_router(notifications.router)
 @app.get("/")
 async def root():
     """Health check endpoint."""
-    return {"message": "Fantasy Cricket League API", "status": "running"}
+    return {"message": "Lazy Fantasy API", "status": "running"}
 
 
 @app.get("/health")

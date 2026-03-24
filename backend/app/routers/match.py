@@ -89,8 +89,10 @@ async def get_match_detail(
         start_time=match.start_time,
         status=match.status.value,
         winner=TeamResponse.model_validate(match.winner) if match.winner else None,
-        most_runs_player=PlayerResponse.model_validate(match.most_runs_player) if match.most_runs_player else None,
-        most_wickets_player=PlayerResponse.model_validate(match.most_wickets_player) if match.most_wickets_player else None,
+        most_runs_team1_player=PlayerResponse.model_validate(match.most_runs_team1_player) if match.most_runs_team1_player else None,
+        most_runs_team2_player=PlayerResponse.model_validate(match.most_runs_team2_player) if match.most_runs_team2_player else None,
+        most_wickets_team1_player=PlayerResponse.model_validate(match.most_wickets_team1_player) if match.most_wickets_team1_player else None,
+        most_wickets_team2_player=PlayerResponse.model_validate(match.most_wickets_team2_player) if match.most_wickets_team2_player else None,
         pom_player=PlayerResponse.model_validate(match.pom_player) if match.pom_player else None,
     )
 

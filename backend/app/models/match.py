@@ -28,10 +28,16 @@ class Match(Base):
     result_winner_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("teams.id"), nullable=True
     )
-    result_most_runs_player_id: Mapped[Optional[int]] = mapped_column(
+    result_most_runs_team1_player_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("players.id"), nullable=True
     )
-    result_most_wickets_player_id: Mapped[Optional[int]] = mapped_column(
+    result_most_runs_team2_player_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("players.id"), nullable=True
+    )
+    result_most_wickets_team1_player_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("players.id"), nullable=True
+    )
+    result_most_wickets_team2_player_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("players.id"), nullable=True
     )
     result_pom_player_id: Mapped[Optional[int]] = mapped_column(
@@ -43,8 +49,10 @@ class Match(Base):
     team_1 = relationship("Team", foreign_keys=[team_1_id])
     team_2 = relationship("Team", foreign_keys=[team_2_id])
     winner = relationship("Team", foreign_keys=[result_winner_id])
-    most_runs_player = relationship("Player", foreign_keys=[result_most_runs_player_id])
-    most_wickets_player = relationship("Player", foreign_keys=[result_most_wickets_player_id])
+    most_runs_team1_player = relationship("Player", foreign_keys=[result_most_runs_team1_player_id])
+    most_runs_team2_player = relationship("Player", foreign_keys=[result_most_runs_team2_player_id])
+    most_wickets_team1_player = relationship("Player", foreign_keys=[result_most_wickets_team1_player_id])
+    most_wickets_team2_player = relationship("Player", foreign_keys=[result_most_wickets_team2_player_id])
     pom_player = relationship("Player", foreign_keys=[result_pom_player_id])
     predictions = relationship("Prediction", back_populates="match")
 

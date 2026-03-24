@@ -12,6 +12,7 @@ class Team(Base):
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(10))
     logo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    sport: Mapped[str] = mapped_column(String(20), default="cricket", server_default="cricket")
 
     # Relationships
     players = relationship("Player", back_populates="team")

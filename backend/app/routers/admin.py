@@ -7,6 +7,7 @@ from app.models import Match, MatchStatus, Team, Tournament, Player, User, Match
 from app.schemas.admin import MatchCreate, MatchResultCreate, SetLineupRequest
 from app.schemas.match import MatchResponse, TeamResponse, PlayerResponse
 from app.services.auth import get_current_admin_user
+from app.services.league import snapshot_league_ranks
 from app.services.scoring import calculate_scores
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -111,36 +112,54 @@ async def set_match_result(
             detail="Winner must be one of the match teams",
         )
     
-    # Validate players exist and belong to match teams
-    valid_team_ids = {match.team_1_id, match.team_2_id}
-    player_ids = [
-        result_data.result_most_runs_player_id,
-        result_data.result_most_wickets_player_id,
-        result_data.result_pom_player_id,
+    # Validate per-team players
+    team1_player_ids = [
+        result_data.result_most_runs_team1_player_id,
+        result_data.result_most_wickets_team1_player_id,
     ]
-    
-    for player_id in player_ids:
+    team2_player_ids = [
+        result_data.result_most_runs_team2_player_id,
+        result_data.result_most_wickets_team2_player_id,
+    ]
+    pom_player_ids = [result_data.result_pom_player_id]
+
+    valid_team_ids = {match.team_1_id, match.team_2_id}
+
+    for player_id in team1_player_ids:
         player = db.query(Player).filter(Player.id == player_id).first()
         if not player:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Player with ID {player_id} not found",
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player with ID {player_id} not found")
+        if player.team_id != match.team_1_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player {player.name} must belong to {match.team_1.name}")
+
+    for player_id in team2_player_ids:
+        player = db.query(Player).filter(Player.id == player_id).first()
+        if not player:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player with ID {player_id} not found")
+        if player.team_id != match.team_2_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player {player.name} must belong to {match.team_2.name}")
+
+    for player_id in pom_player_ids:
+        player = db.query(Player).filter(Player.id == player_id).first()
+        if not player:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player with ID {player_id} not found")
         if player.team_id not in valid_team_ids:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Player {player.name} is not in either team",
-            )
-    
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player {player.name} is not in either team")
+
     # Update match with results
     match.result_winner_id = result_data.result_winner_id
-    match.result_most_runs_player_id = result_data.result_most_runs_player_id
-    match.result_most_wickets_player_id = result_data.result_most_wickets_player_id
+    match.result_most_runs_team1_player_id = result_data.result_most_runs_team1_player_id
+    match.result_most_runs_team2_player_id = result_data.result_most_runs_team2_player_id
+    match.result_most_wickets_team1_player_id = result_data.result_most_wickets_team1_player_id
+    match.result_most_wickets_team2_player_id = result_data.result_most_wickets_team2_player_id
     match.result_pom_player_id = result_data.result_pom_player_id
     match.status = MatchStatus.COMPLETED
     
     db.commit()
-    
+
+    # Snapshot current ranks before scoring so deltas can be computed afterwards
+    snapshot_league_ranks(db, match_id)
+
     # Calculate scores for all predictions
     predictions_processed = calculate_scores(db, match_id)
     
@@ -206,17 +225,21 @@ async def get_match_predictions(
         
         # Get player names
         winner_team = db.query(Team).filter(Team.id == pred.predicted_winner_id).first()
-        most_runs_player = db.query(Player).filter(Player.id == pred.predicted_most_runs_player_id).first()
-        most_wickets_player = db.query(Player).filter(Player.id == pred.predicted_most_wickets_player_id).first()
+        runs_t1 = db.query(Player).filter(Player.id == pred.predicted_most_runs_team1_player_id).first()
+        runs_t2 = db.query(Player).filter(Player.id == pred.predicted_most_runs_team2_player_id).first()
+        wkts_t1 = db.query(Player).filter(Player.id == pred.predicted_most_wickets_team1_player_id).first()
+        wkts_t2 = db.query(Player).filter(Player.id == pred.predicted_most_wickets_team2_player_id).first()
         pom_player = db.query(Player).filter(Player.id == pred.predicted_pom_player_id).first()
-        
+
         result.append({
             "id": pred.id,
             "user_id": pred.user_id,
             "username": user.username if user else "Unknown",
             "predicted_winner": winner_team.name if winner_team else "Unknown",
-            "predicted_most_runs": most_runs_player.name if most_runs_player else "Unknown",
-            "predicted_most_wickets": most_wickets_player.name if most_wickets_player else "Unknown",
+            "predicted_most_runs_team1": runs_t1.name if runs_t1 else "Unknown",
+            "predicted_most_runs_team2": runs_t2.name if runs_t2 else "Unknown",
+            "predicted_most_wickets_team1": wkts_t1.name if wkts_t1 else "Unknown",
+            "predicted_most_wickets_team2": wkts_t2.name if wkts_t2 else "Unknown",
             "predicted_pom": pom_player.name if pom_player else "Unknown",
             "points_earned": pred.points_earned,
             "is_processed": pred.is_processed,

@@ -106,7 +106,7 @@ describe('SignupPage', () => {
       expect(mockSignup).toHaveBeenCalledWith('newuser', 'a@b.com', 'password123');
       expect(mockApiLogin).toHaveBeenCalledWith('newuser', 'password123');
       expect(mockAuthLogin).toHaveBeenCalledWith('tok', 'newuser');
-      expect(mockPush).toHaveBeenCalledWith('/dashboard');
+      expect(mockPush).toHaveBeenCalledWith('/predictions');
     });
   });
 

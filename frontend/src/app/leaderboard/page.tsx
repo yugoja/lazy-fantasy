@@ -19,6 +19,7 @@ interface League {
   name: string;
   invite_code: string;
   owner_id: number;
+  sport?: string;
 }
 
 interface LeaderboardEntry {
@@ -26,6 +27,7 @@ interface LeaderboardEntry {
   username: string;
   total_points: number;
   rank: number;
+  rank_delta: number | null;
 }
 
 function LeaderboardContent() {
@@ -37,7 +39,6 @@ function LeaderboardContent() {
   const [selectedLeagueId, setSelectedLeagueId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [boardLoading, setBoardLoading] = useState(false);
-  const [prevRanks, setPrevRanks] = useState<Record<number, number>>({});
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -74,20 +75,7 @@ function LeaderboardContent() {
     setBoardLoading(true);
     try {
       const data = await getLeaderboard(leagueId);
-      const entries = data.entries;
-
-      // Load previously stored ranks for this league
-      const storageKey = `leaderboard-ranks-${leagueId}`;
-      const stored = localStorage.getItem(storageKey);
-      const prev: Record<number, number> = stored ? JSON.parse(stored) : {};
-      setPrevRanks(prev);
-
-      // Save current ranks for next visit
-      const current: Record<number, number> = {};
-      entries.forEach((e: LeaderboardEntry) => { current[e.user_id] = e.rank; });
-      localStorage.setItem(storageKey, JSON.stringify(current));
-
-      setEntries(entries);
+      setEntries(data.entries);
     } catch {
       setEntries([]);
     } finally {
@@ -144,7 +132,7 @@ function LeaderboardContent() {
           <SelectContent>
             {leagues.map((league) => (
               <SelectItem key={league.id} value={String(league.id)}>
-                {league.name}
+                {league.name} 🏏
               </SelectItem>
             ))}
           </SelectContent>
@@ -237,8 +225,7 @@ function LeaderboardContent() {
             <div className="divide-y divide-border">
               {entries.map((entry) => {
                 const isCurrentUser = entry.username === username;
-                const prev = prevRanks[entry.user_id];
-                const delta = prev != null ? prev - entry.rank : null;
+                const delta = entry.rank_delta ?? null;
                 return (
                   <div
                     key={entry.user_id}

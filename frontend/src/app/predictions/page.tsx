@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
-import { getMatches, getMyPredictions, getMyPredictionsDetailed, PredictionDetail } from '@/lib/api';
+import { getMatches, getMyPredictions, getMyPredictionsDetailed, getMyLeagues, PredictionDetail } from '@/lib/api';
 import { MatchCard } from '@/components/MatchCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Target, Star, Check, X } from 'lucide-react';
+import { Trophy, Target, Star, Check, X, Flag, Zap, Users } from 'lucide-react';
 import { cn, getFlagUrl } from '@/lib/utils';
 import { ShareButton } from '@/components/ShareButton';
 import { shareWithCard } from '@/lib/share';
@@ -40,6 +40,7 @@ export default function PredictionsPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [detailedPredictions, setDetailedPredictions] = useState<PredictionDetail[]>([]);
+  const [leagues, setLeagues] = useState<Array<{ id: number; name: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
@@ -57,14 +58,16 @@ export default function PredictionsPage() {
 
   const loadData = async () => {
     try {
-      const [matchesData, predictionsData, detailedData] = await Promise.allSettled([
+      const [matchesData, predictionsData, detailedData, leaguesData] = await Promise.allSettled([
         getMatches(),
         getMyPredictions(),
         getMyPredictionsDetailed(),
+        getMyLeagues(),
       ]);
       if (matchesData.status === 'fulfilled') setMatches(matchesData.value);
       if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
       if (detailedData.status === 'fulfilled') setDetailedPredictions(detailedData.value);
+      if (leaguesData.status === 'fulfilled') setLeagues(leaguesData.value);
     } catch {
       setLoadError('Failed to load data');
     } finally {
@@ -180,8 +183,10 @@ export default function PredictionsPage() {
     const loser = winner === pred.team_1.short_name ? pred.team_2.short_name : pred.team_1.short_name;
     const cats = [
       { label: 'Winner', ok: pred.actual_winner && pred.predicted_winner.short_name === pred.actual_winner.short_name },
-      { label: 'Runs', ok: pred.actual_most_runs_player && pred.predicted_most_runs_player.name === pred.actual_most_runs_player.name },
-      { label: 'Wickets', ok: pred.actual_most_wickets_player && pred.predicted_most_wickets_player.name === pred.actual_most_wickets_player.name },
+      { label: `Runs (${pred.team_1.short_name})`, ok: pred.actual_most_runs_team1_player && pred.predicted_most_runs_team1_player.name === pred.actual_most_runs_team1_player.name },
+      { label: `Runs (${pred.team_2.short_name})`, ok: pred.actual_most_runs_team2_player && pred.predicted_most_runs_team2_player.name === pred.actual_most_runs_team2_player.name },
+      { label: `Wickets (${pred.team_1.short_name})`, ok: pred.actual_most_wickets_team1_player && pred.predicted_most_wickets_team1_player.name === pred.actual_most_wickets_team1_player.name },
+      { label: `Wickets (${pred.team_2.short_name})`, ok: pred.actual_most_wickets_team2_player && pred.predicted_most_wickets_team2_player.name === pred.actual_most_wickets_team2_player.name },
       { label: 'POM', ok: pred.actual_pom_player && pred.predicted_pom_player.name === pred.actual_pom_player.name },
     ];
     const scorecard = cats.map(c => `${c.ok ? '✅' : '❌'} ${c.label}`).join('\n');
@@ -190,13 +195,18 @@ export default function PredictionsPage() {
     return [
       `🏏 ${winner} beat ${loser} — results are in!`,
       '',
-      `I got ${pred.points_earned}/100 on Lazy Fantasy (${correctCount}/4 correct) 🎯`,
+      `I got ${pred.points_earned}/140 on Lazy Fantasy (${correctCount}/6 correct) 🎯`,
       '',
       scorecard,
       '',
       `Who else predicted? Drop your score 👇`,
       `${appUrl}/predictions`,
     ].join('\n');
+  };
+
+  const friendsPicksLink = (matchId: number) => {
+    if (leagues.length === 0) return null;
+    return `/leagues/${leagues[0].id}/match/${matchId}`;
   };
 
   const renderDetailedCard = (pred: PredictionDetail) => {
@@ -214,18 +224,34 @@ export default function PredictionsPage() {
         color: 'text-primary',
       },
       {
-        label: 'Most Runs',
+        label: `Runs (${pred.team_1.short_name})`,
         icon: Target,
-        predicted: pred.predicted_most_runs_player.name,
-        actual: pred.actual_most_runs_player?.name,
+        predicted: pred.predicted_most_runs_team1_player.name,
+        actual: pred.actual_most_runs_team1_player?.name,
         pts: 20,
         color: 'text-blue-400',
       },
       {
-        label: 'Most Wickets',
+        label: `Runs (${pred.team_2.short_name})`,
         icon: Target,
-        predicted: pred.predicted_most_wickets_player.name,
-        actual: pred.actual_most_wickets_player?.name,
+        predicted: pred.predicted_most_runs_team2_player.name,
+        actual: pred.actual_most_runs_team2_player?.name,
+        pts: 20,
+        color: 'text-blue-400',
+      },
+      {
+        label: `Wkts (${pred.team_1.short_name})`,
+        icon: Target,
+        predicted: pred.predicted_most_wickets_team1_player.name,
+        actual: pred.actual_most_wickets_team1_player?.name,
+        pts: 20,
+        color: 'text-green-400',
+      },
+      {
+        label: `Wkts (${pred.team_2.short_name})`,
+        icon: Target,
+        predicted: pred.predicted_most_wickets_team2_player.name,
+        actual: pred.actual_most_wickets_team2_player?.name,
         pts: 20,
         color: 'text-green-400',
       },
@@ -309,6 +335,17 @@ export default function PredictionsPage() {
             })}
           </div>
 
+          {/* Friends' picks link — shown for all locked matches */}
+          {friendsPicksLink(pred.match_id) && (
+            <Link
+              href={friendsPicksLink(pred.match_id)!}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mt-1"
+            >
+              <Users className="h-3.5 w-3.5" />
+              Friends&apos; picks
+            </Link>
+          )}
+
           {/* Share — only shown once results are processed */}
           {isProcessed && (
             <ShareButton
@@ -316,8 +353,10 @@ export default function PredictionsPage() {
               onClick={async () => {
                 const categories = [
                   { label: 'Winner', correct: !!(pred.actual_winner && pred.predicted_winner.short_name === pred.actual_winner.short_name) },
-                  { label: 'Most Runs', correct: !!(pred.actual_most_runs_player && pred.predicted_most_runs_player.name === pred.actual_most_runs_player.name) },
-                  { label: 'Most Wickets', correct: !!(pred.actual_most_wickets_player && pred.predicted_most_wickets_player.name === pred.actual_most_wickets_player.name) },
+                  { label: `Runs (${pred.team_1.short_name})`, correct: !!(pred.actual_most_runs_team1_player && pred.predicted_most_runs_team1_player.name === pred.actual_most_runs_team1_player.name) },
+                  { label: `Runs (${pred.team_2.short_name})`, correct: !!(pred.actual_most_runs_team2_player && pred.predicted_most_runs_team2_player.name === pred.actual_most_runs_team2_player.name) },
+                  { label: `Wkts (${pred.team_1.short_name})`, correct: !!(pred.actual_most_wickets_team1_player && pred.predicted_most_wickets_team1_player.name === pred.actual_most_wickets_team1_player.name) },
+                  { label: `Wkts (${pred.team_2.short_name})`, correct: !!(pred.actual_most_wickets_team2_player && pred.predicted_most_wickets_team2_player.name === pred.actual_most_wickets_team2_player.name) },
                   { label: 'POM', correct: !!(pred.actual_pom_player && pred.predicted_pom_player.name === pred.actual_pom_player.name) },
                 ];
                 const image = await generateResultCard({
@@ -353,7 +392,7 @@ export default function PredictionsPage() {
     }
 
     const processed = detailedPredictions.filter(p => p.is_processed);
-    const maxPoints = processed.length * 100;
+    const maxPoints = processed.length * 140;
 
     const categoryStats = [
       {
@@ -365,20 +404,36 @@ export default function PredictionsPage() {
         correct: processed.filter(p => p.actual_winner && p.predicted_winner.short_name === p.actual_winner.short_name).length,
       },
       {
-        label: 'Most Runs',
+        label: 'Runs (T1)',
         icon: Target,
         color: 'text-blue-400',
         bgColor: 'bg-blue-400',
         pts: 20,
-        correct: processed.filter(p => p.actual_most_runs_player && p.predicted_most_runs_player.name === p.actual_most_runs_player.name).length,
+        correct: processed.filter(p => p.actual_most_runs_team1_player && p.predicted_most_runs_team1_player.name === p.actual_most_runs_team1_player.name).length,
       },
       {
-        label: 'Most Wickets',
+        label: 'Runs (T2)',
+        icon: Target,
+        color: 'text-blue-300',
+        bgColor: 'bg-blue-300',
+        pts: 20,
+        correct: processed.filter(p => p.actual_most_runs_team2_player && p.predicted_most_runs_team2_player.name === p.actual_most_runs_team2_player.name).length,
+      },
+      {
+        label: 'Wkts (T1)',
         icon: Target,
         color: 'text-green-400',
         bgColor: 'bg-green-400',
         pts: 20,
-        correct: processed.filter(p => p.actual_most_wickets_player && p.predicted_most_wickets_player.name === p.actual_most_wickets_player.name).length,
+        correct: processed.filter(p => p.actual_most_wickets_team1_player && p.predicted_most_wickets_team1_player.name === p.actual_most_wickets_team1_player.name).length,
+      },
+      {
+        label: 'Wkts (T2)',
+        icon: Target,
+        color: 'text-green-300',
+        bgColor: 'bg-green-300',
+        pts: 20,
+        correct: processed.filter(p => p.actual_most_wickets_team2_player && p.predicted_most_wickets_team2_player.name === p.actual_most_wickets_team2_player.name).length,
       },
       {
         label: 'POM',
@@ -391,7 +446,7 @@ export default function PredictionsPage() {
     ];
 
     const totalCorrect = categoryStats.reduce((s, c) => s + c.correct, 0);
-    const totalPossibleCorrect = processed.length * 4;
+    const totalPossibleCorrect = processed.length * 6;
 
     return (
       <div className="space-y-4">
@@ -452,61 +507,44 @@ export default function PredictionsPage() {
 
   return (
     <div className="container-mobile py-6 space-y-6 pb-24">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Match Predictions</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pick a match to make your predictions.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Match Predictions</h1>
+          <p className="text-sm text-muted-foreground mt-1">Pick a match to make your predictions.</p>
+        </div>
       </div>
 
-      {/* Error */}
       {loadError && (
         <Card className="p-3 border-destructive/50 bg-destructive/10">
           <p className="text-sm text-destructive">{loadError}</p>
         </Card>
       )}
 
-      {/* Tabs */}
       <Tabs defaultValue="upcoming" className="w-full">
         <TabsList className="w-full">
-          <TabsTrigger value="upcoming" className="flex-1">
-            Upcoming
-          </TabsTrigger>
-          <TabsTrigger value="live" className="flex-1">
-            Live ({ongoing.length})
-          </TabsTrigger>
-          <TabsTrigger value="done" className="flex-1">
-            Done ({detailedPredictions.length})
-          </TabsTrigger>
+          <TabsTrigger value="upcoming" className="flex-1">Upcoming</TabsTrigger>
+          <TabsTrigger value="live" className="flex-1">Live ({ongoing.length})</TabsTrigger>
+          <TabsTrigger value="done" className="flex-1">Done ({detailedPredictions.length})</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="upcoming" className="mt-4">
-          {renderMatches(upcoming)}
-        </TabsContent>
-
+        <TabsContent value="upcoming" className="mt-4">{renderMatches(upcoming)}</TabsContent>
         <TabsContent value="live" className="mt-4">
           {ongoing.length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-sm text-muted-foreground">No live matches right now</p>
-            </Card>
+            <Card className="p-8 text-center"><p className="text-sm text-muted-foreground">No live matches right now</p></Card>
           ) : (
             <div className="space-y-4">
               {ongoing.map((match) => {
                 const pred = detailedByMatchId.get(match.id);
+                const link = friendsPicksLink(match.id);
                 if (!pred) {
                   return (
-                    <div key={match.id}>
-                      <MatchCard
-                        id={match.id}
-                        team1={match.team_1}
-                        team2={match.team_2}
-                        startTime={match.start_time}
-                        status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'}
-                        venue={match.venue}
-                        hasPredicted={!!predictionByMatch.get(match.id)}
-                        lineupAnnounced={match.lineup_announced}
-                      />
+                    <div key={match.id} className="space-y-2">
+                      <MatchCard id={match.id} team1={match.team_1} team2={match.team_2} startTime={match.start_time} status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'} venue={match.venue} hasPredicted={!!predictionByMatch.get(match.id)} lineupAnnounced={match.lineup_announced} />
+                      {link && (
+                        <Link href={link} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-1">
+                          <Users className="h-3.5 w-3.5" />
+                          Friends&apos; picks
+                        </Link>
+                      )}
                     </div>
                   );
                 }
@@ -515,10 +553,7 @@ export default function PredictionsPage() {
             </div>
           )}
         </TabsContent>
-
-        <TabsContent value="done" className="mt-4">
-          {renderPredictionHistory()}
-        </TabsContent>
+        <TabsContent value="done" className="mt-4">{renderPredictionHistory()}</TabsContent>
       </Tabs>
     </div>
   );

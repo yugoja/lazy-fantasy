@@ -1,9 +1,11 @@
+from typing import Optional
 from pydantic import BaseModel
 
 
 class LeagueCreate(BaseModel):
     """Schema for creating a new league."""
     name: str
+    sport: str = "cricket"
 
 
 class LeagueResponse(BaseModel):
@@ -12,6 +14,7 @@ class LeagueResponse(BaseModel):
     name: str
     invite_code: str
     owner_id: int
+    sport: str = "cricket"
 
     model_config = {"from_attributes": True}
 
@@ -27,6 +30,7 @@ class LeaderboardEntry(BaseModel):
     username: str
     total_points: int
     rank: int
+    rank_delta: Optional[int] = None
 
 
 class LeaderboardResponse(BaseModel):

@@ -100,7 +100,6 @@ export default function DashboardPage() {
         ? Math.round((processedPredictions / predictions.length) * 100)
         : 0;
 
-    // Get upcoming matches (scheduled and start time in the future)
     const now = new Date();
     const upcomingMatches = matches
         .filter(m => m.status === 'SCHEDULED' && new Date(m.start_time) > now)
@@ -193,7 +192,6 @@ export default function DashboardPage() {
             />
             {heroContent}
 
-            {/* Stats Overview */}
             <StatsOverview
                 totalPoints={totalPoints}
                 accuracy={accuracy}
@@ -201,7 +199,6 @@ export default function DashboardPage() {
                 processedPredictions={processedPredictions}
             />
 
-            {/* Upcoming Matches */}
             <section>
                 <div className="flex items-center justify-between mb-4">
                     <div>
@@ -215,7 +212,6 @@ export default function DashboardPage() {
                         </Button>
                     </Link>
                 </div>
-
                 {upcomingMatches.length === 0 ? (
                     <Card className="p-6 text-center">
                         <p className="text-sm text-muted-foreground">No upcoming matches</p>
@@ -239,7 +235,6 @@ export default function DashboardPage() {
                 )}
             </section>
 
-            {/* My Leagues */}
             <section>
                 <div className="flex items-center justify-between mb-4">
                     <div>
@@ -256,7 +251,7 @@ export default function DashboardPage() {
 
                 {leagues.length === 0 ? (
                     <Card className="p-6 text-center space-y-3">
-                        <p className="text-sm text-muted-foreground">You haven't joined any leagues yet</p>
+                        <p className="text-sm text-muted-foreground">You haven&apos;t joined any leagues yet</p>
                         <Link href="/leagues">
                             <Button size="sm">Join or Create League</Button>
                         </Link>

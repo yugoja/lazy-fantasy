@@ -13,8 +13,10 @@ class MatchCreate(BaseModel):
 class MatchResultCreate(BaseModel):
     """Schema for setting match results."""
     result_winner_id: int
-    result_most_runs_player_id: int
-    result_most_wickets_player_id: int
+    result_most_runs_team1_player_id: int
+    result_most_runs_team2_player_id: int
+    result_most_wickets_team1_player_id: int
+    result_most_wickets_team2_player_id: int
     result_pom_player_id: int
 
 

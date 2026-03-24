@@ -181,8 +181,10 @@ def completed_match(db_session, test_tournament, test_teams):
     team1_players = db_session.query(Player).filter(Player.team_id == team1.id).all()
     team2_players = db_session.query(Player).filter(Player.team_id == team2.id).all()
 
-    match.result_most_runs_player_id = team1_players[0].id
-    match.result_most_wickets_player_id = team2_players[4].id
+    match.result_most_runs_team1_player_id = team1_players[0].id
+    match.result_most_runs_team2_player_id = team2_players[0].id
+    match.result_most_wickets_team1_player_id = team1_players[4].id
+    match.result_most_wickets_team2_player_id = team2_players[4].id
     match.result_pom_player_id = team1_players[0].id
 
     db_session.add(match)
@@ -222,8 +224,10 @@ def test_prediction(db_session, test_user, test_match, test_teams):
         user_id=test_user.id,
         match_id=test_match.id,
         predicted_winner_id=team1.id,
-        predicted_most_runs_player_id=team1_players[0].id,
-        predicted_most_wickets_player_id=team2_players[4].id,
+        predicted_most_runs_team1_player_id=team1_players[0].id,
+        predicted_most_runs_team2_player_id=team2_players[0].id,
+        predicted_most_wickets_team1_player_id=team1_players[4].id,
+        predicted_most_wickets_team2_player_id=team2_players[4].id,
         predicted_pom_player_id=team1_players[0].id
     )
     db_session.add(prediction)

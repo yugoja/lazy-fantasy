@@ -90,6 +90,8 @@ export default function AdminPage() {
         <p className="text-sm text-muted-foreground">Manage matches and view predictions</p>
       </div>
 
+
+
       {error && (
         <Card className="p-3 border-destructive/50 bg-destructive/10">
           <p className="text-sm text-destructive">{error}</p>

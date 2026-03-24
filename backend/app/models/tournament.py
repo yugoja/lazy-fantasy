@@ -12,6 +12,7 @@ class Tournament(Base):
     name: Mapped[str] = mapped_column(String(100))
     start_date: Mapped[date] = mapped_column(Date)
     end_date: Mapped[date] = mapped_column(Date)
+    sport: Mapped[str] = mapped_column(String(20), default="cricket", server_default="cricket")
 
     # Relationships
     matches = relationship("Match", back_populates="tournament")

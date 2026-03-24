@@ -27,8 +27,10 @@ class TestScoringLogic:
             user_id=test_user.id,
             match_id=completed_match.id,
             predicted_winner_id=completed_match.result_winner_id,
-            predicted_most_runs_player_id=completed_match.result_most_runs_player_id,
-            predicted_most_wickets_player_id=completed_match.result_most_wickets_player_id,
+            predicted_most_runs_team1_player_id=completed_match.result_most_runs_team1_player_id,
+            predicted_most_runs_team2_player_id=completed_match.result_most_runs_team2_player_id,
+            predicted_most_wickets_team1_player_id=completed_match.result_most_wickets_team1_player_id,
+            predicted_most_wickets_team2_player_id=completed_match.result_most_wickets_team2_player_id,
             predicted_pom_player_id=completed_match.result_pom_player_id
         )
         db_session.add(prediction)
@@ -38,8 +40,8 @@ class TestScoringLogic:
         calculate_scores(db_session, completed_match.id)
         db_session.refresh(prediction)
 
-        # Should get: 10 + 20 + 20 + 50 = 100 points
-        assert prediction.points_earned == 100
+        # Should get: 10 + 20 + 20 + 20 + 20 + 50 = 140 points
+        assert prediction.points_earned == 140
         assert prediction.is_processed is True
 
     def test_no_correct_predictions_score(
@@ -50,17 +52,22 @@ class TestScoringLogic:
         from app.models.player import Player
 
         team1, team2 = test_teams
+        team1_players = db_session.query(Player).filter(
+            Player.team_id == team1.id
+        ).all()
         team2_players = db_session.query(Player).filter(
             Player.team_id == team2.id
         ).all()
 
-        # Create prediction that's all wrong
+        # Create prediction that's all wrong (but valid per-team)
         prediction = Prediction(
             user_id=test_user.id,
             match_id=completed_match.id,
             predicted_winner_id=team2.id,  # Wrong
-            predicted_most_runs_player_id=team2_players[0].id,  # Wrong
-            predicted_most_wickets_player_id=team2_players[1].id,  # Wrong
+            predicted_most_runs_team1_player_id=team1_players[1].id,  # Wrong
+            predicted_most_runs_team2_player_id=team2_players[1].id,  # Wrong
+            predicted_most_wickets_team1_player_id=team1_players[5].id,  # Wrong
+            predicted_most_wickets_team2_player_id=team2_players[5].id,  # Wrong
             predicted_pom_player_id=team2_players[0].id  # Wrong
         )
         db_session.add(prediction)
@@ -80,18 +87,23 @@ class TestScoringLogic:
         from app.models.prediction import Prediction
         from app.models.player import Player
 
-        team2 = test_teams[1]
+        team1, team2 = test_teams
+        team1_players = db_session.query(Player).filter(
+            Player.team_id == team1.id
+        ).all()
         team2_players = db_session.query(Player).filter(
             Player.team_id == team2.id
         ).all()
 
-        # Predict winner and most runs correctly, others wrong
+        # Predict winner and most runs (team1) correctly, others wrong
         prediction = Prediction(
             user_id=test_user.id,
             match_id=completed_match.id,
             predicted_winner_id=completed_match.result_winner_id,  # Correct: +10
-            predicted_most_runs_player_id=completed_match.result_most_runs_player_id,  # Correct: +20
-            predicted_most_wickets_player_id=team2_players[1].id,  # Wrong: +0
+            predicted_most_runs_team1_player_id=completed_match.result_most_runs_team1_player_id,  # Correct: +20
+            predicted_most_runs_team2_player_id=team2_players[1].id,  # Wrong: +0
+            predicted_most_wickets_team1_player_id=team1_players[5].id,  # Wrong: +0
+            predicted_most_wickets_team2_player_id=team2_players[5].id,  # Wrong: +0
             predicted_pom_player_id=team2_players[0].id  # Wrong: +0
         )
         db_session.add(prediction)

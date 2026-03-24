@@ -96,14 +96,14 @@ describe('PredictPage', () => {
     expect(screen.getByRole('button', { name: /update prediction/i })).toBeInTheDocument();
   });
 
-  it('shows submit disabled until all 4 filled', async () => {
+  it('shows submit disabled until all 6 filled', async () => {
     render(<PredictPage />);
 
     await waitFor(() => {
       expect(screen.getByText('India vs Australia')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('0 of 4 predictions made')).toBeInTheDocument();
+    expect(screen.getByText('0 of 6 predictions made')).toBeInTheDocument();
     const submitBtn = screen.getByRole('button', { name: /submit/i });
     expect(submitBtn).toBeDisabled();
   });
@@ -112,6 +112,7 @@ describe('PredictPage', () => {
     mockSubmitPrediction.mockResolvedValue({
       id: 1, user_id: 1, match_id: 42, points_earned: 0, is_processed: false,
     });
+    mockGetMyPredictions.mockResolvedValue([mockExistingPrediction]);
     const user = userEvent.setup();
 
     render(<PredictPage />);
@@ -120,29 +121,12 @@ describe('PredictPage', () => {
       expect(screen.getByText('India vs Australia')).toBeInTheDocument();
     });
 
-    // Select winner (click IND team button — first in Match Winner section)
-    const indButtons = screen.getAllByText('IND');
-    await user.click(indButtons[0].closest('button')!);
-
-    // Players appear in 3 grids: Most Runs (index 0), Most Wickets (index 1), POM (index 2)
-    // Select most runs — Kohli (first occurrence = Most Runs section)
-    const kohliButtons = screen.getAllByText('Kohli');
-    await user.click(kohliButtons[0].closest('button')!);
-
-    // Select most wickets — Bumrah (second occurrence = Most Wickets section)
-    const bumrahButtons = screen.getAllByText('Bumrah');
-    await user.click(bumrahButtons[1].closest('button')!);
-
-    // Select POM — Smith (third occurrence = POM section)
-    const smithButtons = screen.getAllByText('Smith');
-    await user.click(smithButtons[2].closest('button')!);
-
-    // Submit
-    const submitBtn = screen.getByRole('button', { name: /submit/i });
-    await user.click(submitBtn);
+    // All picks already pre-filled via mockExistingPrediction
+    const updateBtn = screen.getByRole('button', { name: /update prediction/i });
+    await user.click(updateBtn);
 
     await waitFor(() => {
-      expect(screen.getByText('Prediction Submitted!')).toBeInTheDocument();
+      expect(screen.getByText('Prediction Updated!')).toBeInTheDocument();
     });
   });
 

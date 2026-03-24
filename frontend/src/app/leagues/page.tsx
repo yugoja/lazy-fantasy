@@ -25,6 +25,7 @@ interface League {
   name: string;
   invite_code: string;
   owner_id: number;
+  sport?: string;
 }
 
 export default function LeaguesPage() {
@@ -54,6 +55,7 @@ function LeaguesContent() {
 
   // Create form
   const [leagueName, setLeagueName] = useState('');
+  const leagueSport = 'cricket';
   const [createError, setCreateError] = useState('');
   const [createLoading, setCreateLoading] = useState(false);
 
@@ -137,7 +139,7 @@ function LeaguesContent() {
 
     setCreateLoading(true);
     try {
-      const league = await createLeague(leagueName.trim());
+      const league = await createLeague(leagueName.trim(), leagueSport);
       setLeagues(prev => [...prev, league]);
       setCreatedLeague(league);
       setCreateOpen(false);
@@ -237,7 +239,12 @@ function LeaguesContent() {
                   <Shield className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm">{league.name}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm">{league.name}</span>
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                      🏏
+                    </Badge>
+                  </div>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="outline" className="text-[10px]">
                       {league.invite_code}

@@ -86,13 +86,13 @@ export async function googleLogin(credential: string) {
 
 // Leagues
 export async function getMyLeagues() {
-    return request<Array<{ id: number; name: string; invite_code: string; owner_id: number }>>('/leagues/my');
+    return request<Array<{ id: number; name: string; invite_code: string; owner_id: number; sport: string }>>('/leagues/my');
 }
 
-export async function createLeague(name: string) {
-    return request<{ id: number; name: string; invite_code: string; owner_id: number }>('/leagues/', {
+export async function createLeague(name: string, sport: string = 'cricket') {
+    return request<{ id: number; name: string; invite_code: string; owner_id: number; sport: string }>('/leagues/', {
         method: 'POST',
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, sport }),
     });
 }
 
@@ -103,11 +103,34 @@ export async function joinLeague(inviteCode: string) {
     });
 }
 
+export interface FriendPrediction {
+    username: string;
+    is_me: boolean;
+    points_earned: number;
+    is_processed: boolean;
+    predicted_winner: { id: number; name: string; short_name: string };
+    predicted_most_runs_team1_player: { id: number; name: string; team_id: number; role: string };
+    predicted_most_runs_team2_player: { id: number; name: string; team_id: number; role: string };
+    predicted_most_wickets_team1_player: { id: number; name: string; team_id: number; role: string };
+    predicted_most_wickets_team2_player: { id: number; name: string; team_id: number; role: string };
+    predicted_pom_player: { id: number; name: string; team_id: number; role: string };
+    actual_winner: { id: number; name: string; short_name: string } | null;
+    actual_most_runs_team1_player: { id: number; name: string; team_id: number; role: string } | null;
+    actual_most_runs_team2_player: { id: number; name: string; team_id: number; role: string } | null;
+    actual_most_wickets_team1_player: { id: number; name: string; team_id: number; role: string } | null;
+    actual_most_wickets_team2_player: { id: number; name: string; team_id: number; role: string } | null;
+    actual_pom_player: { id: number; name: string; team_id: number; role: string } | null;
+}
+
+export async function getLeagueMatchPredictions(leagueId: number, matchId: number) {
+    return request<FriendPrediction[]>(`/leagues/${leagueId}/matches/${matchId}/predictions`);
+}
+
 export async function getLeaderboard(leagueId: number) {
     return request<{
         league_id: number;
         league_name: string;
-        entries: Array<{ user_id: number; username: string; total_points: number; rank: number }>;
+        entries: Array<{ user_id: number; username: string; total_points: number; rank: number; rank_delta: number | null }>;
     }>(`/leagues/${leagueId}/leaderboard`);
 }
 
@@ -156,12 +179,16 @@ export interface PredictionDetail {
     start_time: string;
     status: string;
     predicted_winner: TeamInfo;
-    predicted_most_runs_player: PlayerInfo;
-    predicted_most_wickets_player: PlayerInfo;
+    predicted_most_runs_team1_player: PlayerInfo;
+    predicted_most_runs_team2_player: PlayerInfo;
+    predicted_most_wickets_team1_player: PlayerInfo;
+    predicted_most_wickets_team2_player: PlayerInfo;
     predicted_pom_player: PlayerInfo;
     actual_winner: TeamInfo | null;
-    actual_most_runs_player: PlayerInfo | null;
-    actual_most_wickets_player: PlayerInfo | null;
+    actual_most_runs_team1_player: PlayerInfo | null;
+    actual_most_runs_team2_player: PlayerInfo | null;
+    actual_most_wickets_team1_player: PlayerInfo | null;
+    actual_most_wickets_team2_player: PlayerInfo | null;
     actual_pom_player: PlayerInfo | null;
 }
 
@@ -196,8 +223,10 @@ export async function getMatchPlayers(matchId: number) {
 export async function submitPrediction(data: {
     match_id: number;
     predicted_winner_id: number;
-    predicted_most_runs_player_id: number;
-    predicted_most_wickets_player_id: number;
+    predicted_most_runs_team1_player_id: number;
+    predicted_most_runs_team2_player_id: number;
+    predicted_most_wickets_team1_player_id: number;
+    predicted_most_wickets_team2_player_id: number;
     predicted_pom_player_id: number;
 }) {
     return request<{
@@ -218,12 +247,46 @@ export async function getMyPredictions() {
         user_id: number;
         match_id: number;
         predicted_winner_id: number;
-        predicted_most_runs_player_id: number;
-        predicted_most_wickets_player_id: number;
+        predicted_most_runs_team1_player_id: number;
+        predicted_most_runs_team2_player_id: number;
+        predicted_most_wickets_team1_player_id: number;
+        predicted_most_wickets_team2_player_id: number;
         predicted_pom_player_id: number;
         points_earned: number;
         is_processed: boolean;
     }>>('/predictions/my');
+}
+
+// F1
+import type { F1Race, F1RaceDetail, F1Prediction, F1PredictionDetail, F1PredictionRequest, Player } from '@/types';
+
+export async function getF1Races(tournamentId?: number) {
+    const params = new URLSearchParams({ include_completed: 'true' });
+    if (tournamentId) params.set('tournament_id', String(tournamentId));
+    return request<F1Race[]>(`/f1/races/?${params}`);
+}
+
+export async function getF1RaceDetail(raceId: number) {
+    return request<F1RaceDetail>(`/f1/races/${raceId}`);
+}
+
+export async function getF1RaceDrivers(raceId: number) {
+    return request<{ race_id: number; drivers: Player[] }>(`/f1/races/${raceId}/drivers`);
+}
+
+export async function submitF1Prediction(data: F1PredictionRequest) {
+    return request<F1Prediction>('/f1/predictions/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    });
+}
+
+export async function getMyF1Predictions() {
+    return request<F1Prediction[]>('/f1/predictions/my');
+}
+
+export async function getMyF1PredictionsDetailed() {
+    return request<F1PredictionDetail[]>('/f1/predictions/my/detailed');
 }
 
 export { ApiError, API_BASE };

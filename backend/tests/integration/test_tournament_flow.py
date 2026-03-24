@@ -128,12 +128,14 @@ class TestCompleteTournamentFlow:
         team1_players = match_players["team_1_players"]
         team2_players = match_players["team_2_players"]
 
-        # Step 7: User 1 makes predictions
+        # Step 7: User 1 makes predictions (all correct)
         user1_prediction = {
             "match_id": match_id,
             "predicted_winner_id": team1.id,
-            "predicted_most_runs_player_id": team1_players[0]["id"],
-            "predicted_most_wickets_player_id": team2_players[4]["id"],
+            "predicted_most_runs_team1_player_id": team1_players[0]["id"],
+            "predicted_most_runs_team2_player_id": team2_players[0]["id"],
+            "predicted_most_wickets_team1_player_id": team1_players[4]["id"],
+            "predicted_most_wickets_team2_player_id": team2_players[4]["id"],
             "predicted_pom_player_id": team1_players[0]["id"]
         }
         response = client.post(
@@ -143,12 +145,14 @@ class TestCompleteTournamentFlow:
         )
         assert response.status_code == 201
 
-        # Step 8: User 2 makes different predictions
+        # Step 8: User 2 makes different predictions (all wrong)
         user2_prediction = {
             "match_id": match_id,
             "predicted_winner_id": team2.id,
-            "predicted_most_runs_player_id": team2_players[0]["id"],
-            "predicted_most_wickets_player_id": team1_players[4]["id"],
+            "predicted_most_runs_team1_player_id": team1_players[1]["id"],
+            "predicted_most_runs_team2_player_id": team2_players[1]["id"],
+            "predicted_most_wickets_team1_player_id": team1_players[5]["id"],
+            "predicted_most_wickets_team2_player_id": team2_players[5]["id"],
             "predicted_pom_player_id": team2_players[0]["id"]
         }
         response = client.post(
@@ -161,8 +165,10 @@ class TestCompleteTournamentFlow:
         # Step 9: Admin sets match result (Team 1 wins)
         match_result = {
             "result_winner_id": team1.id,
-            "result_most_runs_player_id": team1_players[0]["id"],
-            "result_most_wickets_player_id": team2_players[4]["id"],
+            "result_most_runs_team1_player_id": team1_players[0]["id"],
+            "result_most_runs_team2_player_id": team2_players[0]["id"],
+            "result_most_wickets_team1_player_id": team1_players[4]["id"],
+            "result_most_wickets_team2_player_id": team2_players[4]["id"],
             "result_pom_player_id": team1_players[0]["id"]
         }
         response = client.post(
@@ -183,13 +189,13 @@ class TestCompleteTournamentFlow:
         assert response.status_code == 200
         leaderboard = response.json()
 
-        # User 1 predicted all correctly: 10 + 20 + 20 + 50 = 100 points
+        # User 1 predicted all correctly: 10 + 20 + 20 + 20 + 20 + 50 = 140 points
         # User 2 predicted none correctly: 0 points
         entries = sorted(leaderboard["entries"], key=lambda x: x["rank"])
 
         assert len(entries) == 2
         assert entries[0]["username"] == "player1"
-        assert entries[0]["total_points"] == 100
+        assert entries[0]["total_points"] == 140
         assert entries[0]["rank"] == 1
 
         assert entries[1]["username"] == "player2"
@@ -230,26 +236,30 @@ class TestCompleteTournamentFlow:
         team1_players = match_players["team_1_players"]
         team2_players = match_players["team_2_players"]
 
-        # Make prediction - predict winner and most runs correctly only
+        # Make prediction - predict winner and most runs (team1) correctly only
         prediction = {
             "match_id": match_id,
-            "predicted_winner_id": team1.id,  # Correct
-            "predicted_most_runs_player_id": team1_players[0]["id"],  # Correct
-            "predicted_most_wickets_player_id": team1_players[4]["id"],  # Wrong
-            "predicted_pom_player_id": team2_players[0]["id"]  # Wrong
+            "predicted_winner_id": team1.id,  # Correct: +10
+            "predicted_most_runs_team1_player_id": team1_players[0]["id"],  # Correct: +20
+            "predicted_most_runs_team2_player_id": team2_players[1]["id"],  # Wrong: +0
+            "predicted_most_wickets_team1_player_id": team1_players[5]["id"],  # Wrong: +0
+            "predicted_most_wickets_team2_player_id": team2_players[5]["id"],  # Wrong: +0
+            "predicted_pom_player_id": team2_players[0]["id"]  # Wrong: +0
         }
         client.post("/predictions/", json=prediction, headers=headers)
 
         # Set result
         match_result = {
             "result_winner_id": team1.id,
-            "result_most_runs_player_id": team1_players[0]["id"],
-            "result_most_wickets_player_id": team2_players[4]["id"],
+            "result_most_runs_team1_player_id": team1_players[0]["id"],
+            "result_most_runs_team2_player_id": team2_players[0]["id"],
+            "result_most_wickets_team1_player_id": team1_players[4]["id"],
+            "result_most_wickets_team2_player_id": team2_players[4]["id"],
             "result_pom_player_id": team1_players[0]["id"]
         }
         client.post(f"/admin/matches/{match_id}/result", json=match_result, headers=headers)
 
-        # Check score: 10 (winner) + 20 (most runs) = 30 points
+        # Check score: 10 (winner) + 20 (most runs team1) = 30 points
         response = client.get(f"/leagues/{league_id}/leaderboard", headers=headers)
         leaderboard = response.json()
 
@@ -288,8 +298,10 @@ class TestCompleteTournamentFlow:
         prediction = {
             "match_id": match_id,
             "predicted_winner_id": team1.id,
-            "predicted_most_runs_player_id": team1_players[0]["id"],
-            "predicted_most_wickets_player_id": team2_players[4]["id"],
+            "predicted_most_runs_team1_player_id": team1_players[0]["id"],
+            "predicted_most_runs_team2_player_id": team2_players[0]["id"],
+            "predicted_most_wickets_team1_player_id": team1_players[4]["id"],
+            "predicted_most_wickets_team2_player_id": team2_players[4]["id"],
             "predicted_pom_player_id": team1_players[0]["id"]
         }
         response = client.post("/predictions/", json=prediction, headers=headers)
@@ -331,8 +343,10 @@ class TestCompleteTournamentFlow:
         prediction = {
             "match_id": match_id,
             "predicted_winner_id": team1.id,
-            "predicted_most_runs_player_id": team1_players[0]["id"],
-            "predicted_most_wickets_player_id": team2_players[4]["id"],
+            "predicted_most_runs_team1_player_id": team1_players[0]["id"],
+            "predicted_most_runs_team2_player_id": team2_players[0]["id"],
+            "predicted_most_wickets_team1_player_id": team1_players[4]["id"],
+            "predicted_most_wickets_team2_player_id": team2_players[4]["id"],
             "predicted_pom_player_id": team1_players[0]["id"]
         }
         response = client.post("/predictions/", json=prediction, headers=headers)
@@ -418,15 +432,17 @@ class TestCompleteTournamentFlow:
         team2_players = response.json()["team_2_players"]
 
         # Both users make predictions for all matches
-        # User 1 predicts all correctly for all matches
-        # User 2 predicts winner correctly only
+        # User 1 predicts all correctly for all matches (140 pts each)
+        # User 2 predicts winner correctly only (10 pts each)
         for match_id in match_ids:
             # User 1 - perfect predictions
             prediction = {
                 "match_id": match_id,
                 "predicted_winner_id": team1.id,
-                "predicted_most_runs_player_id": team1_players[0]["id"],
-                "predicted_most_wickets_player_id": team2_players[4]["id"],
+                "predicted_most_runs_team1_player_id": team1_players[0]["id"],
+                "predicted_most_runs_team2_player_id": team2_players[0]["id"],
+                "predicted_most_wickets_team1_player_id": team1_players[4]["id"],
+                "predicted_most_wickets_team2_player_id": team2_players[4]["id"],
                 "predicted_pom_player_id": team1_players[0]["id"]
             }
             client.post(
@@ -439,8 +455,10 @@ class TestCompleteTournamentFlow:
             prediction = {
                 "match_id": match_id,
                 "predicted_winner_id": team1.id,
-                "predicted_most_runs_player_id": team2_players[0]["id"],
-                "predicted_most_wickets_player_id": team1_players[4]["id"],
+                "predicted_most_runs_team1_player_id": team1_players[1]["id"],
+                "predicted_most_runs_team2_player_id": team2_players[1]["id"],
+                "predicted_most_wickets_team1_player_id": team1_players[5]["id"],
+                "predicted_most_wickets_team2_player_id": team2_players[5]["id"],
                 "predicted_pom_player_id": team2_players[0]["id"]
             }
             client.post(
@@ -452,8 +470,10 @@ class TestCompleteTournamentFlow:
         # Set results for all matches
         match_result = {
             "result_winner_id": team1.id,
-            "result_most_runs_player_id": team1_players[0]["id"],
-            "result_most_wickets_player_id": team2_players[4]["id"],
+            "result_most_runs_team1_player_id": team1_players[0]["id"],
+            "result_most_runs_team2_player_id": team2_players[0]["id"],
+            "result_most_wickets_team1_player_id": team1_players[4]["id"],
+            "result_most_wickets_team2_player_id": team2_players[4]["id"],
             "result_pom_player_id": team1_players[0]["id"]
         }
 
@@ -472,9 +492,9 @@ class TestCompleteTournamentFlow:
         leaderboard = response.json()
         entries = sorted(leaderboard["entries"], key=lambda x: x["rank"])
 
-        # User 1: 3 matches * 100 points = 300
+        # User 1: 3 matches * 140 points = 420
         assert entries[0]["username"] == "user1"
-        assert entries[0]["total_points"] == 300
+        assert entries[0]["total_points"] == 420
 
         # User 2: 3 matches * 10 points = 30
         assert entries[1]["username"] == "user2"
@@ -538,23 +558,27 @@ class TestCompleteTournamentFlow:
             start_time=datetime.now(timezone.utc) - timedelta(days=3),
             status=MatchStatus.COMPLETED,
             result_winner_id=team1.id,
-            result_most_runs_player_id=team1_players[0].id,
-            result_most_wickets_player_id=team2_players[4].id,
+            result_most_runs_team1_player_id=team1_players[0].id,
+            result_most_runs_team2_player_id=team2_players[0].id,
+            result_most_wickets_team1_player_id=team1_players[4].id,
+            result_most_wickets_team2_player_id=team2_players[4].id,
             result_pom_player_id=team1_players[0].id,
         )
         db_session.add(old_match)
         db_session.commit()
         db_session.refresh(old_match)
 
-        # User 1 had a perfect prediction on the old match (100 pts)
+        # User 1 had a perfect prediction on the old match (140 pts)
         old_pred = Prediction(
             user_id=user1_id,
             match_id=old_match.id,
             predicted_winner_id=team1.id,
-            predicted_most_runs_player_id=team1_players[0].id,
-            predicted_most_wickets_player_id=team2_players[4].id,
+            predicted_most_runs_team1_player_id=team1_players[0].id,
+            predicted_most_runs_team2_player_id=team2_players[0].id,
+            predicted_most_wickets_team1_player_id=team1_players[4].id,
+            predicted_most_wickets_team2_player_id=team2_players[4].id,
             predicted_pom_player_id=team1_players[0].id,
-            points_earned=100,
+            points_earned=140,
         )
         db_session.add(old_pred)
         db_session.commit()
@@ -600,21 +624,25 @@ class TestCompleteTournamentFlow:
             json={
                 "match_id": new_match_id,
                 "predicted_winner_id": team1.id,
-                "predicted_most_runs_player_id": api_t2_players[0]["id"],
-                "predicted_most_wickets_player_id": api_t1_players[4]["id"],
+                "predicted_most_runs_team1_player_id": api_t1_players[1]["id"],
+                "predicted_most_runs_team2_player_id": api_t2_players[1]["id"],
+                "predicted_most_wickets_team1_player_id": api_t1_players[5]["id"],
+                "predicted_most_wickets_team2_player_id": api_t2_players[5]["id"],
                 "predicted_pom_player_id": api_t2_players[0]["id"],
             },
             headers=headers1,
         )
 
-        # User 2 predicts everything correctly (100 pts)
+        # User 2 predicts everything correctly (140 pts)
         client.post(
             "/predictions/",
             json={
                 "match_id": new_match_id,
                 "predicted_winner_id": team1.id,
-                "predicted_most_runs_player_id": api_t1_players[0]["id"],
-                "predicted_most_wickets_player_id": api_t2_players[4]["id"],
+                "predicted_most_runs_team1_player_id": api_t1_players[0]["id"],
+                "predicted_most_runs_team2_player_id": api_t2_players[0]["id"],
+                "predicted_most_wickets_team1_player_id": api_t1_players[4]["id"],
+                "predicted_most_wickets_team2_player_id": api_t2_players[4]["id"],
                 "predicted_pom_player_id": api_t1_players[0]["id"],
             },
             headers=headers2,
@@ -625,8 +653,10 @@ class TestCompleteTournamentFlow:
             f"/admin/matches/{new_match_id}/result",
             json={
                 "result_winner_id": team1.id,
-                "result_most_runs_player_id": api_t1_players[0]["id"],
-                "result_most_wickets_player_id": api_t2_players[4]["id"],
+                "result_most_runs_team1_player_id": api_t1_players[0]["id"],
+                "result_most_runs_team2_player_id": api_t2_players[0]["id"],
+                "result_most_wickets_team1_player_id": api_t1_players[4]["id"],
+                "result_most_wickets_team2_player_id": api_t2_players[4]["id"],
                 "result_pom_player_id": api_t1_players[0]["id"],
             },
             headers=headers1,
@@ -643,11 +673,11 @@ class TestCompleteTournamentFlow:
 
         assert len(entries) == 2
 
-        # User 2 should be #1 with 100 pts (perfect on new match)
+        # User 2 should be #1 with 140 pts (perfect on new match)
         assert entries[0]["username"] == "scoped2"
-        assert entries[0]["total_points"] == 100
+        assert entries[0]["total_points"] == 140
 
         # User 1 should be #2 with only 10 pts (winner-only on new match)
-        # The 100 pts from the old match should NOT count
+        # The 140 pts from the old match should NOT count
         assert entries[1]["username"] == "scoped1"
         assert entries[1]["total_points"] == 10

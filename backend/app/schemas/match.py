@@ -50,8 +50,10 @@ class MatchDetailResponse(BaseModel):
     start_time: datetime
     status: str
     winner: TeamResponse | None = None
-    most_runs_player: PlayerResponse | None = None
-    most_wickets_player: PlayerResponse | None = None
+    most_runs_team1_player: PlayerResponse | None = None
+    most_runs_team2_player: PlayerResponse | None = None
+    most_wickets_team1_player: PlayerResponse | None = None
+    most_wickets_team2_player: PlayerResponse | None = None
     pom_player: PlayerResponse | None = None
 
     @field_serializer("start_time")

@@ -26,15 +26,18 @@ async def submit_prediction(
 ):
     """
     Submit a prediction for a match.
-    
+
     Predictions can only be submitted before the match starts (UTC).
     If a prediction already exists for this match, it will be updated.
-    
+
     **Scoring:**
     - Winner: +10 pts
-    - Most Runs: +20 pts
-    - Most Wickets: +20 pts
+    - Most Runs (Team 1): +20 pts
+    - Most Runs (Team 2): +20 pts
+    - Most Wickets (Team 1): +20 pts
+    - Most Wickets (Team 2): +20 pts
     - Player of Match: +50 pts
+    - Max total: 140 pts
     """
     # Check if predictions are still open
     can_submit, reason = can_submit_prediction(db, prediction_data.match_id)
@@ -43,7 +46,7 @@ async def submit_prediction(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=reason,
         )
-    
+
     # Validate winner team
     winner_team = db.query(Team).filter(Team.id == prediction_data.predicted_winner_id).first()
     if not winner_team:
@@ -51,47 +54,58 @@ async def submit_prediction(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid winner team ID",
         )
-    
-    # Validate players
-    player_ids = [
-        prediction_data.predicted_most_runs_player_id,
-        prediction_data.predicted_most_wickets_player_id,
-        prediction_data.predicted_pom_player_id,
-    ]
-    is_valid, error = validate_prediction_players(db, prediction_data.match_id, player_ids)
+
+    # Validate players with per-team constraints
+    is_valid, error = validate_prediction_players(
+        db,
+        prediction_data.match_id,
+        team1_player_ids=[
+            prediction_data.predicted_most_runs_team1_player_id,
+            prediction_data.predicted_most_wickets_team1_player_id,
+        ],
+        team2_player_ids=[
+            prediction_data.predicted_most_runs_team2_player_id,
+            prediction_data.predicted_most_wickets_team2_player_id,
+        ],
+        either_team_player_ids=[
+            prediction_data.predicted_pom_player_id,
+        ],
+    )
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error,
         )
-    
+
     # Check for existing prediction
     existing = get_prediction_by_user_and_match(
         db, current_user.id, prediction_data.match_id
     )
-    
+
     if existing:
-        # Update existing prediction
         prediction = update_prediction(
             db,
             existing,
             prediction_data.predicted_winner_id,
-            prediction_data.predicted_most_runs_player_id,
-            prediction_data.predicted_most_wickets_player_id,
+            prediction_data.predicted_most_runs_team1_player_id,
+            prediction_data.predicted_most_runs_team2_player_id,
+            prediction_data.predicted_most_wickets_team1_player_id,
+            prediction_data.predicted_most_wickets_team2_player_id,
             prediction_data.predicted_pom_player_id,
         )
     else:
-        # Create new prediction
         prediction = create_prediction(
             db,
             current_user.id,
             prediction_data.match_id,
             prediction_data.predicted_winner_id,
-            prediction_data.predicted_most_runs_player_id,
-            prediction_data.predicted_most_wickets_player_id,
+            prediction_data.predicted_most_runs_team1_player_id,
+            prediction_data.predicted_most_runs_team2_player_id,
+            prediction_data.predicted_most_wickets_team1_player_id,
+            prediction_data.predicted_most_wickets_team2_player_id,
             prediction_data.predicted_pom_player_id,
         )
-    
+
     return prediction
 
 
@@ -129,12 +143,16 @@ async def get_my_predictions_detailed(
             start_time=match.start_time,
             status=match.status.value,
             predicted_winner=TeamResponse.model_validate(pred.predicted_winner),
-            predicted_most_runs_player=PlayerResponse.model_validate(pred.predicted_most_runs_player),
-            predicted_most_wickets_player=PlayerResponse.model_validate(pred.predicted_most_wickets_player),
+            predicted_most_runs_team1_player=PlayerResponse.model_validate(pred.predicted_most_runs_team1_player),
+            predicted_most_runs_team2_player=PlayerResponse.model_validate(pred.predicted_most_runs_team2_player),
+            predicted_most_wickets_team1_player=PlayerResponse.model_validate(pred.predicted_most_wickets_team1_player),
+            predicted_most_wickets_team2_player=PlayerResponse.model_validate(pred.predicted_most_wickets_team2_player),
             predicted_pom_player=PlayerResponse.model_validate(pred.predicted_pom_player),
             actual_winner=TeamResponse.model_validate(match.winner) if match.winner else None,
-            actual_most_runs_player=PlayerResponse.model_validate(match.most_runs_player) if match.most_runs_player else None,
-            actual_most_wickets_player=PlayerResponse.model_validate(match.most_wickets_player) if match.most_wickets_player else None,
+            actual_most_runs_team1_player=PlayerResponse.model_validate(match.most_runs_team1_player) if match.most_runs_team1_player else None,
+            actual_most_runs_team2_player=PlayerResponse.model_validate(match.most_runs_team2_player) if match.most_runs_team2_player else None,
+            actual_most_wickets_team1_player=PlayerResponse.model_validate(match.most_wickets_team1_player) if match.most_wickets_team1_player else None,
+            actual_most_wickets_team2_player=PlayerResponse.model_validate(match.most_wickets_team2_player) if match.most_wickets_team2_player else None,
             actual_pom_player=PlayerResponse.model_validate(match.pom_player) if match.pom_player else None,
         ))
     return result

@@ -40,3 +40,24 @@ export function getFlagUrl(shortNameOrCode: string): string | undefined {
   if (!code) return undefined
   return `/flags/${code}.png`
 }
+
+/** Map F1 constructor short_name → logo filename */
+const CONSTRUCTOR_LOGO_MAP: Record<string, string> = {
+  MCL: "mclaren",
+  FER: "ferrari",
+  RBR: "redbull",
+  MER: "mercedes",
+  AMR: "aston-martin",
+  ALP: "alpine",
+  HAA: "haas",
+  RB: "rb",
+  WIL: "williams",
+  AUD: "audi",
+  CAD: "cadillac",
+}
+
+export function getConstructorLogoUrl(shortName: string): string | undefined {
+  const slug = CONSTRUCTOR_LOGO_MAP[shortName]
+  if (!slug) return undefined
+  return `/constructors/${slug}.png`
+}
