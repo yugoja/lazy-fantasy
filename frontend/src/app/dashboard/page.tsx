@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Shield, ChevronRight, Zap, Target, Trophy, Clock } from 'lucide-react';
+import { Shield, ChevronRight, Zap, Target, Trophy, Clock, Users } from 'lucide-react';
 import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 
 interface League {
@@ -156,6 +156,13 @@ export default function DashboardPage() {
             );
             const timeLabel = hoursUntil < 24 ? `in ${hoursUntil}h` : `in ${Math.round(hoursUntil / 24)}d`;
 
+            const lockedMatch = [...matches]
+                .filter(m => new Date(m.start_time) < now && predictedMatchIds.has(m.id))
+                .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())[0];
+            const friendsPicksHref = lockedMatch && leagues.length > 0
+                ? `/leagues/${leagues[0].id}/match/${lockedMatch.id}`
+                : null;
+
             return (
                 <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
@@ -166,6 +173,12 @@ export default function DashboardPage() {
                         <p className="text-xs text-muted-foreground mt-0.5">
                             All predictions made · next match {timeLabel}
                         </p>
+                        {friendsPicksHref && (
+                            <Link href={friendsPicksHref} className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                <Users className="h-3 w-3" />
+                                See what your league picked →
+                            </Link>
+                        )}
                     </div>
                 </div>
             );
