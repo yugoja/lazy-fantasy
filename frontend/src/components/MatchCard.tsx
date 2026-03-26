@@ -30,6 +30,7 @@ interface MatchCardProps {
 
 function useCountdown(targetDate: string) {
   const [timeLeft, setTimeLeft] = useState('');
+  const [isUrgent, setIsUrgent] = useState(false);
 
   useEffect(() => {
     const calc = () => {
@@ -39,8 +40,11 @@ function useCountdown(targetDate: string) {
 
       if (diff <= 0) {
         setTimeLeft('Locked');
+        setIsUrgent(false);
         return;
       }
+
+      setIsUrgent(diff < 2 * 60 * 60 * 1000);
 
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -61,7 +65,7 @@ function useCountdown(targetDate: string) {
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  return timeLeft;
+  return { timeLeft, isUrgent };
 }
 
 export function MatchCard({
@@ -79,7 +83,7 @@ export function MatchCard({
   const isLive = status === 'LIVE';
   const isCompleted = status === 'COMPLETED';
   const isUpcoming = status === 'UPCOMING' || status === 'SCHEDULED';
-  const countdown = useCountdown(startTime);
+  const { timeLeft: countdown, isUrgent } = useCountdown(startTime);
   const isLocked = countdown === 'Locked';
 
   const formatDateTime = (dateString: string) => {
@@ -135,7 +139,9 @@ export function MatchCard({
               'flex items-center gap-1.5 text-xs font-medium rounded-full px-2.5 py-1 ml-auto',
               countdown === 'Locked'
                 ? 'text-red-400 bg-red-400/10'
-                : 'text-yellow-400 bg-yellow-400/10'
+                : isUrgent
+                  ? 'text-orange-400 bg-orange-400/10'
+                  : 'text-yellow-400 bg-yellow-400/10'
             )}>
               {countdown === 'Locked' ? <Lock className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
               <span>{countdown}</span>
@@ -157,7 +163,7 @@ export function MatchCard({
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
-            <span className="font-semibold text-sm truncate">{team1.short_name}</span>
+            <span className="font-bold text-2xl truncate">{team1.short_name}</span>
           </div>
 
           {/* VS */}
@@ -165,7 +171,7 @@ export function MatchCard({
 
           {/* Team 2 */}
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <span className="font-semibold text-sm truncate">{team2.short_name}</span>
+            <span className="font-bold text-2xl truncate">{team2.short_name}</span>
             {flagUrl2 && (
               <Image
                 src={flagUrl2}

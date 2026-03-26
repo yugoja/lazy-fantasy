@@ -19,7 +19,7 @@ function StatCard({ icon: Icon, value, label, meta, change, iconColor = 'bg-prim
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="text-2xl font-bold leading-none mb-1">{value}</div>
+          <div className="text-2xl font-bold font-mono leading-none mb-1">{value}</div>
           <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
             {label}
           </div>
