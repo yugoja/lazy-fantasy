@@ -4,14 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, getMatches, getMyPredictions, ApiError } from '@/lib/api';
-import { StatsOverview } from '@/components/StatsOverview';
+import { getMyLeagues, getMatches, getMyPredictions, getDugoutEvents, DugoutEvent, ApiError } from '@/lib/api';
+import { DugoutFeed } from '@/components/DugoutFeed';
 import { MatchCard } from '@/components/MatchCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Shield, ChevronRight, Zap, Target, Trophy, Clock, Users } from 'lucide-react';
+import { ChevronRight, Zap, Target, Trophy, Clock, Users } from 'lucide-react';
 import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 
 interface League {
@@ -44,6 +43,7 @@ export default function DashboardPage() {
     const [leagues, setLeagues] = useState<League[]>([]);
     const [matches, setMatches] = useState<Match[]>([]);
     const [predictions, setPredictions] = useState<Prediction[]>([]);
+    const [dugoutEvents, setDugoutEvents] = useState<DugoutEvent[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -61,14 +61,16 @@ export default function DashboardPage() {
 
     const loadData = async () => {
         try {
-            const [leaguesData, matchesData, predictionsData] = await Promise.allSettled([
+            const [leaguesData, matchesData, predictionsData, dugoutData] = await Promise.allSettled([
                 getMyLeagues(),
                 getMatches(),
                 getMyPredictions(),
+                getDugoutEvents(),
             ]);
             if (leaguesData.status === 'fulfilled') setLeagues(leaguesData.value);
             if (matchesData.status === 'fulfilled') setMatches(matchesData.value);
             if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
+            if (dugoutData.status === 'fulfilled') setDugoutEvents(dugoutData.value);
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.message);
@@ -93,12 +95,6 @@ export default function DashboardPage() {
             </div>
         );
     }
-
-    const totalPoints = predictions.reduce((sum, p) => sum + p.points_earned, 0);
-    const processedPredictions = predictions.filter(p => p.is_processed).length;
-    const accuracy = predictions.length > 0
-        ? Math.round((processedPredictions / predictions.length) * 100)
-        : 0;
 
     const now = new Date();
     const upcomingMatches = matches
@@ -190,7 +186,7 @@ export default function DashboardPage() {
                     <Trophy className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                    <p className="font-bold text-base leading-tight">{totalPoints} pts total</p>
+                    <p className="font-bold text-base leading-tight">No matches yet</p>
                     <p className="text-xs text-muted-foreground mt-0.5">No upcoming matches right now</p>
                 </div>
             </div>
@@ -205,12 +201,7 @@ export default function DashboardPage() {
             />
             {heroContent}
 
-            <StatsOverview
-                totalPoints={totalPoints}
-                accuracy={accuracy}
-                totalPredictions={predictions.length}
-                processedPredictions={processedPredictions}
-            />
+            <DugoutFeed events={dugoutEvents} />
 
             <section>
                 <div className="flex items-center justify-between mb-4">
@@ -243,53 +234,6 @@ export default function DashboardPage() {
                                 hasPredicted={predictedMatchIds.has(match.id)}
                                 lineupAnnounced={match.lineup_announced}
                             />
-                        ))}
-                    </div>
-                )}
-            </section>
-
-            <section>
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 className="text-lg font-bold">My Leagues</h2>
-                        <p className="text-xs text-muted-foreground">{leagues.length} leagues</p>
-                    </div>
-                    <Link href="/leagues">
-                        <Button variant="ghost" size="sm" className="text-xs">
-                            View All
-                            <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
-                    </Link>
-                </div>
-
-                {leagues.length === 0 ? (
-                    <Card className="p-6 text-center space-y-3">
-                        <p className="text-sm text-muted-foreground">You haven&apos;t joined any leagues yet</p>
-                        <Link href="/leagues">
-                            <Button size="sm">Join or Create League</Button>
-                        </Link>
-                    </Card>
-                ) : (
-                    <div className="space-y-3">
-                        {leagues.slice(0, 3).map((league) => (
-                            <Link key={league.id} href={`/leaderboard?league=${league.id}`}>
-                                <Card className="p-4 hover:border-primary/50 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                <Shield className="h-5 w-5 text-primary" />
-                                            </div>
-                                            <div>
-                                                <div className="font-semibold text-sm">{league.name}</div>
-                                                <Badge variant="outline" className="text-[10px] mt-1">
-                                                    {league.invite_code}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                                    </div>
-                                </Card>
-                            </Link>
                         ))}
                     </div>
                 )}

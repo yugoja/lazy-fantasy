@@ -289,4 +289,35 @@ export async function getMyF1PredictionsDetailed() {
     return request<F1PredictionDetail[]>('/f1/predictions/my/detailed');
 }
 
+// Dugout
+export interface DugoutEvent {
+    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift';
+    league_name: string;
+    league_id: number;
+    match_id: number | null;
+    username: string;
+    is_me: boolean;
+    streak_count: number | null;
+    rank: number | null;
+    rank_delta: number | null;
+    agreement_count: number | null;
+    team_short_name: string | null;
+}
+
+export async function getDugoutEvents() {
+    return request<DugoutEvent[]>('/dugout/');
+}
+
+export async function dismissDugoutEvent(event: DugoutEvent) {
+    return request<void>('/dugout/dismiss', {
+        method: 'POST',
+        body: JSON.stringify({
+            type: event.type,
+            league_id: event.league_id,
+            match_id: event.match_id,
+            subject_username: event.username,
+        }),
+    });
+}
+
 export { ApiError, API_BASE };

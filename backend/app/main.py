@@ -7,7 +7,7 @@ from app.config import settings
 from app.database import engine
 from app.models import Base
 from app.routers import auth, league, match, prediction, admin
-from app.routers import notifications
+from app.routers import notifications, dugout
 from app.services.scheduler import start_scheduler, stop_scheduler
 
 if settings.SENTRY_DSN:
@@ -53,6 +53,7 @@ app.include_router(match.router)
 app.include_router(prediction.router)
 app.include_router(admin.router)
 app.include_router(notifications.router)
+app.include_router(dugout.router)
 
 
 @app.get("/")
