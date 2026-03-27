@@ -1,4 +1,4 @@
-"""APScheduler background job for match reminders."""
+"""APScheduler background jobs: match reminders + cricket data sync."""
 import logging
 from datetime import datetime, timedelta
 
@@ -84,7 +84,22 @@ def _send_match_reminders() -> None:
         db.close()
 
 
+def _run_sync(fn) -> None:
+    """Run a sync function with its own DB session, logging errors."""
+    db: Session = SessionLocal()
+    try:
+        fn(db)
+    except Exception as e:
+        logger.error(f"{fn.__name__} failed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 def start_scheduler() -> None:
+    from app.services.cricket_sync import sync_lineups, sync_results
+    from app.config import settings
+
     scheduler.add_job(
         _send_match_reminders,
         trigger="interval",
@@ -92,8 +107,34 @@ def start_scheduler() -> None:
         id="match_reminders",
         replace_existing=True,
     )
+
+    # Cricket data sync jobs — only active when CRICAPI_KEY is configured
+    if settings.CRICAPI_KEY:
+        from app.services.providers.cricapi import CricApiProvider
+        from app.services.cricket_sync import set_provider
+        set_provider(CricApiProvider(settings.CRICAPI_KEY, settings.CRICAPI_BASE_URL))
+
+        scheduler.add_job(
+            lambda: _run_sync(sync_lineups),
+            trigger="interval",
+            minutes=10,
+            id="lineup_sync",
+            replace_existing=True,
+        )
+        scheduler.add_job(
+            lambda: _run_sync(sync_results),
+            trigger="interval",
+            minutes=5,
+            start_date=datetime.utcnow() + timedelta(minutes=2),
+            id="result_sync",
+            replace_existing=True,
+        )
+        logger.info("Cricket sync jobs registered (lineup: 10m, results: 5m+2m offset)")
+    else:
+        logger.info("CRICAPI_KEY not set — cricket sync jobs skipped")
+
     scheduler.start()
-    logger.info("Scheduler started — checking for reminders every 5 minutes")
+    logger.info("Scheduler started")
 
 
 def stop_scheduler() -> None:

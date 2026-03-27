@@ -3,7 +3,7 @@
 ## Architecture
 - **Frontend**: Next.js 16 + TypeScript + Tailwind + shadcn/ui (`frontend/`)
 - **Backend**: FastAPI + SQLAlchemy + SQLite + JWT auth (`backend/`)
-- **Branch**: `feature/v0-redesign` (active development)
+- **Branch**: `main` (active development; staging branch deploys to staging.lazyfantasy.app)
 
 ## Pending TODO
 
@@ -55,6 +55,7 @@
   - Opt-in via `GOOGLE_CLIENT_ID` (backend) / `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (frontend)
 
 ### Engagement & Social
+- [x] The Dugout — social feed on dashboard (contrarian, agreement, streak, rank shift events); server-side dismissal
 - [ ] Social nudge — prompt users to challenge friends after a match result drops
 - [ ] Prediction streak display — make streak more prominent/celebratory on dashboard and profile to drive daily engagement
 - [ ] WhatsApp score share improvements — richer message copy, share from leaderboard view, share after result first loads (not just on Done tab)
@@ -67,12 +68,13 @@
 - [x] Done tab enhancements — show points breakdown more visually (progress bars, correct/wrong counts per category)
   - Summary card: total points progress bar, per-category accuracy bars (Winner/Runs/Wickets/POM), overall accuracy count
   - Per-prediction cards: points earned shown next to each correct category
+- [x] Dashboard design quick wins — team names 2xl bold on MatchCard, font-mono stats, urgency countdown, unified Dugout card tints
 
 ### League Features
 - [ ] League activity feed — see what others predicted after the match locks
 - [ ] Head-to-head — compare your predictions vs a specific friend in a league
 - [ ] Mini leaderboard on match card — show user's current rank in context while predicting
-- [ ] Leaderboard rank history in DB — currently tracked in localStorage (resets on new device/browser); persist rank snapshots in backend after each match result so deltas are accurate across devices
+- [x] Leaderboard rank history in DB — `LeagueMember.prev_rank` column; snapshotted after each match result via `snapshot_ranks_for_leagues()`; powers rank delta on leaderboard and Dugout rank shift events
 
 ## Completed (Phase 4 - commit 357711f)
 - Redesigned all pages with shadcn/ui + Tailwind (login, signup, landing, admin, set result, view predictions)

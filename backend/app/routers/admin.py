@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Match, MatchStatus, Team, Tournament, Player, User, MatchLineup
-from app.schemas.admin import MatchCreate, MatchResultCreate, SetLineupRequest
+from app.schemas.admin import (
+    MatchCreate, MatchResultCreate, SetLineupRequest,
+    LinkMatchRequest, BulkPlayerMappingRequest, SyncStatusResponse,
+)
 from app.schemas.match import MatchResponse, TeamResponse, PlayerResponse
 from app.services.auth import get_current_admin_user
 from app.services.league import snapshot_league_ranks
@@ -194,6 +197,10 @@ async def list_all_matches(
             "start_time": match.start_time.isoformat() if match.start_time.tzinfo else match.start_time.isoformat() + "+00:00",
             "status": match.status.value,
             "prediction_count": prediction_count,
+            "external_match_id": match.external_match_id,
+            "sync_state": match.sync_state,
+            "sync_error": match.sync_error,
+            "last_synced_at": match.last_synced_at.isoformat() if match.last_synced_at else None,
         })
     
     return result
@@ -423,4 +430,266 @@ async def set_match_lineup(
         "player_ids": lineup_data.player_ids,
         "message": "Lineup set successfully",
     }
+
+
+# ---------------------------------------------------------------------------
+# CricAPI sync endpoints
+# ---------------------------------------------------------------------------
+
+@router.post("/matches/{match_id}/link", response_model=SyncStatusResponse)
+async def link_match_to_cricapi(
+    match_id: int,
+    body: LinkMatchRequest,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Link a match to a CricAPI external_match_id and validate the ID."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+
+    from app.services.cricket_sync import get_provider
+    provider = get_provider()
+    if not provider:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="CricAPI not configured — set CRICAPI_KEY in environment",
+        )
+
+    info = provider.get_match_info(body.external_match_id)
+    if not info:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"CricAPI returned no data for ID {body.external_match_id!r}. Check the ID is correct.",
+        )
+
+    match.external_match_id = body.external_match_id
+    match.sync_state = "linked"
+    match.sync_error = None
+    db.commit()
+
+    return SyncStatusResponse(
+        match_id=match.id,
+        external_match_id=match.external_match_id,
+        sync_state=match.sync_state,
+        last_synced_at=match.last_synced_at,
+        sync_error=match.sync_error,
+        cricapi_preview={
+            "name": info.name,
+            "status": info.status,
+            "lineup_announced": info.lineup_announced,
+            "team1_players": len(info.team1_players),
+            "team2_players": len(info.team2_players),
+            "winner_name": info.winner_name,
+        },
+    )
+
+
+@router.delete("/matches/{match_id}/link", status_code=204)
+async def unlink_match_from_cricapi(
+    match_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Remove CricAPI link from a match and reset sync state."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+    match.external_match_id = None
+    match.sync_state = "unlinked"
+    match.sync_error = None
+    match.last_synced_at = None
+    db.commit()
+
+
+@router.get("/matches/{match_id}/sync-status", response_model=SyncStatusResponse)
+async def get_match_sync_status(
+    match_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Get current CricAPI sync state + live preview for a match."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+
+    preview = None
+    if match.external_match_id:
+        from app.services.cricket_sync import get_provider
+        provider = get_provider()
+        if provider:
+            info = provider.get_match_info(match.external_match_id)
+            if info:
+                preview = {
+                    "name": info.name,
+                    "status": info.status,
+                    "lineup_announced": info.lineup_announced,
+                    "team1_players": len(info.team1_players),
+                    "team2_players": len(info.team2_players),
+                    "winner_name": info.winner_name,
+                    "overs_completed": info.overs_completed,
+                }
+
+    return SyncStatusResponse(
+        match_id=match.id,
+        external_match_id=match.external_match_id,
+        sync_state=match.sync_state,
+        last_synced_at=match.last_synced_at,
+        sync_error=match.sync_error,
+        cricapi_preview=preview,
+    )
+
+
+@router.post("/matches/{match_id}/sync")
+async def trigger_manual_sync(
+    match_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Force an immediate sync cycle for a specific match."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+    if not match.external_match_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Match is not linked to CricAPI")
+
+    from app.services.cricket_sync import (
+        get_provider, _sync_lineup_for_match, _sync_result_for_match,
+    )
+    provider = get_provider()
+    if not provider:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="CricAPI not configured",
+        )
+
+    info = provider.get_match_info(match.external_match_id)
+    if not info:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="CricAPI returned no data")
+
+    action = "no-op"
+    status_lower = info.status.lower()
+
+    if "result" in status_lower or "won" in status_lower:
+        _sync_result_for_match(db, match)
+        action = "result_sync"
+    elif info.lineup_announced and match.sync_state in ("linked", "unlinked"):
+        _sync_lineup_for_match(db, match)
+        action = "lineup_sync"
+
+    db.refresh(match)
+    return {
+        "match_id": match_id,
+        "action": action,
+        "sync_state": match.sync_state,
+        "sync_error": match.sync_error,
+    }
+
+
+@router.get("/matches/{match_id}/player-mapping")
+async def get_player_mapping(
+    match_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Show resolved and unresolved CricAPI player name mappings for a match."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+    if not match.external_match_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Match is not linked to CricAPI")
+
+    from app.services.cricket_sync import get_provider, _resolve_player
+    provider = get_provider()
+    if not provider:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="CricAPI not configured")
+
+    info = provider.get_match_info(match.external_match_id)
+    if not info:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="CricAPI returned no data")
+
+    all_players = db.query(Player).filter(Player.team_id.in_([match.team_1_id, match.team_2_id])).all()
+    team1_db = [p for p in all_players if p.team_id == match.team_1_id]
+    team2_db = [p for p in all_players if p.team_id == match.team_2_id]
+
+    players = []
+
+    def _process(provider_players, db_players, team_label):
+        for pp in provider_players:
+            player = _resolve_player(pp, db_players, db)
+            if player:
+                players.append({
+                    "provider_id": pp.provider_id,
+                    "provider_name": pp.name,
+                    "resolved": True,
+                    "player_id": player.id,
+                    "player_name": player.name,
+                    "team": team_label,
+                    "suggestions": [],
+                })
+            else:
+                players.append({
+                    "provider_id": pp.provider_id,
+                    "provider_name": pp.name,
+                    "resolved": False,
+                    "player_id": None,
+                    "player_name": None,
+                    "team": team_label,
+                    "suggestions": [
+                        {"id": p.id, "name": p.name}
+                        for p in db_players
+                    ][:5],
+                })
+
+    _process(info.team1_players, team1_db, match.team_1.short_name)
+    _process(info.team2_players, team2_db, match.team_2.short_name)
+
+    return {"match_id": match_id, "players": players}
+
+
+@router.post("/matches/{match_id}/player-mapping", status_code=204)
+async def save_player_mapping(
+    match_id: int,
+    body: BulkPlayerMappingRequest,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Save cricapi_player_id on Player records (one-time bootstrap per season)."""
+    for item in body.mappings:
+        player = db.query(Player).filter(Player.id == item.player_id).first()
+        if not player:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player {item.player_id} not found")
+        # Clear old mapping if another player had this provider_id
+        existing = db.query(Player).filter(
+            Player.cricapi_player_id == item.provider_id,
+            Player.id != item.player_id,
+        ).first()
+        if existing:
+            existing.cricapi_player_id = None
+        player.cricapi_player_id = item.provider_id
+    db.commit()
+
+
+@router.get("/series/{series_id}/matches")
+async def list_series_matches(
+    series_id: str,
+    current_user: User = Depends(get_current_admin_user),
+):
+    """List CricAPI matches in a series (for finding the right external_match_id)."""
+    from app.services.cricket_sync import get_provider
+    provider = get_provider()
+    if not provider:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="CricAPI not configured")
+
+    matches = provider.search_matches(series_id)
+    return [
+        {
+            "provider_match_id": m.provider_match_id,
+            "name": m.name,
+            "status": m.status,
+            "team1": m.team1_name,
+            "team2": m.team2_name,
+        }
+        for m in matches
+    ]
 

@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Settings, Clock, CheckCircle2, BarChart3, ArrowRight } from 'lucide-react';
+import { Settings, Clock, CheckCircle2, BarChart3, ArrowRight, Radio, Link2 } from 'lucide-react';
 
 interface AdminMatch {
   id: number;
@@ -19,6 +19,26 @@ interface AdminMatch {
   start_time: string;
   status: string;
   prediction_count: number;
+  external_match_id: string | null;
+  sync_state: string;
+  sync_error: string | null;
+  last_synced_at: string | null;
+}
+
+function SyncStateBadge({ match }: { match: AdminMatch }) {
+  if (!match.external_match_id) return null;
+  const stateMap: Record<string, { label: string; className: string }> = {
+    linked:        { label: 'Linked',        className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+    lineup_synced: { label: 'Lineup Synced', className: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+    result_synced: { label: 'Result Synced', className: 'bg-green-500/20 text-green-400 border-green-500/30' },
+  };
+  const state = stateMap[match.sync_state] ?? { label: match.sync_state, className: 'bg-muted text-muted-foreground border-border' };
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border ${state.className}`}>
+      <Radio className="h-2.5 w-2.5" />
+      {state.label}
+    </span>
+  );
 }
 
 export default function AdminPage() {
@@ -138,9 +158,12 @@ export default function AdminPage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-sm">
-                        {match.team_1.short_name} vs {match.team_2.short_name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">
+                          {match.team_1.short_name} vs {match.team_2.short_name}
+                        </p>
+                        <SyncStateBadge match={match} />
+                      </div>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
                         {new Date(match.start_time).toLocaleDateString('en-US', {
                           month: 'short',
@@ -154,6 +177,11 @@ export default function AdminPage() {
                       {match.prediction_count} predictions
                     </Badge>
                   </div>
+                  {match.sync_error && (
+                    <p className="text-[10px] text-destructive bg-destructive/10 rounded px-2 py-1 truncate">
+                      {match.sync_error}
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     <Link href={`/admin/matches/${match.id}/lineup`} className="flex-1">
                       <Button variant="secondary" size="sm" className="w-full text-xs">
@@ -166,10 +194,16 @@ export default function AdminPage() {
                       </Button>
                     </Link>
                   </div>
-                  <div>
-                    <Link href={`/admin/matches/${match.id}/predictions`}>
+                  <div className="flex gap-2">
+                    <Link href={`/admin/matches/${match.id}/predictions`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full text-xs">
                         View Predictions
+                      </Button>
+                    </Link>
+                    <Link href={`/admin/matches/${match.id}/sync`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full text-xs gap-1">
+                        <Link2 className="h-3 w-3" />
+                        {match.external_match_id ? 'Sync' : 'Link CricAPI'}
                       </Button>
                     </Link>
                   </div>
@@ -202,9 +236,12 @@ export default function AdminPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-sm">
-                        {match.team_1.short_name} vs {match.team_2.short_name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">
+                          {match.team_1.short_name} vs {match.team_2.short_name}
+                        </p>
+                        <SyncStateBadge match={match} />
+                      </div>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
                         {new Date(match.start_time).toLocaleDateString('en-US', {
                           month: 'short',

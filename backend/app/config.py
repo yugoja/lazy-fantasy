@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     VAPID_PRIVATE_KEY: str = ""
     VAPID_CLAIMS_EMAIL: str = ""
 
+    # CricAPI (cricketdata.org) — for auto lineup/result sync
+    CRICAPI_KEY: str = ""
+    CRICAPI_BASE_URL: str = "https://api.cricapi.com/v1"
+
     # CORS Configuration (comma-separated origins for production)
     CORS_ORIGINS: str = "http://localhost:3000"
     FRONTEND_URL: str = "http://localhost:3000"

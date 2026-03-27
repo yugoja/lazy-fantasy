@@ -24,6 +24,13 @@ class Match(Base):
         Enum(MatchStatus), default=MatchStatus.SCHEDULED
     )
 
+    # CricAPI sync fields
+    external_match_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    sync_state: Mapped[str] = mapped_column(String(20), default="unlinked")
+    # sync_state values: unlinked | linked | lineup_synced | result_synced
+    sync_error: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    last_synced_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
     # Match results (nullable until match is completed)
     result_winner_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("teams.id"), nullable=True
