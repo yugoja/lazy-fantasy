@@ -1,8 +1,9 @@
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', (e) => {
-  // Only handle GET requests; let everything else pass through
+  // Only handle non-navigation GET requests; let page loads pass through
   if (e.request.method !== 'GET') return;
+  if (e.request.mode === 'navigate') return;
   e.respondWith(fetch(e.request));
 });
 
