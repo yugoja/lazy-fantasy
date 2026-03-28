@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Lock, Users } from 'lucide-react';
-import { cn, getFlagUrl } from '@/lib/utils';
+import { cn, getTeamLogoUrl } from '@/lib/utils';
 
 interface Team {
   name: string;
@@ -96,8 +95,8 @@ export function MatchCard({
 
   const { date, time } = formatDateTime(startTime);
 
-  const flagUrl1 = getFlagUrl(team1.short_name);
-  const flagUrl2 = getFlagUrl(team2.short_name);
+  const flagUrl1 = getTeamLogoUrl(team1.short_name);
+  const flagUrl2 = getTeamLogoUrl(team2.short_name);
 
   return (
     <Card className={cn('p-4 hover:border-primary/50 transition-colors', className)}>
@@ -154,12 +153,13 @@ export function MatchCard({
           {/* Team 1 */}
           <div className="flex items-center gap-2 flex-1">
             {flagUrl1 && (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={flagUrl1}
-                alt={`${team1.name} flag`}
+                alt={team1.name}
                 width={32}
-                height={24}
-                className="h-6 w-8 object-cover rounded-sm"
+                height={32}
+                className="h-8 w-8 object-contain"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
@@ -173,12 +173,13 @@ export function MatchCard({
           <div className="flex items-center gap-2 flex-1 justify-end">
             <span className="font-bold text-2xl truncate">{team2.short_name}</span>
             {flagUrl2 && (
-              <Image
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
                 src={flagUrl2}
-                alt={`${team2.name} flag`}
+                alt={team2.name}
                 width={32}
-                height={24}
-                className="h-6 w-8 object-cover rounded-sm"
+                height={32}
+                className="h-8 w-8 object-contain"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}

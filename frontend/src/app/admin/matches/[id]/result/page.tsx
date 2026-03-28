@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getMatchPlayers, API_BASE } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ArrowLeft, Trophy, Target, Star, CheckCircle2 } from 'lucide-react';
-import { cn, getFlagUrl } from '@/lib/utils';
+import { cn, getTeamLogoUrl } from '@/lib/utils';
 
 interface Player {
     id: number;
@@ -226,7 +225,7 @@ export default function SetResultPage() {
                     <div className="grid grid-cols-2 gap-3">
                         {[matchData.team_1, matchData.team_2].map((team) => {
                             const isSelected = winnerId === team.id;
-                            const flagSrc = getFlagUrl(team.short_name);
+                            const flagSrc = getTeamLogoUrl(team.short_name);
                             return (
                                 <button
                                     key={team.id}
@@ -241,14 +240,10 @@ export default function SetResultPage() {
                                     )}
                                 >
                                     {flagSrc && (
-                                        <Image
-                                            src={flagSrc}
-                                            alt={`${team.name} flag`}
-                                            width={32}
-                                            height={24}
-                                            className="h-6 w-8 object-cover rounded-sm"
-                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                        />
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={flagSrc} alt={team.name} width={36} height={36}
+                                            className="h-9 w-9 object-contain"
+                                            onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                                     )}
                                     <span className="font-semibold text-sm">{team.short_name}</span>
                                     <span className="text-xs text-muted-foreground">{team.name}</span>

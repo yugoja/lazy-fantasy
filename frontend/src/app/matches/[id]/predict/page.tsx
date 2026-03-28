@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getMatchPlayers, getMyPredictions, submitPrediction, ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ArrowLeft, Trophy, Target, Star, CheckCircle2, Clock } from 'lucide-react';
-import { cn, getFlagUrl } from '@/lib/utils';
+import { cn, getTeamLogoUrl } from '@/lib/utils';
 
 interface Player {
   id: number;
@@ -350,7 +349,7 @@ export default function PredictPage() {
           <div className="grid grid-cols-2 gap-3">
             {[matchData.team_1, matchData.team_2].map((team) => {
               const isSelected = winnerId === team.id;
-              const flagSrc = getFlagUrl(team.short_name);
+              const logoSrc = getTeamLogoUrl(team.short_name);
               return (
                 <button
                   key={team.id}
@@ -362,9 +361,10 @@ export default function PredictPage() {
                   )}
                 >
                   {isSelected && <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-primary" />}
-                  {flagSrc && (
-                    <Image src={flagSrc} alt={team.name} width={40} height={30}
-                      className="h-7 w-10 object-cover rounded-sm"
+                  {logoSrc && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logoSrc} alt={team.name} width={40} height={40}
+                      className="h-10 w-10 object-contain"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   )}
                   <span className="font-bold text-base">{team.short_name}</span>

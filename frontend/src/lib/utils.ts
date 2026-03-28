@@ -41,6 +41,29 @@ export function getFlagUrl(shortNameOrCode: string): string | undefined {
   return `/flags/${code}.png`
 }
 
+/** Map IPL team short_name → local logo path */
+const TEAM_LOGO_MAP: Record<string, string> = {
+  CSK:  '/teams/csk.svg',
+  DC:   '/teams/dc.svg',
+  GT:   '/teams/gt.svg',
+  KKR:  '/teams/kkr.svg',
+  LSG:  '/teams/lsg.svg',
+  MI:   '/teams/mi.svg',
+  PBKS: '/teams/pbks.svg',
+  RCB:  '/teams/rcb.svg',
+  RR:   '/teams/rr.svg',
+  SRH:  '/teams/srh.svg',
+  UPW:  '/teams/upw.png',
+}
+
+/**
+ * Returns a logo URL for any team short_name.
+ * IPL franchises → /teams/*.svg; national teams → /flags/*.png
+ */
+export function getTeamLogoUrl(shortName: string): string | undefined {
+  return TEAM_LOGO_MAP[shortName] ?? getFlagUrl(shortName)
+}
+
 /** Map F1 constructor short_name → logo filename */
 const CONSTRUCTOR_LOGO_MAP: Record<string, string> = {
   MCL: "mclaren",

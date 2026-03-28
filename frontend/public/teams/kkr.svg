@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="82" height="96" viewBox="0 0 82 96">
+  <!-- Kolkata Knight Riders -->
+  <path d="M41 4 L78 18 L78 58 Q78 80 41 93 Q4 80 4 58 L4 18 Z" fill="#3A225D"/>
+  <path d="M41 4 L78 18 L78 38 L4 38 L4 18 Z" fill="#4E2F7A"/>
+  <path d="M41 4 L78 18 L78 58 Q78 80 41 93 Q4 80 4 58 L4 18 Z" fill="none" stroke="#C8A83A" stroke-width="2.5"/>
+  <line x1="4" y1="38" x2="78" y2="38" stroke="#C8A83A" stroke-width="1" opacity="0.5"/>
+  <text x="41" y="65" text-anchor="middle" dominant-baseline="central" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#C8A83A" letter-spacing="0.5">KKR</text>
+</svg>

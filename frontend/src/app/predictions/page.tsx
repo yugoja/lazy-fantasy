@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getMatches, getMyPredictions, getMyPredictionsDetailed, getMyLeagues, PredictionDetail } from '@/lib/api';
 import { MatchCard } from '@/components/MatchCard';
@@ -12,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Target, Star, Check, X, Flag, Zap, Users } from 'lucide-react';
-import { cn, getFlagUrl } from '@/lib/utils';
+import { cn, getTeamLogoUrl } from '@/lib/utils';
 import { ShareButton } from '@/components/ShareButton';
 import { shareWithCard } from '@/lib/share';
 import { generateUpcomingCard, generateResultCard } from '@/lib/share-card';
@@ -210,8 +209,8 @@ export default function PredictionsPage() {
   };
 
   const renderDetailedCard = (pred: PredictionDetail) => {
-    const flag1 = getFlagUrl(pred.team_1.short_name);
-    const flag2 = getFlagUrl(pred.team_2.short_name);
+    const flag1 = getTeamLogoUrl(pred.team_1.short_name);
+    const flag2 = getTeamLogoUrl(pred.team_2.short_name);
     const isProcessed = pred.is_processed;
 
     const categories = [
@@ -272,13 +271,15 @@ export default function PredictionsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {flag1 && (
-                <Image src={flag1} alt="" width={24} height={16} className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={flag1} alt="" width={20} height={20} className="h-5 w-5 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               )}
               <span className="text-sm font-semibold">
                 {pred.team_1.short_name} vs {pred.team_2.short_name}
               </span>
               {flag2 && (
-                <Image src={flag2} alt="" width={24} height={16} className="h-4 w-6 object-cover rounded-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={flag2} alt="" width={20} height={20} className="h-5 w-5 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               )}
             </div>
             {isProcessed ? (

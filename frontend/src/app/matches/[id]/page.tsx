@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getMatchDetail, MatchDetail } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Trophy, Target, Star, Clock } from 'lucide-react';
-import { getFlagUrl } from '@/lib/utils';
+import { getTeamLogoUrl } from '@/lib/utils';
 
 export default function MatchDetailPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -75,8 +74,8 @@ export default function MatchDetailPage() {
 
   const isCompleted = match.status === 'COMPLETED';
   const isScheduled = match.status === 'SCHEDULED';
-  const flag1 = getFlagUrl(match.team_1.short_name);
-  const flag2 = getFlagUrl(match.team_2.short_name);
+  const flag1 = getTeamLogoUrl(match.team_1.short_name);
+  const flag2 = getTeamLogoUrl(match.team_2.short_name);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -129,14 +128,10 @@ export default function MatchDetailPage() {
             {/* Team 1 */}
             <div className="flex flex-col items-center gap-2 flex-1">
               {flag1 && (
-                <Image
-                  src={flag1}
-                  alt={`${match.team_1.name} flag`}
-                  width={56}
-                  height={40}
-                  className="h-10 w-14 object-cover rounded"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={flag1} alt={match.team_1.name} width={48} height={48}
+                  className="h-12 w-12 object-contain"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               )}
               <span className="font-bold text-lg">{match.team_1.short_name}</span>
               <span className="text-xs text-muted-foreground text-center">{match.team_1.name}</span>
@@ -150,14 +145,10 @@ export default function MatchDetailPage() {
             {/* Team 2 */}
             <div className="flex flex-col items-center gap-2 flex-1">
               {flag2 && (
-                <Image
-                  src={flag2}
-                  alt={`${match.team_2.name} flag`}
-                  width={56}
-                  height={40}
-                  className="h-10 w-14 object-cover rounded"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={flag2} alt={match.team_2.name} width={48} height={48}
+                  className="h-12 w-12 object-contain"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               )}
               <span className="font-bold text-lg">{match.team_2.short_name}</span>
               <span className="text-xs text-muted-foreground text-center">{match.team_2.name}</span>
