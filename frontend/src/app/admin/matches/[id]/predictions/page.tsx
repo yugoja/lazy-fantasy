@@ -16,6 +16,7 @@ interface Prediction {
     id: number;
     user_id: number;
     username: string;
+    display_name: string | null;
     predicted_winner: string;
     predicted_most_runs: string;
     predicted_most_wickets: string;
@@ -157,10 +158,10 @@ export default function ViewPredictionsPage() {
                                     <div className="flex items-center gap-3">
                                         <Avatar className="h-8 w-8">
                                             <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                                                {pred.username.substring(0, 2).toUpperCase()}
+                                                {(pred.display_name || pred.username).substring(0, 2).toUpperCase()}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <span className="font-semibold text-sm">{pred.username}</span>
+                                        <span className="font-semibold text-sm">{pred.display_name || pred.username}</span>
                                     </div>
                                     {pred.is_processed ? (
                                         <Badge variant="default" className="text-[10px]">

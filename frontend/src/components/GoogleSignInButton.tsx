@@ -40,7 +40,7 @@ export default function GoogleSignInButton({ onError, redirectTo }: { onError?: 
         async (response: { credential: string }) => {
             try {
                 const result = await googleLogin(response.credential);
-                login(result.access_token, result.username);
+                login(result.access_token, result.username, result.display_name);
                 router.push(redirectTo || '/dashboard');
             } catch (err) {
                 if (err instanceof ApiError) {

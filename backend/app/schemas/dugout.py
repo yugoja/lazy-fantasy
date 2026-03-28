@@ -15,6 +15,7 @@ class DugoutEvent(BaseModel):
     league_id: int
     match_id: int | None = None
     username: str
+    display_name: str | None = None
     is_me: bool = False
     # Type-specific fields
     streak_count: int | None = None

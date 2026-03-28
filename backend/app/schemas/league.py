@@ -28,6 +28,7 @@ class LeaderboardEntry(BaseModel):
     """Schema for a leaderboard entry."""
     user_id: int
     username: str
+    display_name: Optional[str] = None
     total_points: int
     rank: int
     rank_delta: Optional[int] = None

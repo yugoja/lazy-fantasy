@@ -12,6 +12,7 @@ from app.database import get_db
 from app.schemas.auth import (
     GoogleAuthRequest,
     GoogleAuthResponse,
+    ProfileUpdate,
     Token,
     UserCreate,
     UserResponse,
@@ -21,10 +22,12 @@ from app.services.auth import (
     create_access_token,
     create_google_user,
     create_user,
+    get_current_user,
     get_user_by_email,
     get_user_by_google_id,
     get_user_by_username,
 )
+from app.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +38,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     """
     Register a new user.
-    
+
     - **username**: Unique username
     - **email**: Valid email address
     - **password**: Password (will be hashed)
@@ -46,14 +49,14 @@ async def signup(user_data: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered",
         )
-    
+
     # Check if email already exists
     if get_user_by_email(db, user_data.email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
-    
+
     # Create user
     user = create_user(db, user_data.username, user_data.email, user_data.password)
     return user
@@ -66,7 +69,7 @@ async def login(
 ):
     """
     Login and get JWT access token.
-    
+
     Uses OAuth2 password flow - send username and password as form data.
     """
     user = authenticate_user(db, form_data.username, form_data.password)
@@ -76,13 +79,13 @@ async def login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(user.id)},
         expires_delta=access_token_expires,
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="bearer", display_name=user.display_name)
 
 
 @router.post("/google", response_model=GoogleAuthResponse)
@@ -113,6 +116,7 @@ async def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
 
     google_id = idinfo["sub"]
     email = idinfo.get("email", "")
+    google_display_name = idinfo.get("name")  # Full name from Google profile
 
     # 1. Try to find by google_id (already linked)
     user = get_user_by_google_id(db, google_id)
@@ -122,6 +126,9 @@ async def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
         user = get_user_by_email(db, email)
         if user:
             user.google_id = google_id
+            # Populate display_name from Google if not already set
+            if not user.display_name and google_display_name:
+                user.display_name = google_display_name
             db.commit()
             db.refresh(user)
         else:
@@ -132,7 +139,7 @@ async def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
             while get_user_by_username(db, username):
                 username = f"{base_username[:46]}{suffix}"
                 suffix += 1
-            user = create_google_user(db, email, google_id, username)
+            user = create_google_user(db, email, google_id, username, display_name=google_display_name)
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -143,4 +150,30 @@ async def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
         access_token=access_token,
         token_type="bearer",
         username=user.username,
+        display_name=user.display_name,
     )
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_me(current_user: User = Depends(get_current_user)):
+    """Get current user's profile."""
+    return current_user
+
+
+@router.put("/me", response_model=UserResponse)
+async def update_me(
+    data: ProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update current user's profile."""
+    display_name = data.display_name.strip()
+    if not display_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Display name cannot be empty",
+        )
+    current_user.display_name = display_name
+    db.commit()
+    db.refresh(current_user)
+    return current_user

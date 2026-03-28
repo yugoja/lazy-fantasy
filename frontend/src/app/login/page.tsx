@@ -34,7 +34,7 @@ export default function LoginPage() {
 
         try {
             const response = await apiLogin(username, password);
-            login(response.access_token, username);
+            login(response.access_token, username, response.display_name);
             router.push(redirectTo);
         } catch (err) {
             if (err instanceof ApiError) {

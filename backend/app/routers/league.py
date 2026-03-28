@@ -117,12 +117,13 @@ async def get_leaderboard(
 
     # Build response with ranks and deltas
     entries = []
-    for idx, (user_id, username, total_points, prev_rank) in enumerate(leaderboard_data):
+    for idx, (user_id, username, display_name, total_points, prev_rank) in enumerate(leaderboard_data):
         current_rank = idx + 1
         rank_delta = (prev_rank - current_rank) if prev_rank is not None else None
         entries.append(LeaderboardEntry(
             user_id=user_id,
             username=username,
+            display_name=display_name,
             total_points=int(total_points),
             rank=current_rank,
             rank_delta=rank_delta,
@@ -192,6 +193,7 @@ async def get_league_match_predictions(
     for pred, user in preds:
         entry = FriendPrediction(
             username=user.username,
+            display_name=user.display_name,
             is_me=(user.id == current_user.id),
             points_earned=pred.points_earned,
             is_processed=pred.is_processed,

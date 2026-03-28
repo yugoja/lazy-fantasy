@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 from pydantic import BaseModel, field_serializer
 
 from app.schemas.match import TeamResponse, PlayerResponse
@@ -68,6 +69,7 @@ class PredictionDetailResponse(BaseModel):
 class FriendPrediction(BaseModel):
     """A league member's prediction for a match, shown in the league activity feed."""
     username: str
+    display_name: Optional[str] = None
     is_me: bool
     points_earned: int
     is_processed: bool

@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
@@ -13,6 +14,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: str
+    display_name: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -21,6 +23,7 @@ class Token(BaseModel):
     """Schema for JWT token response."""
     access_token: str
     token_type: str = "bearer"
+    display_name: Optional[str] = None
 
 
 class TokenData(BaseModel):
@@ -38,3 +41,9 @@ class GoogleAuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     username: str
+    display_name: Optional[str] = None
+
+
+class ProfileUpdate(BaseModel):
+    """Schema for updating user profile."""
+    display_name: str

@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, getMyPredictionsDetailed, PredictionDetail } from '@/lib/api';
+import { getMyLeagues, getMyPredictionsDetailed, PredictionDetail, updateProfile } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -21,6 +22,9 @@ import {
   Shield,
   CircleHelp,
   Users,
+  Pencil,
+  Check,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,11 +36,17 @@ interface League {
 }
 
 export default function ProfilePage() {
-  const { isAuthenticated, isLoading: authLoading, username, logout } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, username, displayName, logout, setDisplayName } = useAuth();
   const router = useRouter();
   const [leagues, setLeagues] = useState<League[]>([]);
   const [predictions, setPredictions] = useState<PredictionDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Display name editing
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -46,11 +56,11 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadLeagues();
+      loadData();
     }
   }, [isAuthenticated]);
 
-  const loadLeagues = async () => {
+  const loadData = async () => {
     try {
       const [leaguesData, predictionsData] = await Promise.allSettled([
         getMyLeagues(),
@@ -65,12 +75,41 @@ export default function ProfilePage() {
     }
   };
 
+  const startEditing = () => {
+    setEditValue(displayName || username || '');
+    setSaveError('');
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setSaveError('');
+  };
+
+  const saveDisplayName = async () => {
+    const trimmed = editValue.trim();
+    if (!trimmed) {
+      setSaveError('Name cannot be empty');
+      return;
+    }
+    setIsSaving(true);
+    setSaveError('');
+    try {
+      const updated = await updateProfile(trimmed);
+      setDisplayName(updated.display_name ?? trimmed);
+      setIsEditing(false);
+    } catch {
+      setSaveError('Failed to save. Try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const processed = predictions.filter(p => p.is_processed);
   const totalPoints = processed.reduce((sum, p) => sum + p.points_earned, 0);
   const correctWins = processed.filter(p => p.actual_winner && p.predicted_winner.id === p.actual_winner.id).length;
   const accuracy = processed.length > 0 ? Math.round((correctWins / processed.length) * 100) : 0;
 
-  // Streak: consecutive correct winner picks from most recent processed match
   const sortedProcessed = [...processed].sort(
     (a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
   );
@@ -83,9 +122,8 @@ export default function ProfilePage() {
     }
   }
 
-  const initials = username
-    ? username.substring(0, 2).toUpperCase()
-    : '??';
+  const visibleName = displayName || username || '';
+  const initials = visibleName ? visibleName.substring(0, 2).toUpperCase() : '??';
 
   if (authLoading || isLoading) {
     return (
@@ -120,7 +158,7 @@ export default function ProfilePage() {
             <Trophy className="h-3.5 w-3.5 text-accent-foreground" />
           </div>
         </div>
-        <h1 className="mt-3 text-lg font-bold text-foreground">{username}</h1>
+        <h1 className="mt-3 text-lg font-bold text-foreground">{visibleName}</h1>
         <p className="text-xs text-muted-foreground">@{username}</p>
       </div>
 
@@ -141,11 +179,70 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Personal Info */}
+      {/* Display Name */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-foreground">Personal Info</h2>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">Profile</h2>
         <Card className="border-border bg-card">
           <CardContent className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[11px] text-muted-foreground">Display Name</Label>
+              {isEditing ? (
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={editValue}
+                      onChange={e => setEditValue(e.target.value)}
+                      placeholder="Your name"
+                      maxLength={100}
+                      className="h-8 text-sm"
+                      autoFocus
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') saveDisplayName();
+                        if (e.key === 'Escape') cancelEditing();
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 px-2"
+                      onClick={saveDisplayName}
+                      disabled={isSaving}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2"
+                      onClick={cancelEditing}
+                      disabled={isSaving}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {saveError && (
+                    <p className="text-xs text-destructive">{saveError}</p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-foreground">
+                    {displayName || <span className="text-muted-foreground italic">Not set</span>}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-muted-foreground"
+                    onClick={startEditing}
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                This is how your name appears on the leaderboard and across the app.
+              </p>
+            </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-[11px] text-muted-foreground">Username</Label>
               <p className="text-sm font-medium text-foreground">@{username}</p>

@@ -89,12 +89,13 @@ def get_user_by_google_id(db: Session, google_id: str) -> User | None:
     return db.query(User).filter(User.google_id == google_id).first()
 
 
-def create_google_user(db: Session, email: str, google_id: str, username: str) -> User:
+def create_google_user(db: Session, email: str, google_id: str, username: str, display_name: str | None = None) -> User:
     """Create a new user from Google SSO (no password)."""
     user = User(
         username=username,
         email=email,
         google_id=google_id,
+        display_name=display_name,
     )
     db.add(user)
     db.commit()

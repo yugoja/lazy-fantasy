@@ -9,17 +9,21 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, CheckCheck, Users, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-function getInitials(username: string) {
-  return username.substring(0, 2).toUpperCase();
+function getInitials(name: string) {
+  return name.substring(0, 2).toUpperCase();
 }
 
-function Avatar({ username, isMe }: { username: string; isMe: boolean }) {
+function eventLabel(event: DugoutEvent) {
+  return event.display_name || event.username;
+}
+
+function Avatar({ event }: { event: DugoutEvent }) {
   return (
     <div className={cn(
       'h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
-      isMe ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+      event.is_me ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
     )}>
-      {getInitials(username)}
+      {getInitials(eventLabel(event))}
     </div>
   );
 }
@@ -41,10 +45,10 @@ function ContrарianCard({ event, onDismiss }: { event: DugoutEvent; onDismiss:
     <Card className="border-border/60 bg-muted/40">
       <CardContent className="p-3">
         <div className="flex items-center gap-2.5">
-          <Avatar username={event.username} isMe={event.is_me} />
+          <Avatar event={event} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-sm">{event.is_me ? 'You' : event.username}</span>
+              <span className="font-semibold text-sm">{event.is_me ? 'You' : eventLabel(event)}</span>
               <Badge className="text-[10px] px-1.5 py-0 bg-orange-500/20 text-orange-400 border-orange-500/30 hover:bg-orange-500/20">
                 Lone Wolf
               </Badge>
@@ -82,7 +86,7 @@ function AgreementRow({ event, onDismiss }: { event: DugoutEvent; onDismiss: () 
         <p className="text-sm">
           <span className="font-semibold">You</span>
           {' and '}
-          <span className="font-semibold">{event.username}</span>
+          <span className="font-semibold">{eventLabel(event)}</span>
           {' agree on '}
           <span className="text-green-400 font-semibold">{event.agreement_count}/6</span>
           {' picks'}
@@ -107,10 +111,10 @@ function StreakCard({ event, onDismiss }: { event: DugoutEvent; onDismiss: () =>
     <Card className="border-border/60 bg-muted/40">
       <CardContent className="p-3">
         <div className="flex items-center gap-2.5">
-          <Avatar username={event.username} isMe={event.is_me} />
+          <Avatar event={event} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-semibold text-sm">{event.is_me ? 'You' : event.username}</span>
+              <span className="font-semibold text-sm">{event.is_me ? 'You' : eventLabel(event)}</span>
               <Badge className="text-[10px] px-1.5 py-0 bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/20">
                 Oracle
               </Badge>

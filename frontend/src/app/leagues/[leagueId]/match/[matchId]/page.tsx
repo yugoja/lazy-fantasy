@@ -106,7 +106,8 @@ function PredictionCard({
   myPred: FriendPrediction | null;
 }) {
   const cats = getCategoryData(pred, match);
-  const initials = pred.username.substring(0, 2).toUpperCase();
+  const label = pred.display_name || pred.username;
+  const initials = label.substring(0, 2).toUpperCase();
 
   const agreement = !pred.is_me && myPred ? computeAgreement(pred, myPred) : null;
   const agreementColor =
@@ -131,7 +132,7 @@ function PredictionCard({
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm">{pred.username}</span>
+                <span className="font-semibold text-sm">{label}</span>
                 {pred.is_me && (
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0">You</Badge>
                 )}

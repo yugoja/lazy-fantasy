@@ -15,6 +15,7 @@ class User(Base):
     hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     google_id: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True, index=True)
+    display_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Relationships
     owned_leagues = relationship("League", back_populates="owner")
