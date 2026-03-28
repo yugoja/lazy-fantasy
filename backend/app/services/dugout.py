@@ -158,6 +158,7 @@ def _contrarian_events(
                 league_id=league.id,
                 match_id=match_id,
                 username=user.username,
+                display_name=user.display_name,
                 is_me=(lone_uid == user_id),
                 team_short_name=team_short_map.get(team_id),
             ))
@@ -202,6 +203,7 @@ def _agreement_events(
                     league_id=league.id,
                     match_id=match_id,
                     username=user.username,
+                    display_name=user.display_name,
                     is_me=False,
                     agreement_count=agreement,
                 ))
@@ -280,6 +282,7 @@ def _streak_events(
                     league_name=league.name,
                     league_id=league.id,
                     username=user.username,
+                    display_name=user.display_name,
                     is_me=(best_uid == user_id),
                     streak_count=best_streak,
                 ))
@@ -325,6 +328,7 @@ def _rank_shift_events(
             league_name=league.name,
             league_id=league.id,
             username=user.username,
+            display_name=user.display_name,
             is_me=True,
             rank=current_rank,
             rank_delta=rank_delta,
