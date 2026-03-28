@@ -40,7 +40,7 @@ export default function Home() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
           </span>
-          ICC T20 World Cup 2026 · Live Now
+          IPL 2026 · Live Now
         </div>
 
         <h1 className="text-3xl font-bold tracking-tight mb-3 leading-tight">
@@ -55,7 +55,7 @@ export default function Home() {
           Prove them wrong.
         </p>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-8 leading-relaxed">
-          Predict every T20 World Cup match, play in a private league with your crew, and
+          Predict every IPL match, play in a private league with your crew, and
           settle the group chat debate — who actually knows cricket?
         </p>
 
@@ -77,29 +77,29 @@ export default function Home() {
       <section className="container-mobile py-10">
         <div className="text-center mb-6">
           <h2 className="text-xl font-bold mb-1">What you predict</h2>
-          <p className="text-sm text-muted-foreground">Four picks per match. Up to 100 pts.</p>
+          <p className="text-sm text-muted-foreground">Six picks per match. Up to 140 pts.</p>
         </div>
 
         <Card className="border-border bg-card overflow-hidden">
           {/* Match header */}
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🇮🇳</span>
-              <span className="text-sm font-semibold">India</span>
+              <span className="text-sm font-semibold">Mumbai Indians</span>
             </div>
             <span className="text-xs text-muted-foreground font-medium">vs</span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">Australia</span>
-              <span className="text-lg">🇦🇺</span>
+              <span className="text-sm font-semibold">Chennai Super Kings</span>
             </div>
           </div>
 
           <CardContent className="p-4 space-y-3">
             {[
-              { label: 'Match Winner', example: 'India', pts: 25, done: true },
-              { label: 'Top Batter', example: 'Virat Kohli', pts: 25, done: true },
-              { label: 'Top Bowler', example: 'Jasprit Bumrah', pts: 25, done: false },
-              { label: 'Player of the Match', example: 'Rohit Sharma', pts: 25, done: false },
+              { label: 'Match Winner', example: 'Mumbai Indians', pts: 10, done: true },
+              { label: 'Top Batter · MI', example: 'Rohit Sharma', pts: 20, done: true },
+              { label: 'Top Batter · CSK', example: 'Ruturaj Gaikwad', pts: 20, done: true },
+              { label: 'Top Bowler · MI', example: 'Jasprit Bumrah', pts: 20, done: false },
+              { label: 'Top Bowler · CSK', example: 'Deepak Chahar', pts: 20, done: false },
+              { label: 'Player of the Match', example: 'MS Dhoni', pts: 50, done: false },
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -119,7 +119,7 @@ export default function Home() {
 
             <div className="pt-2 border-t border-border flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Max this match</span>
-              <span className="text-sm font-bold text-primary">100 pts</span>
+              <span className="text-sm font-bold text-primary">140 pts</span>
             </div>
           </CardContent>
         </Card>
@@ -148,7 +148,7 @@ export default function Home() {
               step: '2',
               icon: Target,
               title: 'Predict before every match',
-              desc: 'Pick the winner, top batter, top bowler, and player of the match. Four picks. One shot at glory.',
+              desc: 'Pick the winner, top batter and top bowler from each team, and the player of the match. Six picks. One shot at glory.',
             },
             {
               step: '3',
@@ -203,7 +203,7 @@ export default function Home() {
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-6 space-y-3">
             <Swords className="h-8 w-8 text-primary mx-auto" />
-            <h2 className="text-lg font-bold">The World Cup is live.</h2>
+            <h2 className="text-lg font-bold">IPL 2026 is live.</h2>
             <p className="text-sm text-muted-foreground">
               Your group chat needs settling. Create a league, share the code, and let the
               banter begin.
