@@ -11,6 +11,7 @@ from app.models.match_lineup import MatchLineup
 from app.models.reminder_log import ReminderLog
 from app.models.push_subscription import PushSubscription
 from app.models.dugout_dismissal import DugoutDismissal
+from app.models.tournament_pick import TournamentPick
 
 __all__ = [
     "Base",
@@ -27,4 +28,5 @@ __all__ = [
     "ReminderLog",
     "PushSubscription",
     "DugoutDismissal",
+    "TournamentPick",
 ]

@@ -4,7 +4,7 @@ import string
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models import League, LeagueMember, Match, User, Prediction
+from app.models import League, LeagueMember, Match, User, Prediction, Tournament, TournamentPick
 
 def generate_invite_code(length: int = 6) -> str:
     """Generate a random alphanumeric invite code."""
@@ -76,6 +76,24 @@ def join_league(db: Session, user_id: int, league_id: int) -> LeagueMember:
     return member
 
 
+def _get_tournament_pick_points(db: Session, league_created_at) -> dict:
+    """
+    Returns {user_id: total_tournament_pick_points} for processed picks
+    in tournaments that started after the league was created.
+    """
+    rows = (
+        db.query(TournamentPick.user_id, func.sum(TournamentPick.points_earned))
+        .join(Tournament, TournamentPick.tournament_id == Tournament.id)
+        .filter(
+            TournamentPick.is_processed == True,
+            Tournament.start_date >= league_created_at,
+        )
+        .group_by(TournamentPick.user_id)
+        .all()
+    )
+    return {user_id: pts for user_id, pts in rows}
+
+
 def _compute_standings(db: Session, league_id: int) -> list[tuple[int, int]]:
     """
     Compute current standings for a league.
@@ -110,7 +128,12 @@ def _compute_standings(db: Session, league_id: int) -> list[tuple[int, int]]:
         .all()
     )
 
-    return [(user_id, rank + 1) for rank, (user_id, _) in enumerate(results)]
+    # Add tournament pick points
+    tp_points = _get_tournament_pick_points(db, league.created_at)
+    totals = [(user_id, pts + tp_points.get(user_id, 0)) for user_id, pts in results]
+    totals.sort(key=lambda x: x[1], reverse=True)
+
+    return [(user_id, rank + 1) for rank, (user_id, _) in enumerate(totals)]
 
 
 def snapshot_league_ranks(db: Session, match_id: int) -> None:
@@ -152,7 +175,7 @@ def get_league_leaderboard(
 ) -> list[tuple[int, str, int]]:
     """
     Get leaderboard for a league.
-    Returns list of (user_id, username, total_points) sorted by points descending.
+    Returns list of (user_id, username, display_name, total_points, prev_rank) sorted by points descending.
     Only counts predictions for events that started after the league was created.
     """
     league = db.query(League).filter(League.id == league_id).first()
@@ -183,6 +206,7 @@ def get_league_leaderboard(
         db.query(
             User.id,
             User.username,
+            User.display_name,
             func.coalesce(func.sum(eligible_predictions.c.points_earned), 0).label(
                 "total_points"
             ),
@@ -192,12 +216,20 @@ def get_league_leaderboard(
             eligible_predictions,
             User.id == eligible_predictions.c.user_id,
         )
-        .group_by(User.id, User.username)
+        .group_by(User.id, User.username, User.display_name)
         .order_by(
             func.coalesce(func.sum(eligible_predictions.c.points_earned), 0).desc()
         )
         .all()
     )
 
+    # Add tournament pick points and re-sort
+    tp_points = _get_tournament_pick_points(db, league.created_at)
+    augmented = [
+        (user_id, username, display_name, total_points + tp_points.get(user_id, 0))
+        for user_id, username, display_name, total_points in results
+    ]
+    augmented.sort(key=lambda x: x[3], reverse=True)
+
     # Attach prev_rank to each result row
-    return [(user_id, username, total_points, prev_rank_map.get(user_id)) for user_id, username, total_points in results]
+    return [(user_id, username, display_name, total_points, prev_rank_map.get(user_id)) for user_id, username, display_name, total_points in augmented]

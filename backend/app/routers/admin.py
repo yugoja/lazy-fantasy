@@ -9,9 +9,11 @@ from app.schemas.admin import (
     LinkMatchRequest, BulkPlayerMappingRequest, SyncStatusResponse,
 )
 from app.schemas.match import MatchResponse, TeamResponse, PlayerResponse
+from app.schemas.tournament_picks import SetPicksWindowRequest, SetPicksResultRequest
 from app.services.auth import get_current_admin_user
 from app.services.league import snapshot_league_ranks
 from app.services.scoring import calculate_scores
+from app.services.tournament_picks import score_tournament_picks
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -242,6 +244,7 @@ async def get_match_predictions(
             "id": pred.id,
             "user_id": pred.user_id,
             "username": user.username if user else "Unknown",
+            "display_name": user.display_name if user else None,
             "predicted_winner": winner_team.name if winner_team else "Unknown",
             "predicted_most_runs_team1": runs_t1.name if runs_t1 else "Unknown",
             "predicted_most_runs_team2": runs_t2.name if runs_t2 else "Unknown",
@@ -692,4 +695,61 @@ async def list_series_matches(
         }
         for m in matches
     ]
+
+
+VALID_PICK_WINDOWS = {"closed", "open", "locked", "open2", "finalized"}
+
+
+@router.patch("/tournaments/{tournament_id}/picks-window")
+async def set_picks_window(
+    tournament_id: int,
+    data: SetPicksWindowRequest,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Set the tournament picks window state (Admin only)."""
+    if data.window not in VALID_PICK_WINDOWS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid window value. Must be one of: {', '.join(sorted(VALID_PICK_WINDOWS))}",
+        )
+
+    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not tournament:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tournament not found")
+
+    tournament.picks_window = data.window
+    db.commit()
+    return {"tournament_id": tournament_id, "picks_window": tournament.picks_window}
+
+
+@router.post("/tournaments/{tournament_id}/picks-result")
+async def set_picks_result(
+    tournament_id: int,
+    data: SetPicksResultRequest,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Set tournament Top 4 + player results and trigger picks scoring (Admin only)."""
+    tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
+    if not tournament:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tournament not found")
+
+    if len(data.result_top4_team_ids) != 4:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Exactly 4 team IDs required for Top 4 result.",
+        )
+
+    team_ids = data.result_top4_team_ids
+    tournament.result_top4_team1_id = team_ids[0]
+    tournament.result_top4_team2_id = team_ids[1]
+    tournament.result_top4_team3_id = team_ids[2]
+    tournament.result_top4_team4_id = team_ids[3]
+    tournament.result_best_batsman_player_id = data.result_best_batsman_player_id
+    tournament.result_best_bowler_player_id = data.result_best_bowler_player_id
+    db.commit()
+
+    scored = score_tournament_picks(db, tournament_id)
+    return {"tournament_id": tournament_id, "picks_scored": scored}
 
