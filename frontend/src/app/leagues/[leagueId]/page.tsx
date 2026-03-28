@@ -70,7 +70,8 @@ export default function LeagueLeaderboardPage() {
 
   const handleShare = async () => {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lazyfantasy.app';
-    const text = `Join my Lazy Fantasy league "${leagueName}"!\n\nUse invite code: ${inviteCode}\n\nSign up and join at ${appUrl}`;
+    const joinUrl = `${appUrl}/leagues?join=${inviteCode}`;
+    const text = `Join my Lazy Fantasy league "${leagueName}"!\n\nTap to join: ${joinUrl}`;
     try {
       if (navigator.share) {
         await navigator.share({ text });
