@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, getMatches, getMyPredictions, getDugoutEvents, DugoutEvent, ApiError } from '@/lib/api';
+import { getMyLeagues, getMatches, getMyPredictions, getDugoutEvents, listTournaments, DugoutEvent, ApiError, TournamentSummary } from '@/lib/api';
 import { DugoutFeed } from '@/components/DugoutFeed';
 import { MatchCard } from '@/components/MatchCard';
 import { Card } from '@/components/ui/card';
@@ -44,6 +44,7 @@ export default function DashboardPage() {
     const [matches, setMatches] = useState<Match[]>([]);
     const [predictions, setPredictions] = useState<Prediction[]>([]);
     const [dugoutEvents, setDugoutEvents] = useState<DugoutEvent[]>([]);
+    const [openTournaments, setOpenTournaments] = useState<TournamentSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -61,16 +62,20 @@ export default function DashboardPage() {
 
     const loadData = async () => {
         try {
-            const [leaguesData, matchesData, predictionsData, dugoutData] = await Promise.allSettled([
+            const [leaguesData, matchesData, predictionsData, dugoutData, tournamentsData] = await Promise.allSettled([
                 getMyLeagues(),
                 getMatches(),
                 getMyPredictions(),
                 getDugoutEvents(),
+                listTournaments(),
             ]);
             if (leaguesData.status === 'fulfilled') setLeagues(leaguesData.value);
             if (matchesData.status === 'fulfilled') setMatches(matchesData.value);
             if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
             if (dugoutData.status === 'fulfilled') setDugoutEvents(dugoutData.value);
+            if (tournamentsData.status === 'fulfilled') {
+                setOpenTournaments(tournamentsData.value.filter(t => t.picks_window === 'open' || t.picks_window === 'open2'));
+            }
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.message);
@@ -200,6 +205,25 @@ export default function DashboardPage() {
                 hasLeague={leagues.length > 0}
             />
             {heroContent}
+
+            {openTournaments.map(t => (
+                <div key={t.id} className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
+                            <Trophy className="h-5 w-5 text-purple-500" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-base leading-tight">{t.name} Picks</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                {t.picks_window === 'open2' ? 'Window 2 open — half points' : 'Predict Top 4, Batsman & Bowler'}
+                            </p>
+                        </div>
+                    </div>
+                    <Link href={`/tournaments/${t.id}/picks`}>
+                        <Button size="sm" className="shrink-0 bg-purple-500 hover:bg-purple-600 text-white">Pick Now</Button>
+                    </Link>
+                </div>
+            ))}
 
             <DugoutFeed events={dugoutEvents} />
 
