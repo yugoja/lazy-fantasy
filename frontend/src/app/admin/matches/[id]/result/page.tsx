@@ -5,15 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { getMatchPlayers, API_BASE } from '@/lib/api';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -53,22 +51,20 @@ export default function SetResultPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Form state
+    // Form state — per-team fields
     const [winnerId, setWinnerId] = useState<number | null>(null);
-    const [mostRunsId, setMostRunsId] = useState<string>('');
-    const [mostWicketsId, setMostWicketsId] = useState<string>('');
-    const [pomId, setPomId] = useState<string>('');
+    const [mostRunsTeam1Id, setMostRunsTeam1Id] = useState('');
+    const [mostRunsTeam2Id, setMostRunsTeam2Id] = useState('');
+    const [mostWicketsTeam1Id, setMostWicketsTeam1Id] = useState('');
+    const [mostWicketsTeam2Id, setMostWicketsTeam2Id] = useState('');
+    const [pomId, setPomId] = useState('');
 
     useEffect(() => {
-        if (!authLoading && !isAuthenticated) {
-            router.push('/login');
-        }
+        if (!authLoading && !isAuthenticated) router.push('/login');
     }, [isAuthenticated, authLoading, router]);
 
     useEffect(() => {
-        if (matchId) {
-            loadMatchData();
-        }
+        if (matchId) loadMatchData();
     }, [matchId]);
 
     const loadMatchData = async () => {
@@ -87,13 +83,13 @@ export default function SetResultPage() {
         setError('');
         setSuccess('');
 
-        if (!winnerId || !mostRunsId || !mostWicketsId || !pomId) {
+        if (!winnerId || !mostRunsTeam1Id || !mostRunsTeam2Id ||
+            !mostWicketsTeam1Id || !mostWicketsTeam2Id || !pomId) {
             setError('Please fill in all fields');
             return;
         }
 
         setIsSubmitting(true);
-
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`${API_BASE}/admin/matches/${matchId}/result`, {
@@ -104,8 +100,10 @@ export default function SetResultPage() {
                 },
                 body: JSON.stringify({
                     result_winner_id: winnerId,
-                    result_most_runs_player_id: Number(mostRunsId),
-                    result_most_wickets_player_id: Number(mostWicketsId),
+                    result_most_runs_team1_player_id: Number(mostRunsTeam1Id),
+                    result_most_runs_team2_player_id: Number(mostRunsTeam2Id),
+                    result_most_wickets_team1_player_id: Number(mostWicketsTeam1Id),
+                    result_most_wickets_team2_player_id: Number(mostWicketsTeam2Id),
                     result_pom_player_id: Number(pomId),
                 }),
             });
@@ -131,9 +129,7 @@ export default function SetResultPage() {
                 <Skeleton className="h-6 w-24" />
                 <Skeleton className="h-8 w-64" />
                 <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
+                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
         );
     }
@@ -143,20 +139,16 @@ export default function SetResultPage() {
             <div className="container-mobile py-6 space-y-4">
                 <Card className="p-6 text-center space-y-3">
                     <p className="text-sm text-destructive">{error || 'Match not found'}</p>
-                    <Link href="/admin">
-                        <Button variant="outline" size="sm">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Admin
-                        </Button>
-                    </Link>
+                    <Link href="/admin"><Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Back to Admin</Button></Link>
                 </Card>
             </div>
         );
     }
 
-    const renderPlayerSelect = (
+    const renderTeamSelect = (
+        players: Player[],
         value: string,
-        onValueChange: (val: string) => void,
+        onValueChange: (v: string) => void,
         placeholder: string
     ) => (
         <Select value={value} onValueChange={onValueChange}>
@@ -164,38 +156,50 @@ export default function SetResultPage() {
                 <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
-                <SelectGroup>
-                    <SelectLabel>{matchData.team_1.name}</SelectLabel>
-                    {matchData.team_1_players.map((p) => (
-                        <SelectItem key={p.id} value={String(p.id)}>
-                            {p.name} ({p.role})
-                        </SelectItem>
-                    ))}
-                </SelectGroup>
-                <SelectGroup>
-                    <SelectLabel>{matchData.team_2.name}</SelectLabel>
-                    {matchData.team_2_players.map((p) => (
-                        <SelectItem key={p.id} value={String(p.id)}>
-                            {p.name} ({p.role})
-                        </SelectItem>
-                    ))}
-                </SelectGroup>
+                {players.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                        {p.name} <span className="text-muted-foreground">({p.role})</span>
+                    </SelectItem>
+                ))}
             </SelectContent>
         </Select>
     );
 
+    const renderPerTeamSection = (
+        icon: React.ReactNode,
+        label: string,
+        team1Value: string,
+        onTeam1Change: (v: string) => void,
+        team2Value: string,
+        onTeam2Change: (v: string) => void,
+    ) => (
+        <section className="space-y-3">
+            <div className="flex items-center gap-2">
+                {icon}
+                <h2 className="font-semibold text-sm">{label}</h2>
+            </div>
+            <div className="space-y-2">
+                <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium px-1">{matchData!.team_1.short_name}</p>
+                    {renderTeamSelect(matchData!.team_1_players, team1Value, onTeam1Change, `Select ${matchData!.team_1.short_name} player`)}
+                </div>
+                <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium px-1">{matchData!.team_2.short_name}</p>
+                    {renderTeamSelect(matchData!.team_2_players, team2Value, onTeam2Change, `Select ${matchData!.team_2.short_name} player`)}
+                </div>
+            </div>
+        </section>
+    );
+
+    const allPlayers = [...matchData.team_1_players, ...matchData.team_2_players];
+
     return (
         <div className="container-mobile py-6 space-y-5">
-            {/* Back navigation */}
-            <Link
-                href="/admin"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Admin
             </Link>
 
-            {/* Match Header */}
             <div>
                 <h1 className="text-xl font-bold">Set Match Result</h1>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -208,7 +212,6 @@ export default function SetResultPage() {
                     <p className="text-sm text-destructive">{error}</p>
                 </Card>
             )}
-
             {success && (
                 <Card className="p-3 border-green-500/50 bg-green-500/10">
                     <p className="text-sm text-green-400">{success}</p>
@@ -216,7 +219,7 @@ export default function SetResultPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Winner - Tappable Team Cards */}
+                {/* Winner */}
                 <section className="space-y-3">
                     <div className="flex items-center gap-2">
                         <Trophy className="h-4 w-4 text-primary" />
@@ -232,11 +235,8 @@ export default function SetResultPage() {
                                     type="button"
                                     onClick={() => setWinnerId(team.id)}
                                     className={cn(
-                                        'flex flex-col items-center gap-2 p-4 rounded-lg border transition-all',
-                                        'hover:border-primary/50',
-                                        isSelected
-                                            ? 'border-primary bg-primary/10'
-                                            : 'border-border bg-card'
+                                        'flex flex-col items-center gap-2 p-4 rounded-lg border transition-all hover:border-primary/50',
+                                        isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card'
                                     )}
                                 >
                                     {flagSrc && (
@@ -246,49 +246,51 @@ export default function SetResultPage() {
                                             onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                                     )}
                                     <span className="font-semibold text-sm">{team.short_name}</span>
-                                    <span className="text-xs text-muted-foreground">{team.name}</span>
-                                    {isSelected && (
-                                        <CheckCircle2 className="h-4 w-4 text-primary" />
-                                    )}
+                                    <span className="text-xs text-muted-foreground text-center">{team.name}</span>
+                                    {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
                                 </button>
                             );
                         })}
                     </div>
                 </section>
 
-                {/* Most Runs */}
-                <section className="space-y-3">
-                    <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-primary" />
-                        <h2 className="font-semibold text-sm">Most Runs</h2>
-                    </div>
-                    {renderPlayerSelect(mostRunsId, setMostRunsId, 'Select player')}
-                </section>
+                {/* Most Runs — per team */}
+                {renderPerTeamSection(
+                    <Target className="h-4 w-4 text-primary" />,
+                    'Most Runs',
+                    mostRunsTeam1Id, setMostRunsTeam1Id,
+                    mostRunsTeam2Id, setMostRunsTeam2Id,
+                )}
 
-                {/* Most Wickets */}
-                <section className="space-y-3">
-                    <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-primary" />
-                        <h2 className="font-semibold text-sm">Most Wickets</h2>
-                    </div>
-                    {renderPlayerSelect(mostWicketsId, setMostWicketsId, 'Select player')}
-                </section>
+                {/* Most Wickets — per team */}
+                {renderPerTeamSection(
+                    <Target className="h-4 w-4 text-primary" />,
+                    'Most Wickets',
+                    mostWicketsTeam1Id, setMostWicketsTeam1Id,
+                    mostWicketsTeam2Id, setMostWicketsTeam2Id,
+                )}
 
-                {/* Player of the Match */}
+                {/* Player of the Match — any player */}
                 <section className="space-y-3">
                     <div className="flex items-center gap-2">
                         <Star className="h-4 w-4 text-primary" />
                         <h2 className="font-semibold text-sm">Player of the Match</h2>
                     </div>
-                    {renderPlayerSelect(pomId, setPomId, 'Select player')}
+                    <Select value={pomId} onValueChange={setPomId}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select player" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {allPlayers.map((p) => (
+                                <SelectItem key={p.id} value={String(p.id)}>
+                                    {p.name} <span className="text-muted-foreground">({p.role})</span>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </section>
 
-                <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    disabled={isSubmitting}
-                >
+                <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                     {isSubmitting ? 'Saving...' : 'Save Result & Calculate Scores'}
                 </Button>
             </form>
