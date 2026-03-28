@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <!-- Background -->
+  <rect width="400" height="400" rx="90" fill="#22C373"/>
+
+  <!-- Left ear outer -->
+  <circle cx="78" cy="162" r="64" fill="white"/>
+  <!-- Left ear inner (green) -->
+  <circle cx="78" cy="170" r="42" fill="#22C373"/>
+
+  <!-- Right ear outer -->
+  <circle cx="322" cy="162" r="64" fill="white"/>
+  <!-- Right ear inner (green) -->
+  <circle cx="322" cy="170" r="42" fill="#22C373"/>
+
+  <!-- Head -->
+  <circle cx="200" cy="238" r="122" fill="white"/>
+
+  <!-- Cap — smooth rounded dome -->
+  <path d="M 128 158 Q 128 96 200 88 Q 272 96 272 158 Z" fill="white"/>
+  <!-- Cap peak/brim -->
+  <path d="M 124 162 Q 130 182 200 180 Q 268 182 276 162 Q 260 150 200 148 Q 138 150 124 162Z" fill="white"/>
+
+  <!-- Pennant flagpole -->
+  <line x1="200" y1="62" x2="200" y2="96" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <!-- Pennant flag -->
+  <polygon points="200,62 236,76 200,90" fill="#1aaa62"/>
+
+  <!-- Face: left eye (happy squint) -->
+  <path d="M 158 228 Q 176 210 194 228" stroke="#22C373" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <!-- Face: right eye -->
+  <path d="M 206 228 Q 224 210 242 228" stroke="#22C373" stroke-width="9" fill="none" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <ellipse cx="200" cy="263" rx="32" ry="26" fill="#22C373"/>
+  <ellipse cx="191" cy="255" rx="8" ry="6" fill="white" opacity="0.3"/>
+
+  <!-- Smile -->
+  <path d="M 170 285 Q 200 314 230 285" stroke="#22C373" stroke-width="8.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Body -->
+  <ellipse cx="200" cy="358" rx="98" ry="55" fill="white"/>
+
+  <!-- Scarf -->
+  <path d="M 124 320 Q 200 336 276 320 L 268 344 Q 200 356 132 344 Z" fill="white"/>
+
+  <!-- Arm going up-left -->
+  <path d="M 148 318 Q 110 252 80 178 Q 66 138 50 104"
+        stroke="white" stroke-width="38" fill="none" stroke-linecap="round"/>
+
+  <!-- Foam glove body -->
+  <rect x="8" y="42" width="84" height="96" rx="22" fill="white"/>
+  <!-- Index finger pointing up -->
+  <rect x="30" y="-2" width="36" height="68" rx="18" fill="white"/>
+  <!-- Left knuckle bump -->
+  <rect x="8" y="64" width="26" height="34" rx="13" fill="white"/>
+  <!-- Right knuckle bump -->
+  <rect x="80" y="64" width="26" height="34" rx="13" fill="white"/>
+</svg>
