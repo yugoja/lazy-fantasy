@@ -245,7 +245,7 @@ function LeaguesContent() {
           <p className="text-xs text-muted-foreground">Create a new league or join one with an invite code</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-5">
           {leagues.map((league, idx) => {
             const info = rankInfo[league.id];
             const colorClass = SHIELD_COLORS[idx % SHIELD_COLORS.length];
