@@ -4,14 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getLeaderboard } from '@/lib/api';
+import { getLeaderboard, getMyLeagues } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trophy, TrendingUp, TrendingDown, Minus, ArrowLeft } from 'lucide-react';
+import { Trophy, TrendingUp, TrendingDown, Minus, ArrowLeft, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface LeaderboardEntry {
   user_id: number;
@@ -33,8 +34,10 @@ export default function LeagueLeaderboardPage() {
   const leagueId = Number(params.leagueId);
 
   const [leagueName, setLeagueName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -50,13 +53,33 @@ export default function LeagueLeaderboardPage() {
 
   const loadBoard = async () => {
     try {
-      const data = await getLeaderboard(leagueId);
+      const [data, leagues] = await Promise.all([
+        getLeaderboard(leagueId),
+        getMyLeagues(),
+      ]);
       setLeagueName(data.league_name);
       setEntries(data.entries);
+      const league = leagues.find((l) => l.id === leagueId);
+      if (league) setInviteCode(league.invite_code);
     } catch {
       // empty state
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lazyfantasy.app';
+    const text = `Join my Lazy Fantasy league "${leagueName}"!\n\nUse invite code: ${inviteCode}\n\nSign up and join at ${appUrl}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast({ description: 'Invite link copied to clipboard' });
+      }
+    } catch {
+      // user cancelled
     }
   };
 
@@ -87,7 +110,15 @@ export default function LeagueLeaderboardPage() {
             Leagues
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">{leagueName || 'Leaderboard'}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold">{leagueName || 'Leaderboard'}</h1>
+          {inviteCode && (
+            <Button variant="outline" size="sm" onClick={handleShare} className="shrink-0 gap-2">
+              <Share2 className="h-4 w-4" />
+              Invite
+            </Button>
+          )}
+        </div>
       </div>
 
       {entries.length === 0 ? (
