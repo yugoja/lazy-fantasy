@@ -149,6 +149,53 @@ export default function TournamentPicksPage() {
                 {windowInfo.label}
             </div>
 
+            {/* Current picks summary */}
+            {(selectedTop4.length > 0 || selectedBatsman || selectedBowler) && (
+                <Card>
+                    <CardContent className="pt-4 space-y-3">
+                        {/* Playoff teams */}
+                        <div>
+                            <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Playoff Teams</p>
+                            <div className="flex flex-wrap gap-2">
+                                {selectedTop4.map(teamId => {
+                                    const team = teams.find(t => t.id === teamId);
+                                    const logoSrc = team ? getTeamLogoUrl(team.short_name) : null;
+                                    return team ? (
+                                        <div key={teamId} className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-medium">
+                                            {logoSrc && (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={logoSrc} alt={team.short_name} width={14} height={14}
+                                                    className="h-3.5 w-3.5 object-contain"
+                                                    onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                            )}
+                                            {team.short_name}
+                                        </div>
+                                    ) : null;
+                                })}
+                                {Array.from({ length: 4 - selectedTop4.length }).map((_, i) => (
+                                    <div key={`empty-${i}`} className="border border-dashed border-border rounded-full px-3 py-1 text-xs text-muted-foreground">—</div>
+                                ))}
+                            </div>
+                        </div>
+                        {/* Batsman + Bowler */}
+                        <div className="flex gap-4 pt-1 border-t border-border">
+                            <div className="flex-1">
+                                <p className="text-xs text-muted-foreground mb-0.5">Best Batsman</p>
+                                <p className={cn('text-sm font-medium', selectedBatsman ? 'text-foreground' : 'text-muted-foreground/50')}>
+                                    {selectedBatsman ? (players.find(p => p.id === selectedBatsman)?.name ?? '—') : '—'}
+                                </p>
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-xs text-muted-foreground mb-0.5">Best Bowler</p>
+                                <p className={cn('text-sm font-medium', selectedBowler ? 'text-foreground' : 'text-muted-foreground/50')}>
+                                    {selectedBowler ? (players.find(p => p.id === selectedBowler)?.name ?? '—') : '—'}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Points breakdown */}
             {isOpen && (
                 <Card>

@@ -39,7 +39,7 @@
   - Opt-in via `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` env vars
 
 ### Features
-- [ ] Match reminders — email or push notifications before matches lock (built, needs RESEND_API_KEY + VAPID keys on droplet)
+- [x] Match reminders — push notifications before matches lock (built, needs VAPID keys on droplet); email deferred
 - [ ] Update app icon — replace existing icons in `frontend/public/icons/` (192×192 and 512×512 PNG) and `frontend/public/icons/icon-192x192.png` used as Apple touch icon in `layout.tsx`
 - [x] PWA support — add a manifest so users can "install" it on mobile
   - `manifest.json` with app name, icons, standalone display, dark theme
@@ -71,7 +71,7 @@
 - [x] Dashboard design quick wins — team names 2xl bold on MatchCard, font-mono stats, urgency countdown, unified Dugout card tints
 
 ### League Features
-- [ ] League activity feed — see what others predicted after the match locks
+- [x] League activity feed — see what others predicted after the match locks
 - [ ] Head-to-head — compare your predictions vs a specific friend in a league
 - [ ] Mini leaderboard on match card — show user's current rank in context while predicting
 - [x] Leaderboard rank history in DB — `LeagueMember.prev_rank` column; snapshotted after each match result via `snapshot_ranks_for_leagues()`; powers rank delta on leaderboard and Dugout rank shift events
