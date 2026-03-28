@@ -96,6 +96,12 @@ export async function updateProfile(displayName: string) {
 }
 
 // Leagues
+export async function getLeaguePreview(inviteCode: string) {
+    return request<{ name: string; invite_code: string; member_count: number }>(
+        `/leagues/preview/${inviteCode}`,
+    );
+}
+
 export async function getMyLeagues() {
     return request<Array<{ id: number; name: string; invite_code: string; owner_id: number; sport: string }>>('/leagues/my');
 }

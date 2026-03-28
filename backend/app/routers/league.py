@@ -45,6 +45,22 @@ async def create_new_league(
     return league
 
 
+@router.get("/preview/{invite_code}")
+async def preview_league(
+    invite_code: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Public endpoint — returns basic league info for an invite code.
+    No auth required so the join page can show the league name before login.
+    """
+    league = get_league_by_invite_code(db, invite_code.upper())
+    if not league:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+    member_count = db.query(LeagueMember).filter(LeagueMember.league_id == league.id).count()
+    return {"name": league.name, "invite_code": league.invite_code, "member_count": member_count}
+
+
 @router.post("/join", response_model=LeagueResponse)
 async def join_existing_league(
     join_data: LeagueJoin,
