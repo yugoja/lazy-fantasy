@@ -23,11 +23,11 @@ def get_league_by_invite_code(db: Session, invite_code: str) -> League | None:
 
 
 def get_user_leagues(db: Session, user_id: int) -> list[League]:
-    """Get all leagues a user is a member of."""
+    """Get all leagues a user is a member of (excludes archived)."""
     return (
         db.query(League)
         .join(LeagueMember)
-        .filter(LeagueMember.user_id == user_id)
+        .filter(LeagueMember.user_id == user_id, League.is_archived == False)
         .all()
     )
 

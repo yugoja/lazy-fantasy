@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, ForeignKey, func, text
+from sqlalchemy import Boolean, DateTime, Integer, String, ForeignKey, func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -14,6 +14,7 @@ class League(Base):
     invite_code: Mapped[str] = mapped_column(String(6), unique=True, index=True)
     owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     sport: Mapped[str] = mapped_column(String(20), default="cricket", server_default="cricket")
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
     )
