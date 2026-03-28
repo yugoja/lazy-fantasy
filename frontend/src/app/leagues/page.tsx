@@ -83,7 +83,7 @@ function LeaguesContent() {
 
   const getInviteLink = (code: string) => {
     if (typeof window === 'undefined') return code;
-    return `${window.location.origin}/leagues?join=${code}`;
+    return `${window.location.origin}/join/${code}`;
   };
 
   useEffect(() => {
