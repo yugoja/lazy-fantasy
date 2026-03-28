@@ -4,10 +4,9 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, joinLeague, createLeague, ApiError } from '@/lib/api';
+import { getMyLeagues, getLeaderboard, joinLeague, createLeague, ApiError } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +17,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Shield, ChevronRight, LogIn, Plus, Copy, CheckCircle2, Share2 } from 'lucide-react';
+import { Shield, ChevronRight, LogIn, Plus, Copy, CheckCircle2, TrendingUp, TrendingDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface League {
   id: number;
@@ -27,6 +27,22 @@ interface League {
   owner_id: number;
   sport?: string;
 }
+
+interface LeagueRankInfo {
+  rank: number | null;
+  rank_delta: number | null;
+  total_points: number;
+  member_count: number;
+}
+
+const SHIELD_COLORS = [
+  'bg-violet-500/20 text-violet-400',
+  'bg-sky-500/20 text-sky-400',
+  'bg-emerald-500/20 text-emerald-400',
+  'bg-amber-500/20 text-amber-400',
+  'bg-rose-500/20 text-rose-400',
+  'bg-indigo-500/20 text-indigo-400',
+];
 
 export default function LeaguesPage() {
   return (
@@ -37,10 +53,11 @@ export default function LeaguesPage() {
 }
 
 function LeaguesContent() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, username, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [leagues, setLeagues] = useState<League[]>([]);
+  const [rankInfo, setRankInfo] = useState<Record<number, LeagueRankInfo>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   // Dialog states
@@ -62,7 +79,6 @@ function LeaguesContent() {
   // Created league info
   const [createdLeague, setCreatedLeague] = useState<League | null>(null);
   const [copied, setCopied] = useState(false);
-  const [copiedLeagueId, setCopiedLeagueId] = useState<number | null>(null);
   const [loadError, setLoadError] = useState('');
 
   const getInviteLink = (code: string) => {
@@ -99,6 +115,23 @@ function LeaguesContent() {
     try {
       const data = await getMyLeagues();
       setLeagues(data);
+
+      // Fetch leaderboard for each league in parallel
+      const results = await Promise.allSettled(data.map(l => getLeaderboard(l.id)));
+      const info: Record<number, LeagueRankInfo> = {};
+      results.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          const lb = result.value;
+          const myEntry = lb.entries.find(e => e.username === username);
+          info[data[i].id] = {
+            rank: myEntry?.rank ?? null,
+            rank_delta: myEntry?.rank_delta ?? null,
+            total_points: myEntry?.total_points ?? 0,
+            member_count: lb.entries.length,
+          };
+        }
+      });
+      setRankInfo(info);
     } catch {
       setLoadError('Failed to load leagues');
     } finally {
@@ -156,34 +189,25 @@ function LeaguesContent() {
     }
   };
 
-  const copyInviteLink = (code: string, leagueId?: number) => {
+  const copyInviteLink = (code: string) => {
     navigator.clipboard.writeText(getInviteLink(code));
-    if (leagueId) {
-      setCopiedLeagueId(leagueId);
-      setTimeout(() => setCopiedLeagueId(null), 2000);
-    } else {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (authLoading || isLoading) {
     return (
       <div className="container-mobile py-6 space-y-6">
         <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-36" />
-            <Skeleton className="h-4 w-52" />
-          </div>
+          <Skeleton className="h-8 w-36" />
           <div className="flex gap-2">
             <Skeleton className="h-9 w-16" />
             <Skeleton className="h-9 w-24" />
           </div>
         </div>
-        <Skeleton className="h-6 w-20" />
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-28" />
+            <Skeleton key={i} className="h-24" />
           ))}
         </div>
       </div>
@@ -191,15 +215,10 @@ function LeaguesContent() {
   }
 
   return (
-    <div className="container-mobile py-6 space-y-6">
+    <div className="container-mobile py-6 space-y-4">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">My Leagues</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create or join leagues to compete.
-          </p>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My Leagues</h1>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setJoinOpen(true)}>
             <LogIn className="h-4 w-4 mr-1.5" />
@@ -211,11 +230,6 @@ function LeaguesContent() {
           </Button>
         </div>
       </div>
-
-      {/* League Count */}
-      <Badge variant="secondary" className="text-xs">
-        {leagues.length} League{leagues.length !== 1 ? 's' : ''}
-      </Badge>
 
       {/* Error */}
       {loadError && (
@@ -232,46 +246,62 @@ function LeaguesContent() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {leagues.map((league) => (
-            <Card key={league.id} className="p-4 hover:border-primary/50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{league.name}</span>
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0">
-                      🏏
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-[10px]">
-                      {league.invite_code}
-                    </Badge>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        copyInviteLink(league.invite_code, league.id);
-                      }}
-                      className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                      aria-label="Copy invite link"
-                    >
-                      {copiedLeagueId === league.id ? (
-                        <><CheckCircle2 className="h-3 w-3 text-primary" /> Copied!</>
+          {leagues.map((league, idx) => {
+            const info = rankInfo[league.id];
+            const colorClass = SHIELD_COLORS[idx % SHIELD_COLORS.length];
+            const delta = info?.rank_delta ?? null;
+
+            return (
+              <Link key={league.id} href={`/leagues/${league.id}`}>
+                <Card className="p-4 hover:border-primary/50 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    {/* Shield icon */}
+                    <div className={cn('h-11 w-11 rounded-full flex items-center justify-center shrink-0', colorClass)}>
+                      <Shield className="h-5 w-5" />
+                    </div>
+
+                    {/* League info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm truncate">{league.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {info ? `${info.member_count} member${info.member_count !== 1 ? 's' : ''} · ${info.total_points} pts` : 'Loading…'}
+                      </p>
+                    </div>
+
+                    {/* Rank */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {info?.rank != null ? (
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-primary leading-none">#{info.rank}</p>
+                          <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">Your rank</p>
+                          {delta !== null && delta !== 0 && (
+                            <div className={cn('flex items-center justify-end gap-0.5 text-[10px] font-medium mt-0.5', delta > 0 ? 'text-green-500' : 'text-red-500')}>
+                              {delta > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                              {Math.abs(delta)}
+                            </div>
+                          )}
+                        </div>
                       ) : (
-                        <><Share2 className="h-3 w-3" /> Share</>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">—</p>
+                        </div>
                       )}
-                    </button>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
-                </div>
-                <Link href={`/leaderboard?league=${league.id}`} className="flex items-center gap-1 text-primary text-xs font-medium">
-                  Board
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </Card>
-          ))}
+                </Card>
+              </Link>
+            );
+          })}
+
+          {/* Dashed nudge card */}
+          <button
+            onClick={() => setCreateOpen(true)}
+            className="w-full rounded-xl border-2 border-dashed border-border p-4 text-center hover:border-primary/50 transition-colors"
+          >
+            <p className="text-sm text-muted-foreground">Start a new league</p>
+            <p className="text-xs text-primary font-medium mt-1">Create →</p>
+          </button>
         </div>
       )}
 
@@ -354,7 +384,6 @@ function LeaguesContent() {
           </DialogHeader>
           {createdLeague && (
             <div className="space-y-4">
-              {/* Invite Code Display */}
               <div className="rounded-lg bg-primary/10 border border-primary/30 p-4 text-center">
                 <p className="text-xs text-muted-foreground mb-1">League Code</p>
                 <p className="text-2xl font-bold text-primary tracking-wider">
@@ -362,7 +391,6 @@ function LeaguesContent() {
                 </p>
               </div>
 
-              {/* Copy Link */}
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Invite Link</Label>
                 <div className="flex items-center gap-2">

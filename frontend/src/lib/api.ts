@@ -74,13 +74,24 @@ export async function login(username: string, password: string) {
         throw new ApiError(response.status, error.detail || 'Login failed');
     }
 
-    return response.json() as Promise<{ access_token: string; token_type: string }>;
+    return response.json() as Promise<{ access_token: string; token_type: string; display_name?: string | null }>;
 }
 
 export async function googleLogin(credential: string) {
-    return request<{ access_token: string; token_type: string; username: string }>('/auth/google', {
+    return request<{ access_token: string; token_type: string; username: string; display_name: string | null }>('/auth/google', {
         method: 'POST',
         body: JSON.stringify({ credential }),
+    });
+}
+
+export async function getMe() {
+    return request<{ id: number; username: string; email: string; display_name: string | null }>('/auth/me');
+}
+
+export async function updateProfile(displayName: string) {
+    return request<{ id: number; username: string; email: string; display_name: string | null }>('/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify({ display_name: displayName }),
     });
 }
 
@@ -105,6 +116,7 @@ export async function joinLeague(inviteCode: string) {
 
 export interface FriendPrediction {
     username: string;
+    display_name: string | null;
     is_me: boolean;
     points_earned: number;
     is_processed: boolean;
@@ -296,6 +308,7 @@ export interface DugoutEvent {
     league_id: number;
     match_id: number | null;
     username: string;
+    display_name: string | null;
     is_me: boolean;
     streak_count: number | null;
     rank: number | null;
@@ -318,6 +331,88 @@ export async function dismissDugoutEvent(event: DugoutEvent) {
             subject_username: event.username,
         }),
     });
+}
+
+// Tournament Picks
+export interface TournamentSummary {
+    id: number;
+    name: string;
+    start_date: string;
+    end_date: string;
+    picks_window: string;
+}
+
+export interface TournamentPicksResponse {
+    tournament_id: number;
+    tournament_name: string;
+    picks_window: string;
+    top4_team_ids: (number | null)[];
+    best_batsman_player_id: number | null;
+    best_bowler_player_id: number | null;
+    points_earned: number;
+    is_window2: boolean;
+    is_processed: boolean;
+}
+
+export interface TeamPickOption {
+    id: number;
+    name: string;
+    short_name: string;
+    logo_url?: string;
+}
+
+export interface PlayerPickOption {
+    id: number;
+    name: string;
+    role: string;
+    team_id: number;
+    team_name?: string;
+}
+
+export async function listTournaments() {
+    return request<TournamentSummary[]>('/tournaments/');
+}
+
+export async function getTournamentPicks(tournamentId: number) {
+    return request<TournamentPicksResponse>(`/tournaments/${tournamentId}/picks`);
+}
+
+export async function submitTournamentPicks(
+    tournamentId: number,
+    top4TeamIds: number[],
+    bestBatsmanPlayerId: number | null,
+    bestBowlerPlayerId: number | null,
+) {
+    return request<TournamentPicksResponse>(`/tournaments/${tournamentId}/picks`, {
+        method: 'POST',
+        body: JSON.stringify({
+            top4_team_ids: top4TeamIds,
+            best_batsman_player_id: bestBatsmanPlayerId,
+            best_bowler_player_id: bestBowlerPlayerId,
+        }),
+    });
+}
+
+export async function getMatchesByTournament(tournamentId: number, includeCompleted = true) {
+    const params = new URLSearchParams({ include_completed: String(includeCompleted) });
+    params.set('tournament_id', String(tournamentId));
+    return request<Array<{
+        id: number;
+        tournament_id: number;
+        team_1: { id: number; name: string; short_name: string; logo_url: string | null };
+        team_2: { id: number; name: string; short_name: string; logo_url: string | null };
+        start_time: string;
+        status: string;
+        lineup_announced: boolean;
+    }>>(`/matches/?${params}`);
+}
+
+export async function getTournamentTeams(tournamentId: number) {
+    return request<TeamPickOption[]>(`/tournaments/${tournamentId}/teams`);
+}
+
+export async function getTournamentPlayers(tournamentId: number) {
+    return request<PlayerPickOption[]>(`/tournaments/${tournamentId}/players`);
 }
 
 export { ApiError, API_BASE };

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Trophy, Target, Users, TrendingUp } from 'lucide-react';
+import { Trophy, Target, Users, Medal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Header() {
@@ -20,7 +20,7 @@ export default function Header() {
     { href: '/dashboard', label: 'Home', icon: Trophy },
     { href: '/predictions', label: 'Predict', icon: Target },
     { href: '/leagues', label: 'Leagues', icon: Users },
-    { href: '/leaderboard', label: 'Board', icon: TrendingUp },
+    { href: '/tournaments', label: 'Tournament', icon: Medal },
   ];
 
   return (
