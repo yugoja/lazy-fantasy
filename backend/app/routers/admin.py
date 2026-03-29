@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Match, MatchStatus, Team, Tournament, Player, User, MatchLineup
+from app.models import Match, MatchStatus, Team, Tournament, Player, User, MatchLineup, Prediction
 from app.schemas.admin import (
     MatchCreate, MatchResultCreate, SetLineupRequest,
     LinkMatchRequest, BulkPlayerMappingRequest, SyncStatusResponse,
@@ -154,6 +154,12 @@ async def set_match_result(
     match.result_pom_player_id = result_data.result_pom_player_id
     match.status = MatchStatus.COMPLETED
     
+    db.commit()
+
+    # Reset processed flag so scores can be recalculated on correction
+    db.query(Prediction).filter(Prediction.match_id == match_id).update(
+        {"is_processed": False, "points_earned": 0}
+    )
     db.commit()
 
     # Snapshot current ranks before scoring so deltas can be computed afterwards
