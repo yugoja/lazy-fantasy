@@ -7,6 +7,13 @@
 
 ## Pending TODO
 
+### Database Sync
+- [ ] Switch local dev from SQLite to Postgres to match prod exactly — eliminates ID mismatch bugs and makes local testing trustworthy
+  - Remove SQLite dependency from `backend/app/database.py`
+  - Add `DATABASE_URL` pointing to local Postgres in `backend/.env`
+  - Run all existing migrations (`backend/migrations/pg/`) against local DB
+  - Create a `db-sync.sh` script to pg_dump prod and restore locally
+
 ### Testing
 - [x] Run existing backend tests (`backend/tests/`) and verify they pass with current changes
   - `tests/unit/test_auth.py`

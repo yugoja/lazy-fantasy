@@ -340,10 +340,10 @@ export default function PredictionsPage() {
           {friendsPicksLink(pred.match_id) && (
             <Link
               href={friendsPicksLink(pred.match_id)!}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mt-1"
+              className="flex items-center justify-center gap-2 w-full mt-3 py-2.5 rounded-lg border border-primary/40 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 hover:border-primary/60 transition-colors"
             >
-              <Users className="h-3.5 w-3.5" />
-              Friends&apos; picks
+              <Users className="h-4 w-4" />
+              See Friends&apos; Picks
             </Link>
           )}
 
@@ -541,9 +541,9 @@ export default function PredictionsPage() {
                     <div key={match.id} className="space-y-2">
                       <MatchCard id={match.id} team1={match.team_1} team2={match.team_2} startTime={match.start_time} status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'} venue={match.venue} hasPredicted={!!predictionByMatch.get(match.id)} lineupAnnounced={match.lineup_announced} />
                       {link && (
-                        <Link href={link} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-1">
-                          <Users className="h-3.5 w-3.5" />
-                          Friends&apos; picks
+                        <Link href={link} className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-primary/40 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 hover:border-primary/60 transition-colors">
+                          <Users className="h-4 w-4" />
+                          See Friends&apos; Picks
                         </Link>
                       )}
                     </div>

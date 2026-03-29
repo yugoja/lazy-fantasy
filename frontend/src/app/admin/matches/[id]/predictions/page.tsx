@@ -18,8 +18,10 @@ interface Prediction {
     username: string;
     display_name: string | null;
     predicted_winner: string;
-    predicted_most_runs: string;
-    predicted_most_wickets: string;
+    predicted_most_runs_team1: string;
+    predicted_most_runs_team2: string;
+    predicted_most_wickets_team1: string;
+    predicted_most_wickets_team2: string;
     predicted_pom: string;
     points_earned: number;
     is_processed: boolean;
@@ -179,16 +181,24 @@ export default function ViewPredictionsPage() {
                                         <span className="font-medium">{pred.predicted_winner}</span>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-muted-foreground text-[10px]">Most Runs</span>
-                                        <span className="font-medium">{pred.predicted_most_runs}</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-muted-foreground text-[10px]">Most Wickets</span>
-                                        <span className="font-medium">{pred.predicted_most_wickets}</span>
-                                    </div>
-                                    <div className="flex flex-col">
                                         <span className="text-muted-foreground text-[10px]">POM</span>
                                         <span className="font-medium">{pred.predicted_pom}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-muted-foreground text-[10px]">Runs ({data.team_1.short_name})</span>
+                                        <span className="font-medium">{pred.predicted_most_runs_team1}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-muted-foreground text-[10px]">Runs ({data.team_2.short_name})</span>
+                                        <span className="font-medium">{pred.predicted_most_runs_team2}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-muted-foreground text-[10px]">Wkts ({data.team_1.short_name})</span>
+                                        <span className="font-medium">{pred.predicted_most_wickets_team1}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-muted-foreground text-[10px]">Wkts ({data.team_2.short_name})</span>
+                                        <span className="font-medium">{pred.predicted_most_wickets_team2}</span>
                                     </div>
                                 </div>
                             </CardContent>
