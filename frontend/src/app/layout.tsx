@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-import Header from "@/components/Header";
+import Header, { BottomNav } from "@/components/Header";
 import InstallPrompt from "@/components/InstallPrompt";
 import IOSInstallPrompt from "@/components/IOSInstallPrompt";
 import NotificationPermission from "@/components/NotificationPermission";
@@ -57,7 +57,8 @@ export default function RootLayout({
         </Script>
         <AuthProvider>
           <Header />
-          <main className="pb-20">{children}</main>
+          <main className="flex-1 overflow-y-auto">{children}</main>
+          <BottomNav />
           <InstallPrompt />
           <IOSInstallPrompt />
           <NotificationPermission />
