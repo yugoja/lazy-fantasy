@@ -104,12 +104,6 @@ async def set_match_result(
             detail="Match not found",
         )
     
-    if match.status == MatchStatus.COMPLETED:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Match results have already been set",
-        )
-    
     # Validate winner is one of the match teams
     if result_data.result_winner_id not in [match.team_1_id, match.team_2_id]:
         raise HTTPException(
