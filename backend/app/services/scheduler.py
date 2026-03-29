@@ -1,6 +1,6 @@
 """APScheduler background jobs: match reminders + cricket data sync."""
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # timedelta used by reminder window
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
@@ -97,7 +97,7 @@ def _run_sync(fn) -> None:
 
 
 def start_scheduler() -> None:
-    from app.services.cricket_sync import sync_lineups, sync_results
+    from app.services.cricket_sync import sync_lineups
     from app.config import settings
 
     scheduler.add_job(
@@ -108,7 +108,8 @@ def start_scheduler() -> None:
         replace_existing=True,
     )
 
-    # Cricket data sync jobs — only active when CRICAPI_KEY is configured
+    # Lineup sync — only active when CRICAPI_KEY is configured
+    # Results are set manually via the admin panel
     if settings.CRICAPI_KEY:
         from app.services.providers.cricapi import CricApiProvider
         from app.services.cricket_sync import set_provider
@@ -121,17 +122,9 @@ def start_scheduler() -> None:
             id="lineup_sync",
             replace_existing=True,
         )
-        scheduler.add_job(
-            lambda: _run_sync(sync_results),
-            trigger="interval",
-            minutes=5,
-            start_date=datetime.utcnow() + timedelta(minutes=2),
-            id="result_sync",
-            replace_existing=True,
-        )
-        logger.info("Cricket sync jobs registered (lineup: 10m, results: 5m+2m offset)")
+        logger.info("Cricket lineup sync registered (every 10m)")
     else:
-        logger.info("CRICAPI_KEY not set — cricket sync jobs skipped")
+        logger.info("CRICAPI_KEY not set — lineup sync skipped")
 
     scheduler.start()
     logger.info("Scheduler started")
