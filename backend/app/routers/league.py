@@ -131,10 +131,13 @@ async def get_leaderboard(
     # Get leaderboard data
     leaderboard_data = get_league_leaderboard(db, league_id)
 
-    # Build response with ranks and deltas
+    # Build response with ranks and deltas.
+    # Use standard competition ranking: tied points share the same rank (1,2,2,4).
     entries = []
+    current_rank = 0
     for idx, (user_id, username, display_name, total_points, prev_rank) in enumerate(leaderboard_data):
-        current_rank = idx + 1
+        if idx == 0 or total_points != leaderboard_data[idx - 1][3]:
+            current_rank = idx + 1
         rank_delta = (prev_rank - current_rank) if prev_rank is not None else None
         entries.append(LeaderboardEntry(
             user_id=user_id,
