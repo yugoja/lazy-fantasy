@@ -147,8 +147,8 @@ export default function LeagueLeaderboardPage() {
             </Card>
           )}
 
-          {/* Top 3 Podium */}
-          {topThree.length >= 3 && (
+          {/* Top 3 Podium — hidden when any podium position is shared */}
+          {topThree.length >= 3 && first.rank === 1 && second.rank === 2 && third.rank === 3 && (
             <div className="grid grid-cols-3 gap-2 items-end mb-6">
               {/* 2nd Place */}
               <Card className="p-3 text-center bg-gradient-to-b from-slate-700/10 to-transparent">
