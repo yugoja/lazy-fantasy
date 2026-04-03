@@ -193,7 +193,7 @@ def _agreement_events(
             if uid == user_id:
                 continue
             agreement = _count_agreement(my_pred, pred)
-            if agreement >= 5:
+            if agreement >= 4:
                 user = user_map.get(uid)
                 if not user:
                     continue
