@@ -133,7 +133,14 @@ def _compute_standings(db: Session, league_id: int) -> list[tuple[int, int]]:
     totals = [(user_id, pts + tp_points.get(user_id, 0)) for user_id, pts in results]
     totals.sort(key=lambda x: x[1], reverse=True)
 
-    return [(user_id, rank + 1) for rank, (user_id, _) in enumerate(totals)]
+    # Standard competition ranking: tied users share the same rank,
+    # and the next rank skips accordingly (1, 2, 2, 4 — not 1, 2, 3, 4).
+    ranked = []
+    for i, (user_id, pts) in enumerate(totals):
+        if i == 0 or pts != totals[i - 1][1]:
+            rank = i + 1
+        ranked.append((user_id, rank))
+    return ranked
 
 
 def snapshot_league_ranks(db: Session, match_id: int) -> None:

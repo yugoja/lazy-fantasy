@@ -125,7 +125,12 @@ def _contrarian_events(
         match_id = locked_match_ids_by_league.get(league.id)
         if not match_id:
             continue
-        member_preds = preds_by_match_user.get(match_id, {})
+        league_member_ids = set(members_by_league[league.id])
+        member_preds = {
+            uid: pred
+            for uid, pred in preds_by_match_user.get(match_id, {}).items()
+            if uid in league_member_ids
+        }
         if len(member_preds) < 2:
             continue
 

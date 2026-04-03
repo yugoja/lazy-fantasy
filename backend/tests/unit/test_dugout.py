@@ -126,6 +126,49 @@ class TestContrarian:
         # Both are lone wolves here — expect up to 2 (capped at 2 per league)
         assert len(contrarian) <= 2
 
+    def test_lone_wolf_not_shown_in_leagues_they_dont_belong_to(self, db_session, test_tournament, test_teams):
+        """Regression: a user's prediction must not bleed into lone-wolf checks
+        for leagues they are not a member of.
+
+        Scenario: viewer is in 3 leagues. wolf shares only league_a with the viewer.
+        wolf is lone wolf in league_a. The event should appear exactly once —
+        not once per league the viewer belongs to.
+        """
+        team1, team2 = test_teams
+        players1 = db_session.query(Player).filter(Player.team_id == team1.id).all()
+        players2 = db_session.query(Player).filter(Player.team_id == team2.id).all()
+
+        me = _make_user(db_session, "medup", "medup@t.com")
+        wolf = _make_user(db_session, "wolfdup", "wolfdup@t.com")
+        filler_a = _make_user(db_session, "fillerA", "fillerA@t.com")
+        filler_b = _make_user(db_session, "fillerB", "fillerB@t.com")
+        filler_c = _make_user(db_session, "fillerC", "fillerC@t.com")
+
+        # wolf is only in league_a with the viewer
+        league_a = _make_league(db_session, "legA", me.id, wolf.id, filler_a.id)
+        # league_b and league_c do NOT include wolf
+        league_b = _make_league(db_session, "legB", me.id, filler_b.id)
+        league_c = _make_league(db_session, "legC", me.id, filler_c.id)
+
+        match = _locked_match(db_session, test_tournament, team1, team2)
+
+        # In league_a: me + filler_a pick team1; wolf is lone wolf picking team2
+        _make_prediction(db_session, me.id, match, team1.id, players1[0].id, players2[0].id, players1[4].id, players2[4].id, players1[0].id)
+        _make_prediction(db_session, filler_a.id, match, team1.id, players1[0].id, players2[0].id, players1[4].id, players2[4].id, players1[0].id)
+        _make_prediction(db_session, wolf.id, match, team2.id, players1[1].id, players2[1].id, players1[5].id, players2[5].id, players2[0].id)
+        # filler_b and filler_c also predict (for their respective leagues)
+        _make_prediction(db_session, filler_b.id, match, team1.id, players1[0].id, players2[0].id, players1[4].id, players2[4].id, players1[0].id)
+        _make_prediction(db_session, filler_c.id, match, team1.id, players1[0].id, players2[0].id, players1[4].id, players2[4].id, players1[0].id)
+        db_session.commit()
+
+        events = get_dugout_events(db_session, me.id)
+        contrarian = [e for e in events if e.type == DugoutEventType.CONTRARIAN]
+
+        # wolf is lone wolf only in league_a — must not appear in league_b or league_c
+        assert len(contrarian) == 1
+        assert contrarian[0].username == "wolfdup"
+        assert contrarian[0].league_name == "legA"
+
     def test_contrarian_is_me(self, db_session, test_tournament, test_teams):
         team1, team2 = test_teams
         players1 = db_session.query(Player).filter(Player.team_id == team1.id).all()
