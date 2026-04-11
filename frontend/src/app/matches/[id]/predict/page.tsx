@@ -124,9 +124,13 @@ function PlayerGrid({
               {isSelected ? <CheckCircle2 className="h-5 w-5" /> : getInitials(player.name)}
             </div>
             <div className="flex flex-col items-center gap-0.5 w-full">
-              <span className="text-sm font-semibold truncate w-full text-center leading-tight">
-                {getLastName(player.name)}
-              </span>
+              <div className="flex flex-col items-center gap-0.5 w-full">
+                {player.name.split(' ').map((namePart, i) => (
+                  <span key={i} className="text-sm font-semibold truncate w-full text-center leading-tight">
+                    {namePart}
+                  </span>
+                ))}
+              </div>
               <span className={cn(
                 'text-[10px] font-bold tracking-widest uppercase',
                 isSelected ? 'text-primary' : 'text-muted-foreground'
