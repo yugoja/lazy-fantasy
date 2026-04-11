@@ -257,6 +257,51 @@ class TestAgreement:
         assert len(agreement) == 1
         assert agreement[0].agreement_count == 6
 
+    def test_agreement_not_shown_in_leagues_they_dont_belong_to(self, db_session, test_tournament, test_teams):
+        """Regression: a user's agreement must not bleed into agreement checks
+        for leagues they are not a member of.
+
+        Scenario: viewer is in 3 leagues. friend shares only league_a with the viewer.
+        They have high agreement in league_a. The event should appear exactly once
+        (in league_a) — not in league_b or league_c where friend is not a member.
+        """
+        team1, team2 = test_teams
+        players1 = db_session.query(Player).filter(Player.team_id == team1.id).all()
+        players2 = db_session.query(Player).filter(Player.team_id == team2.id).all()
+
+        viewer = _make_user(db_session, "viewerag", "viewerag@t.com")
+        friend = _make_user(db_session, "friendag", "friendag@t.com")
+        filler_b = _make_user(db_session, "fillerBag", "fillerBag@t.com")
+        filler_c = _make_user(db_session, "fillerCag", "fillerCag@t.com")
+
+        # friend is only in league_a with the viewer
+        league_a = _make_league(db_session, "legAag", viewer.id, friend.id)
+        # league_b and league_c do NOT include friend
+        league_b = _make_league(db_session, "legBag", viewer.id, filler_b.id)
+        league_c = _make_league(db_session, "legCag", viewer.id, filler_c.id)
+
+        match = _locked_match(db_session, test_tournament, team1, team2)
+
+        # In league_a: viewer and friend have high agreement (5 of 6 fields match)
+        _make_prediction(db_session, viewer.id, match, team1.id, players1[0].id, players2[0].id, players1[4].id, players2[4].id, players1[0].id)
+        _make_prediction(db_session, friend.id, match, team1.id, players1[0].id, players2[0].id, players1[4].id, players2[4].id, players1[1].id)
+        # filler_b and filler_c also predict (for their respective leagues)
+        _make_prediction(db_session, filler_b.id, match, team1.id, players1[0].id, players2[0].id, players1[4].id, players2[4].id, players1[0].id)
+        _make_prediction(db_session, filler_c.id, match, team1.id, players1[0].id, players2[0].id, players1[4].id, players2[4].id, players1[0].id)
+        db_session.commit()
+
+        events = get_dugout_events(db_session, viewer.id)
+        agreement = [e for e in events if e.type == DugoutEventType.AGREEMENT]
+
+        # friend has agreement only in league_a — must not appear in league_b or league_c
+        friendag_events = [e for e in agreement if e.username == "friendag"]
+        assert len(friendag_events) == 1
+        assert friendag_events[0].league_name == "legAag"
+
+        # Verify friend does NOT appear in other leagues
+        friendag_in_other_leagues = [e for e in agreement if e.username == "friendag" and e.league_name != "legAag"]
+        assert len(friendag_in_other_leagues) == 0
+
 
 # ---------------------------------------------------------------------------
 # Streak
