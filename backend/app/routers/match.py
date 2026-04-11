@@ -121,14 +121,32 @@ async def get_players_for_match(
             detail="Match not found",
         )
 
-    team_1_players, team_2_players, lineup_announced = players_result
+    team_1_players, team_2_players, lineup_announced, last_t1_ids, last_t2_ids = players_result
 
     return MatchPlayersResponse(
         match_id=match.id,
         team_1=TeamResponse.model_validate(match.team_1),
         team_2=TeamResponse.model_validate(match.team_2),
-        team_1_players=[PlayerResponse.model_validate(p) for p in team_1_players],
-        team_2_players=[PlayerResponse.model_validate(p) for p in team_2_players],
+        team_1_players=[
+            PlayerResponse(
+                id=p.id,
+                name=p.name,
+                team_id=p.team_id,
+                role=p.role,
+                played_last_match=(p.id in last_t1_ids),
+            )
+            for p in team_1_players
+        ],
+        team_2_players=[
+            PlayerResponse(
+                id=p.id,
+                name=p.name,
+                team_id=p.team_id,
+                role=p.role,
+                played_last_match=(p.id in last_t2_ids),
+            )
+            for p in team_2_players
+        ],
         lineup_announced=lineup_announced,
         start_time=match.start_time,
     )

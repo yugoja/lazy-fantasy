@@ -230,8 +230,8 @@ export async function getMatchPlayers(matchId: number) {
         match_id: number;
         team_1: { id: number; name: string; short_name: string };
         team_2: { id: number; name: string; short_name: string };
-        team_1_players: Array<{ id: number; name: string; team_id: number; role: string }>;
-        team_2_players: Array<{ id: number; name: string; team_id: number; role: string }>;
+        team_1_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
+        team_2_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
         lineup_announced: boolean;
         start_time: string;
     }>(`/matches/${matchId}/players`);

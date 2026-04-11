@@ -18,6 +18,7 @@ class PlayerResponse(BaseModel):
     name: str
     team_id: int
     role: str
+    played_last_match: bool = False
 
     model_config = {"from_attributes": True}
 
