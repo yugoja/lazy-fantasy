@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Trophy } from 'lucide-react';
+
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 export default function SignupPage() {
@@ -67,12 +67,13 @@ export default function SignupPage() {
             <div className="container-mobile w-full max-w-sm">
                 <Card className="border-border bg-card">
                     <CardHeader className="items-center text-center space-y-3 pb-2">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Trophy className="h-6 w-6 text-primary" />
+                        <div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/icon.svg" alt="Lazy Fantasy" width={48} height={48} className="h-12 w-12" />
                         </div>
                         <div>
-                            <CardTitle className="text-xl">Create Account</CardTitle>
-                            <CardDescription className="mt-1">Join the fantasy cricket league</CardDescription>
+                            <CardTitle className="text-xl">Join the game</CardTitle>
+                            <CardDescription className="mt-1">Create your account and start predicting</CardDescription>
                         </div>
                     </CardHeader>
                     <CardContent className="pt-4">

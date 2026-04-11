@@ -1,6 +1,6 @@
 import '@/lib/sentry';
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { DM_Sans, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import Header, { BottomNav } from "@/components/Header";
@@ -10,9 +10,9 @@ import NotificationPermission from "@/components/NotificationPermission";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "sonner";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-dm-sans",
   display: "swap",
 });
 
@@ -49,8 +49,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className={inter.className}>
+    <html lang="en" className={`dark ${dmSans.variable} ${spaceGrotesk.variable}`}>
+      <body className={dmSans.className}>
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         <Script id="sw-register" strategy="afterInteractive">
           {`if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');`}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Trophy, Target, Star, CheckCircle2, Clock } from 'lucide-react';
+import { ArrowLeft, Trophy, Target, Star, CheckCircle2, Clock, Pencil, ChevronRight } from 'lucide-react';
 import { cn, getTeamLogoUrl } from '@/lib/utils';
 
 interface Player {
@@ -83,11 +83,62 @@ function buildShareText(team1: string, team2: string, startTime: string): string
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lazyfantasy.app';
   return [
     `🏏 ${team1} vs ${team2} — predictions are open!`,
-    '',
     `I've locked in my call. Have you? ⏰`,
     `Closes in ${formatCountdown(startTime)} 👇`,
     `${appUrl}/predictions`,
   ].join('\n');
+}
+
+// Total prediction steps (not counting summary)
+const PREDICTION_STEPS = 6;
+
+function PlayerGrid({
+  players,
+  selectedId,
+  onSelect,
+}: {
+  players: Player[];
+  selectedId: number | null;
+  onSelect: (id: number) => void;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {players.map((player) => {
+        const isSelected = selectedId === player.id;
+        return (
+          <button
+            key={player.id}
+            type="button"
+            onClick={() => onSelect(player.id)}
+            className={cn(
+              'flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border-2 transition-all duration-150',
+              isSelected
+                ? 'border-primary bg-primary/10'
+                : 'border-border bg-card/60 active:scale-95'
+            )}
+          >
+            <div className={cn(
+              'h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+              isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            )}>
+              {isSelected ? <CheckCircle2 className="h-5 w-5" /> : getInitials(player.name)}
+            </div>
+            <div className="flex flex-col items-center gap-0.5 w-full">
+              <span className="text-sm font-semibold truncate w-full text-center leading-tight">
+                {getLastName(player.name)}
+              </span>
+              <span className={cn(
+                'text-[10px] font-bold tracking-widest uppercase',
+                isSelected ? 'text-primary' : 'text-muted-foreground'
+              )}>
+                {getRoleLabel(player.role)}
+              </span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function PredictPage() {
@@ -102,6 +153,7 @@ export default function PredictPage() {
   const [error, setError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0); // 0–5 = picks, 6 = summary
 
   const [winnerId, setWinnerId] = useState<number | null>(null);
   const [mostRunsTeam1Id, setMostRunsTeam1Id] = useState<number | null>(null);
@@ -110,18 +162,18 @@ export default function PredictPage() {
   const [mostWicketsTeam2Id, setMostWicketsTeam2Id] = useState<number | null>(null);
   const [pomId, setPomId] = useState<number | null>(null);
 
-  // Section refs for scroll-to-on-pick-click
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const winnerRef = useRef<HTMLElement>(null);
-  const bat1Ref = useRef<HTMLElement>(null);
-  const bat2Ref = useRef<HTMLElement>(null);
-  const bowl1Ref = useRef<HTMLElement>(null);
-  const bowl2Ref = useRef<HTMLElement>(null);
-  const pomRef = useRef<HTMLElement>(null);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scrollToSection = (ref: React.RefObject<HTMLElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const advance = useCallback(() => {
+    setCurrentStep(s => Math.min(s + 1, PREDICTION_STEPS));
+  }, []);
+
+  const autoAdvance = useCallback(() => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    advanceTimer.current = setTimeout(advance, 420);
+  }, [advance]);
+
+  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) router.push('/login');
@@ -154,6 +206,7 @@ export default function PredictPage() {
           setMostWicketsTeam2Id(existing.predicted_most_wickets_team2_player_id);
           setPomId(existing.predicted_pom_player_id);
           setIsEditing(true);
+          setCurrentStep(PREDICTION_STEPS); // jump straight to summary when editing
         }
       }
     } catch (err) {
@@ -196,10 +249,9 @@ export default function PredictPage() {
     return (
       <div className="container-mobile py-6 space-y-4">
         <Skeleton className="h-6 w-24" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-14 w-full" />
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
@@ -221,7 +273,6 @@ export default function PredictPage() {
   const t1Bowlers = matchData.team_1_players.filter(p => isBowler(p.role));
   const t2Bowlers = matchData.team_2_players.filter(p => isBowler(p.role));
 
-  // Lookup helpers
   const findPlayer = (id: number | null, pool: Player[]) => pool.find(p => p.id === id);
   const winnerTeam = winnerId ? (winnerId === matchData.team_1.id ? matchData.team_1 : matchData.team_2) : null;
   const runsT1 = findPlayer(mostRunsTeam1Id, matchData.team_1_players);
@@ -230,69 +281,69 @@ export default function PredictPage() {
   const wktsT2 = findPlayer(mostWicketsTeam2Id, matchData.team_2_players);
   const pomPlayer = findPlayer(pomId, allPlayers);
 
-  const renderPlayerGrid = (players: Player[], selectedId: number | null, onSelect: (id: number) => void) => (
-    <div className="grid grid-cols-3 gap-2">
-      {players.map((player) => {
-        const isSelected = selectedId === player.id;
-        return (
-          <button
-            key={player.id}
-            type="button"
-            onClick={() => onSelect(player.id)}
-            className={cn(
-              'flex flex-col items-center gap-1 p-2.5 rounded-xl border transition-all',
-              isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-border/80'
-            )}
-          >
-            <div className={cn(
-              'h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold',
-              isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-            )}>
-              {getInitials(player.name)}
-            </div>
-            <span className="text-xs font-medium truncate w-full text-center leading-tight">
-              {getLastName(player.name)}
-            </span>
-            <span className="text-[9px] text-muted-foreground tracking-wide">{getRoleLabel(player.role)}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
+  const isSummary = currentStep === PREDICTION_STEPS;
 
-  const SectionHeader = ({ icon, label, team, pts }: { icon: React.ReactNode; label: string; team?: string; pts: number }) => (
-    <div className="flex items-center gap-2 mb-3">
-      <span className="text-primary">{icon}</span>
-      <span className="font-semibold text-sm">{label}</span>
-      {team && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground">{team}</span>}
-      <span className="ml-auto text-[11px] font-semibold text-primary">+{pts} pts</span>
-    </div>
-  );
+  // Step config
+  const stepConfig = [
+    {
+      num: 1, label: 'Match Winner', sublabel: null, teamShortName: null, winnerTeamShortName: winnerTeam?.short_name ?? null,
+      icon: <Trophy className="h-4 w-4" />, pts: 10,
+      currentValue: winnerTeam?.short_name ?? null,
+    },
+    {
+      num: 2, label: 'Top Batsman', sublabel: matchData.team_1.short_name, teamShortName: matchData.team_1.short_name, winnerTeamShortName: null,
+      icon: <Target className="h-4 w-4" />, pts: 20,
+      currentValue: runsT1 ? runsT1.name : null,
+    },
+    {
+      num: 3, label: 'Top Batsman', sublabel: matchData.team_2.short_name, teamShortName: matchData.team_2.short_name, winnerTeamShortName: null,
+      icon: <Target className="h-4 w-4" />, pts: 20,
+      currentValue: runsT2 ? runsT2.name : null,
+    },
+    {
+      num: 4, label: 'Top Bowler', sublabel: matchData.team_1.short_name, teamShortName: matchData.team_1.short_name, winnerTeamShortName: null,
+      icon: <Target className="h-4 w-4" />, pts: 20,
+      currentValue: wktsT1 ? wktsT1.name : null,
+    },
+    {
+      num: 5, label: 'Top Bowler', sublabel: matchData.team_2.short_name, teamShortName: matchData.team_2.short_name, winnerTeamShortName: null,
+      icon: <Target className="h-4 w-4" />, pts: 20,
+      currentValue: wktsT2 ? wktsT2.name : null,
+    },
+    {
+      num: 6, label: 'Man of the Match', sublabel: null, teamShortName: null, winnerTeamShortName: null,
+      icon: <Star className="h-4 w-4" />, pts: 50,
+      currentValue: pomPlayer ? pomPlayer.name : null,
+    },
+  ];
 
-  // h-screen minus app header (h-14=56px) minus bottom nav (h-16=64px)
+  const activeStep = stepConfig[currentStep];
+
   return (
     <div className="flex flex-col mx-auto max-w-[430px]" style={{ height: 'calc(100dvh - 56px - 64px)' }}>
 
-      {/* ── Sticky top: match info + picks strip ── */}
-      <div className="flex-shrink-0 px-4 pt-3 pb-3 border-b border-border bg-background space-y-3">
+      {/* ── Sticky header ── */}
+      <div className="flex-shrink-0 px-4 pt-3 pb-3 border-b border-border bg-background">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <Link href="/predictions" className="shrink-0 text-muted-foreground hover:text-foreground">
+            <button
+              type="button"
+              onClick={() => currentStep > 0 ? setCurrentStep(s => s - 1) : router.push('/predictions')}
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+            >
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </button>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5">
                 <h1 className="text-base font-bold">
                   {matchData.team_1.short_name} vs {matchData.team_2.short_name}
                 </h1>
                 {matchData.lineup_announced && (
-                  <Badge className="bg-green-600/20 text-green-400 border-green-600/30 text-[9px] py-0">PLAYING XI</Badge>
+                  <Badge className="bg-green-600/20 text-green-400 border-green-600/30 text-[10px] py-0">XI</Badge>
                 )}
               </div>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {new Date(matchData.start_time).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                {' · '}
-                {new Date(matchData.start_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })} IST
               </p>
             </div>
           </div>
@@ -302,123 +353,217 @@ export default function PredictPage() {
           </div>
         </div>
 
-        {/* Picks summary strip */}
-        <div className="rounded-xl border border-border bg-card p-2.5 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Your Picks</span>
-            <span className="text-[9px] text-muted-foreground">{filledCount} of 6 made</span>
-          </div>
-          <div className="grid grid-cols-3 gap-1">
-            {[
-              { label: 'WINNER',                                        value: winnerTeam?.short_name,              ref: winnerRef },
-              { label: `BAT · ${matchData.team_1.short_name}`,         value: runsT1  ? getLastName(runsT1.name)  : null, ref: bat1Ref },
-              { label: `BAT · ${matchData.team_2.short_name}`,         value: runsT2  ? getLastName(runsT2.name)  : null, ref: bat2Ref },
-              { label: `BOWL · ${matchData.team_1.short_name}`,        value: wktsT1  ? getLastName(wktsT1.name)  : null, ref: bowl1Ref },
-              { label: `BOWL · ${matchData.team_2.short_name}`,        value: wktsT2  ? getLastName(wktsT2.name)  : null, ref: bowl2Ref },
-              { label: 'MOTM',                                         value: pomPlayer ? getLastName(pomPlayer.name) : null, ref: pomRef },
-            ].map(({ label, value, ref }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => scrollToSection(ref)}
+        {/* Step progress dots */}
+        {!isSummary && (
+          <div className="flex items-center gap-1.5 mt-3">
+            {stepConfig.map((s, i) => (
+              <div
+                key={i}
                 className={cn(
-                  'rounded-lg px-2 py-1.5 border text-left transition-colors',
-                  value ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/30'
+                  'h-1 rounded-full transition-all duration-300',
+                  i < currentStep
+                    ? 'bg-primary flex-1'
+                    : i === currentStep
+                    ? 'bg-primary flex-[2]'
+                    : 'bg-muted flex-1'
                 )}
-              >
-                <p className="text-[8px] text-muted-foreground uppercase tracking-wide leading-none mb-0.5">{label}</p>
-                <p className={cn('text-[11px] font-semibold truncate', value ? 'text-primary' : 'text-muted-foreground')}>
-                  {value ?? '—'}
-                </p>
-              </button>
+              />
             ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Scrollable sections ── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
-        {error && (
-          <div className="p-3 rounded-lg border border-destructive/50 bg-destructive/10">
-            <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
-
-        <section ref={winnerRef}>
-          <SectionHeader icon={<Trophy className="h-4 w-4" />} label="Match Winner" pts={10} />
-          <div className="grid grid-cols-2 gap-3">
-            {[matchData.team_1, matchData.team_2].map((team) => {
-              const isSelected = winnerId === team.id;
-              const logoSrc = getTeamLogoUrl(team.short_name);
-              return (
-                <button
-                  key={team.id}
-                  type="button"
-                  onClick={() => setWinnerId(team.id)}
-                  className={cn(
-                    'relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all',
-                    isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-border/80'
-                  )}
-                >
-                  {isSelected && <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-primary" />}
-                  {logoSrc && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logoSrc} alt={team.name} width={40} height={40}
-                      className="h-10 w-10 object-contain"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                  )}
-                  <span className="font-bold text-base">{team.short_name}</span>
-                  <span className="text-xs text-muted-foreground">{team.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section ref={bat1Ref}>
-          <SectionHeader icon={<Target className="h-4 w-4" />} label="Top Batsman" team={matchData.team_1.short_name} pts={20} />
-          {renderPlayerGrid(t1Batters, mostRunsTeam1Id, setMostRunsTeam1Id)}
-        </section>
-
-        <section ref={bat2Ref}>
-          <SectionHeader icon={<Target className="h-4 w-4" />} label="Top Batsman" team={matchData.team_2.short_name} pts={20} />
-          {renderPlayerGrid(t2Batters, mostRunsTeam2Id, setMostRunsTeam2Id)}
-        </section>
-
-        <section ref={bowl1Ref}>
-          <SectionHeader icon={<Target className="h-4 w-4" />} label="Top Bowler" team={matchData.team_1.short_name} pts={20} />
-          {renderPlayerGrid(t1Bowlers, mostWicketsTeam1Id, setMostWicketsTeam1Id)}
-        </section>
-
-        <section ref={bowl2Ref}>
-          <SectionHeader icon={<Target className="h-4 w-4" />} label="Top Bowler" team={matchData.team_2.short_name} pts={20} />
-          {renderPlayerGrid(t2Bowlers, mostWicketsTeam2Id, setMostWicketsTeam2Id)}
-        </section>
-
-        <section ref={pomRef}>
-          <SectionHeader icon={<Star className="h-4 w-4" />} label="Man of the Match" pts={50} />
-          {renderPlayerGrid(allPlayers, pomId, setPomId)}
-        </section>
       </div>
 
-      {/* ── Sticky bottom: submit bar ── */}
-      <div className="flex-shrink-0 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            {picks.map((v, i) => (
-              <div key={i} className={cn('rounded-full transition-all', v ? 'h-2.5 w-2.5 bg-primary' : 'h-2 w-2 bg-muted')} />
-            ))}
-            <span className="text-xs text-muted-foreground ml-1">Up to 140 pts</span>
+      {/* ── Step content ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {isSummary ? (
+          /* ── Summary ── */
+          <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">Your Picks</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {filledCount === 6 ? 'All done — ready to lock in.' : `${6 - filledCount} pick${6 - filledCount !== 1 ? 's' : ''} remaining.`}
+              </p>
+            </div>
+
+            {error && (
+              <div className="p-3 rounded-lg border border-destructive/50 bg-destructive/10">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-border overflow-hidden divide-y divide-border">
+              {stepConfig.map((s, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+                  {/* Step number */}
+                  <div className={cn(
+                    'h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                    s.currentValue ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  )}>
+                    {s.currentValue ? <CheckCircle2 className="h-4 w-4" /> : s.num}
+                  </div>
+
+                  {/* Label + value */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider leading-none">
+                        {s.label}{s.sublabel ? ` · ${s.sublabel}` : ''}
+                      </p>
+                      {s.teamShortName && (() => {
+                        const logo = getTeamLogoUrl(s.teamShortName);
+                        return logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={logo} alt={s.teamShortName} width={14} height={14}
+                            className="h-3.5 w-3.5 object-contain opacity-80"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        ) : null;
+                      })()}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {s.winnerTeamShortName && (() => {
+                        const logo = getTeamLogoUrl(s.winnerTeamShortName);
+                        return logo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={logo} alt={s.winnerTeamShortName} width={18} height={18}
+                            className="h-4.5 w-4.5 object-contain shrink-0"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        ) : null;
+                      })()}
+                      <p className={cn(
+                        'text-base font-semibold truncate',
+                        s.currentValue ? 'text-foreground' : 'text-muted-foreground'
+                      )}>
+                        {s.currentValue ?? '—'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Pts + edit */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-muted-foreground">+{s.pts}</span>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(i)}
+                      className="flex items-center gap-0.5 text-xs text-primary font-medium px-2 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Potential total */}
+              <div className="flex items-center justify-between px-4 py-3 bg-primary/5">
+                <span className="text-sm text-muted-foreground">Potential total</span>
+                <span className="font-bold text-base text-primary">Up to 140 pts</span>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSubmit}
+              disabled={filledCount < 6 || isSubmitting}
+              className="w-full"
+              size="lg"
+            >
+              {isSubmitting ? 'Saving...' : isEditing ? 'Update Picks' : 'Lock In Picks'}
+            </Button>
           </div>
-          <Button
-            onClick={handleSubmit}
-            disabled={filledCount < 6 || isSubmitting}
-            className="ml-auto"
-            size="lg"
-          >
-            {isSubmitting ? 'Saving...' : isEditing ? 'Update Picks' : 'Submit Picks'}
-          </Button>
-        </div>
+        ) : (
+          /* ── Prediction step ── */
+          <>
+            {/* Fixed step header */}
+            <div key={`header-${currentStep}`} className="flex-shrink-0 relative px-4 pt-5 pb-4 border-b border-border bg-background step-enter overflow-hidden">
+              {/* Ghost step number */}
+              <div
+                aria-hidden
+                className="absolute right-1 top-0 text-[100px] font-black select-none pointer-events-none text-muted-foreground/10"
+                style={{ lineHeight: 1 }}
+              >
+                {activeStep.num}
+              </div>
+              <div className="relative">
+                <p className="text-sm text-muted-foreground uppercase tracking-widest font-semibold">
+                  Step {activeStep.num} of {PREDICTION_STEPS}
+                </p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <h2 className="text-2xl font-bold">
+                    {activeStep.label}
+                    {activeStep.sublabel && (
+                      <span className="text-primary"> {activeStep.sublabel}</span>
+                    )}
+                  </h2>
+                  {activeStep.teamShortName && (() => {
+                    const logo = getTeamLogoUrl(activeStep.teamShortName);
+                    return logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={logo} alt={activeStep.teamShortName} width={28} height={28}
+                        className="h-7 w-7 object-contain"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    ) : null;
+                  })()}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-sm text-muted-foreground">+{activeStep.pts} pts if correct</p>
+                  {activeStep.currentValue && (
+                    <span className="text-sm text-primary font-medium">✓ {activeStep.currentValue}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Scrollable player grid */}
+            <div key={`body-${currentStep}`} className="flex-1 overflow-y-auto px-4 pt-4 pb-4 step-enter">
+              {currentStep === 0 && (
+                <div className="grid grid-cols-2 gap-4">
+                  {[matchData.team_1, matchData.team_2].map((team) => {
+                    const isSelected = winnerId === team.id;
+                    const logoSrc = getTeamLogoUrl(team.short_name);
+                    return (
+                      <button
+                        key={team.id}
+                        type="button"
+                        onClick={() => { setWinnerId(team.id); autoAdvance(); }}
+                        className={cn(
+                          'relative flex flex-col items-center gap-3 py-8 px-4 rounded-2xl border-2 transition-all duration-150',
+                          isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card/60 active:scale-95'
+                        )}
+                      >
+                        {isSelected && <CheckCircle2 className="absolute top-3 right-3 h-4 w-4 text-primary" />}
+                        {logoSrc && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={logoSrc} alt={team.name} width={48} height={48}
+                            className="h-12 w-12 object-contain"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        )}
+                        <div>
+                          <div className="font-bold text-lg text-center">{team.short_name}</div>
+                          <div className="text-sm text-muted-foreground text-center leading-tight mt-0.5">{team.name}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {currentStep === 1 && <PlayerGrid players={t1Batters} selectedId={mostRunsTeam1Id} onSelect={(id) => { setMostRunsTeam1Id(id); autoAdvance(); }} />}
+              {currentStep === 2 && <PlayerGrid players={t2Batters} selectedId={mostRunsTeam2Id} onSelect={(id) => { setMostRunsTeam2Id(id); autoAdvance(); }} />}
+              {currentStep === 3 && <PlayerGrid players={t1Bowlers} selectedId={mostWicketsTeam1Id} onSelect={(id) => { setMostWicketsTeam1Id(id); autoAdvance(); }} />}
+              {currentStep === 4 && <PlayerGrid players={t2Bowlers} selectedId={mostWicketsTeam2Id} onSelect={(id) => { setMostWicketsTeam2Id(id); autoAdvance(); }} />}
+              {currentStep === 5 && <PlayerGrid players={allPlayers} selectedId={pomId} onSelect={(id) => { setPomId(id); autoAdvance(); }} />}
+
+              {/* Next / skip */}
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={advance}
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {activeStep.currentValue ? 'Next' : 'Skip'}
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Success Dialog */}

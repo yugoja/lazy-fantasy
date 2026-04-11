@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Trophy, Target, Users, Medal } from 'lucide-react';
+import { Target, Users, Medal, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/dashboard', label: 'Home', icon: Trophy },
+  { href: '/dashboard', label: 'Home', icon: Flame },
   { href: '/predictions', label: 'Predict', icon: Target },
   { href: '/leagues', label: 'Leagues', icon: Users },
   { href: '/tournaments', label: 'Tournament', icon: Medal },
@@ -27,8 +27,9 @@ export default function Header() {
     <header className="flex-shrink-0 sticky top-0 z-50 bg-background border-b border-border safe-top">
       <div className="container-mobile h-14 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <Trophy className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg font-['Space_Grotesk']">Lazy Fantasy</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
+          <span className="text-lg font-extrabold tracking-tight">Lazy<span className="text-primary">F</span></span>
         </Link>
 
         {isAuthenticated && username && (

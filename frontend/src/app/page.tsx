@@ -35,38 +35,33 @@ export default function Home() {
 
       {/* Hero */}
       <section className="container-mobile pt-14 pb-10 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs text-primary font-medium mb-6">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-          </span>
-          IPL 2026 · Live Now
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs text-primary-foreground font-bold mb-6 uppercase tracking-wide">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse-dot"></span>
+          Live Now
         </div>
 
-        <h1 className="text-3xl font-bold tracking-tight mb-3 leading-tight">
+        <h1 className="text-4xl font-extrabold tracking-tight mb-3 leading-[1.1]">
           Your mates think they
           <br />
-          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            know cricket.
-          </span>
+          know cricket<span className="text-primary">.</span>
         </h1>
 
-        <p className="text-base text-muted-foreground max-w-sm mx-auto mb-2 leading-relaxed">
+        <p className="text-lg font-semibold text-foreground max-w-sm mx-auto mb-1">
           Prove them wrong.
         </p>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-8 leading-relaxed">
-          Predict every IPL match, play in a private league with your crew, and
-          settle the group chat debate — who actually knows cricket?
+          Predict every match. Play in a private league with your crew.
+          Settle the group chat debate once and for all.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/signup">
-            <Button size="lg" className="w-full sm:w-auto font-semibold">
+            <Button size="lg" className="w-full sm:w-auto font-bold text-base px-8">
               Start Playing Free
             </Button>
           </Link>
           <Link href="/login">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto font-semibold">
               Sign In
             </Button>
           </Link>

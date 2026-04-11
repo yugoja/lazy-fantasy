@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Trophy } from 'lucide-react';
+
+
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 export default function LoginPage() {
@@ -52,12 +53,13 @@ export default function LoginPage() {
             <div className="container-mobile w-full max-w-sm">
                 <Card className="border-border bg-card">
                     <CardHeader className="items-center text-center space-y-3 pb-2">
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Trophy className="h-6 w-6 text-primary" />
+                        <div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/icon.svg" alt="Lazy Fantasy" width={48} height={48} className="h-12 w-12" />
                         </div>
                         <div>
-                            <CardTitle className="text-xl">Welcome Back</CardTitle>
-                            <CardDescription className="mt-1">Sign in to your account</CardDescription>
+                            <CardTitle className="text-xl">Welcome back</CardTitle>
+                            <CardDescription className="mt-1">Sign in to keep playing</CardDescription>
                         </div>
                     </CardHeader>
                     <CardContent className="pt-4">
