@@ -20,13 +20,23 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [redirectTo, setRedirectTo] = useState('/dashboard');
     const router = useRouter();
-    const { login } = useAuth();
+    const { login, isAuthenticated, isLoading: authLoading } = useAuth();
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const redirect = params.get('redirect');
         if (redirect) setRedirectTo(redirect);
     }, []);
+
+    useEffect(() => {
+        if (!authLoading && isAuthenticated) {
+            router.push('/dashboard');
+        }
+    }, [isAuthenticated, authLoading, router]);
+
+    if (authLoading || isAuthenticated) {
+        return null;
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

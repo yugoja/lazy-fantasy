@@ -19,7 +19,7 @@ export default function Home() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
+  if (isLoading || isAuthenticated) {
     return (
       <div className="container-mobile py-10 space-y-6">
         <Skeleton className="h-8 w-48 mx-auto" />
