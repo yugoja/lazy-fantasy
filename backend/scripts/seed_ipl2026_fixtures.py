@@ -108,7 +108,7 @@ def run(mode: str):
 
     from app.models import Prediction
 
-    ipl_team_ids = set(team_id.values())
+    ipl_team_ids = {team_id[c] for c in {"CSK","DC","GT","KKR","LSG","MI","PBKS","RR","RCB","SRH"}}
 
     from datetime import timezone
     now = datetime.now(timezone.utc).replace(tzinfo=None)
