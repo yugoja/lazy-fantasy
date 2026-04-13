@@ -1,14 +1,16 @@
 """
 Seed IPL 2026 fixtures (matches 21–70, April 13 – May 24).
 
+Looks up team IDs dynamically by short_name — safe to run on any environment.
+
 Usage:
   # Local: clears all scheduled matches then inserts matches 21–70
-  python scripts/seed_ipl2026_fixtures.py --mode local
+  python scripts/seed_ipl2026_fixtures.py local
 
-  # Droplet: only inserts matches not already present (safe to re-run)
-  python scripts/seed_ipl2026_fixtures.py --mode prod
+  # Prod: clears ALL scheduled matches for this tournament, inserts matches 21–70
+  python scripts/seed_ipl2026_fixtures.py prod
 
-Times are stored as UTC (IST = UTC+5:30):
+Times stored as UTC (IST = UTC+5:30):
   19:30 IST → 14:00 UTC
   15:30 IST → 10:00 UTC
 """
@@ -19,16 +21,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from datetime import datetime
 from app.database import SessionLocal
 from app.models import Match, MatchStatus
+from app.models.team import Team
 
 TOURNAMENT_ID = 2
 
-# Team code → DB id
-TEAM_ID = {
-    "CSK": 5, "DC": 6, "GT": 7, "KKR": 8, "LSG": 9,
-    "MI": 10, "PBKS": 11, "RR": 12, "RCB": 13, "SRH": 14,
-}
-
-# IST time string → UTC hour (minutes always 0)
 IST_TO_UTC = {
     "15:30 IST": (10, 0),
     "19:30 IST": (14, 0),
@@ -97,33 +93,32 @@ def make_start_time(date_str: str, time_str: str) -> datetime:
 def run(mode: str):
     db = SessionLocal()
 
-    if mode == "local":
-        deleted = db.query(Match).filter(
-            Match.tournament_id == TOURNAMENT_ID,
-            Match.status == MatchStatus.SCHEDULED,
-        ).delete()
-        db.commit()
-        print(f"Deleted {deleted} existing scheduled matches")
+    # Resolve team short_name → id dynamically (safe across environments)
+    teams = db.query(Team).all()
+    team_id = {t.short_name: t.id for t in teams}
+    print("Teams found:", {k: v for k, v in team_id.items() if k in
+          {"CSK","DC","GT","KKR","LSG","MI","PBKS","RR","RCB","SRH"}})
 
-    # Build set of existing (team1, team2, date) to avoid dupes in prod mode
-    existing = db.query(Match).filter(Match.tournament_id == TOURNAMENT_ID).all()
-    existing_keys = {
-        (m.team_1_id, m.team_2_id, m.start_time.date())
-        for m in existing
-    }
+    missing = [f["team1"] for f in FIXTURES if f["team1"] not in team_id] + \
+              [f["team2"] for f in FIXTURES if f["team2"] not in team_id]
+    if missing:
+        print(f"ERROR: Teams not found in DB: {set(missing)}")
+        db.close()
+        sys.exit(1)
 
-    inserted = 0
-    skipped = 0
+    # Delete ALL scheduled matches for this tournament (both modes)
+    deleted = db.query(Match).filter(
+        Match.tournament_id == TOURNAMENT_ID,
+        Match.status == MatchStatus.SCHEDULED,
+    ).delete()
+    db.commit()
+    print(f"Deleted {deleted} scheduled matches")
+
+    # Insert all 50 fixtures
     for f in FIXTURES:
-        t1 = TEAM_ID[f["team1"]]
-        t2 = TEAM_ID[f["team2"]]
+        t1 = team_id[f["team1"]]
+        t2 = team_id[f["team2"]]
         start = make_start_time(f["date"], f["time"])
-        key = (t1, t2, start.date())
-
-        if key in existing_keys:
-            skipped += 1
-            continue
-
         db.add(Match(
             tournament_id=TOURNAMENT_ID,
             team_1_id=t1,
@@ -131,22 +126,18 @@ def run(mode: str):
             start_time=start,
             status=MatchStatus.SCHEDULED,
         ))
-        inserted += 1
 
     db.commit()
     db.close()
-    print(f"Inserted {inserted} matches, skipped {skipped} duplicates")
+    print(f"Inserted {len(FIXTURES)} matches")
     print(f"Season runs: 2026-04-13 → 2026-05-24")
 
 
 if __name__ == "__main__":
     mode = "local"
-    if len(sys.argv) > 1 and sys.argv[1] in ("--mode", "-m") and len(sys.argv) > 2:
-        mode = sys.argv[2]
-    elif len(sys.argv) > 1 and sys.argv[1] in ("local", "prod"):
+    if len(sys.argv) > 1 and sys.argv[1] in ("local", "prod"):
         mode = sys.argv[1]
-
-    if mode not in ("local", "prod"):
+    elif len(sys.argv) > 1:
         print("Usage: python scripts/seed_ipl2026_fixtures.py [local|prod]")
         sys.exit(1)
 
