@@ -110,10 +110,15 @@ def run(mode: str):
 
     ipl_team_ids = set(team_id.values())
 
-    # Find scheduled matches where either team is NOT an IPL team (junk matches)
+    from datetime import timezone
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    # Find FUTURE scheduled matches where either team is NOT an IPL team (junk matches)
+    # Never touch past matches — they may have predictions users care about
     scheduled = db.query(Match).filter(
         Match.tournament_id == TOURNAMENT_ID,
         Match.status == MatchStatus.SCHEDULED,
+        Match.start_time > now,
     ).all()
 
     junk_ids = [
