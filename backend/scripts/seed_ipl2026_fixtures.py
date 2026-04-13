@@ -106,19 +106,45 @@ def run(mode: str):
         db.close()
         sys.exit(1)
 
-    # Delete ALL scheduled matches for this tournament (both modes)
-    deleted = db.query(Match).filter(
+    from app.models import Prediction
+
+    ipl_team_ids = set(team_id.values())
+
+    # Find scheduled matches where either team is NOT an IPL team (junk matches)
+    scheduled = db.query(Match).filter(
         Match.tournament_id == TOURNAMENT_ID,
         Match.status == MatchStatus.SCHEDULED,
-    ).delete()
-    db.commit()
-    print(f"Deleted {deleted} scheduled matches")
+    ).all()
 
-    # Insert all 50 fixtures
+    junk_ids = [
+        m.id for m in scheduled
+        if m.team_1_id not in ipl_team_ids or m.team_2_id not in ipl_team_ids
+    ]
+
+    if junk_ids:
+        pred_deleted = db.query(Prediction).filter(Prediction.match_id.in_(junk_ids)).delete(synchronize_session=False)
+        match_deleted = db.query(Match).filter(Match.id.in_(junk_ids)).delete(synchronize_session=False)
+        db.commit()
+        print(f"Removed {match_deleted} junk matches (+ {pred_deleted} predictions)")
+    else:
+        print("No junk matches found")
+
+    # Build set of existing valid IPL scheduled fixtures to avoid dupes
+    existing = db.query(Match).filter(
+        Match.tournament_id == TOURNAMENT_ID,
+        Match.status == MatchStatus.SCHEDULED,
+    ).all()
+    existing_keys = {(m.team_1_id, m.team_2_id, m.start_time.date()) for m in existing}
+
+    inserted = 0
+    skipped = 0
     for f in FIXTURES:
         t1 = team_id[f["team1"]]
         t2 = team_id[f["team2"]]
         start = make_start_time(f["date"], f["time"])
+        if (t1, t2, start.date()) in existing_keys:
+            skipped += 1
+            continue
         db.add(Match(
             tournament_id=TOURNAMENT_ID,
             team_1_id=t1,
@@ -126,10 +152,11 @@ def run(mode: str):
             start_time=start,
             status=MatchStatus.SCHEDULED,
         ))
+        inserted += 1
 
     db.commit()
     db.close()
-    print(f"Inserted {len(FIXTURES)} matches")
+    print(f"Inserted {inserted} matches, skipped {skipped} already present")
     print(f"Season runs: 2026-04-13 → 2026-05-24")
 
 
