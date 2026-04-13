@@ -72,67 +72,6 @@ function getRoleLabel(role: string) {
   return map[role.toLowerCase()] ?? role.substring(0, 4).toUpperCase();
 }
 
-function RoleIcon({ role, selected }: { role: string; selected: boolean }) {
-  const r = role.toLowerCase();
-  const color = selected ? 'white' : 'currentColor';
-
-  // Bat icon
-  if (r.includes('bat') || r === 'batsman' || r === 'batter') {
-    return (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <line x1="8" y1="4" x2="18" y2="20" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-        <rect x="15" y="17" width="2" height="8" fill={color} opacity="0.7" />
-      </svg>
-    );
-  }
-
-  // Ball icon
-  if (r.includes('bowl') || r === 'bowler') {
-    return (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="8" stroke={color} strokeWidth="1.5" />
-        <path d="M 8 12 Q 12 10, 16 12" stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  // Bat + Ball (All-rounder)
-  if (r.includes('all')) {
-    return (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Bat */}
-        <line x1="6" y1="6" x2="12" y2="14" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-        <rect x="11" y="12" width="1.5" height="5" fill={color} opacity="0.7" />
-        {/* Ball */}
-        <circle cx="16" cy="10" r="4" stroke={color} strokeWidth="1.5" />
-        <path d="M 14 10 Q 16 9, 18 10" stroke={color} strokeWidth="1" fill="none" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  // Wicket (Wicketkeeper)
-  if (r.includes('keep') || r === 'wk' || r.includes('wk-batter')) {
-    return (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Stumps */}
-        <line x1="8" y1="9" x2="8" y2="18" stroke={color} strokeWidth="1.5" />
-        <line x1="12" y1="9" x2="12" y2="18" stroke={color} strokeWidth="1.5" />
-        <line x1="16" y1="9" x2="16" y2="18" stroke={color} strokeWidth="1.5" />
-        {/* Bails */}
-        <line x1="7" y1="9" x2="13" y2="9" stroke={color} strokeWidth="1" />
-        <line x1="11" y1="9" x2="17" y2="9" stroke={color} strokeWidth="1" />
-      </svg>
-    );
-  }
-
-  // Fallback
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <line x1="8" y1="4" x2="18" y2="20" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-      <rect x="15" y="17" width="2" height="8" fill={color} opacity="0.7" />
-    </svg>
-  );
-}
 
 function isBatter(role: string) {
   return ['batsman', 'batter', 'wicketkeeper', 'wk-batter', 'all-rounder', 'all_rounder', 'allrounder'].includes(role.toLowerCase());
@@ -193,14 +132,11 @@ function PlayerGrid({
               <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-green-500 ring-1 ring-white" title="Played last match" />
             )}
 
-            {/* Role icon avatar */}
             <div className={cn(
-              'h-11 w-11 rounded-full flex items-center justify-center transition-all',
-              isSelected
-                ? 'bg-primary ring-2 ring-primary ring-offset-1'
-                : 'bg-muted text-muted-foreground'
+              'h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+              isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             )}>
-              <RoleIcon role={player.role} selected={isSelected} />
+              {isSelected ? <CheckCircle2 className="h-5 w-5" /> : getInitials(player.name)}
             </div>
 
             <div className="flex flex-col items-center gap-0.5 w-full">
