@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Settings, Clock, CheckCircle2, BarChart3, ArrowRight, Radio, Link2 } from 'lucide-react';
+import { Settings, Clock, CheckCircle2, BarChart3, ArrowRight, Radio, Link2, AlertTriangle } from 'lucide-react';
 
 interface AdminMatch {
   id: number;
@@ -97,6 +97,9 @@ export default function AdminPage() {
   const scheduledMatches = matches
     .filter(m => m.status === 'SCHEDULED' && new Date(m.start_time) >= todayStart)
     .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+  const awaitingResultMatches = matches
+    .filter(m => m.status === 'SCHEDULED' && new Date(m.start_time) < todayStart)
+    .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
   const completedMatches = matches.filter(m => m.status === 'COMPLETED');
 
   return (
@@ -213,6 +216,60 @@ export default function AdminPage() {
           </div>
         )}
       </section>
+
+      {/* Awaiting Result (past matches not yet resulted) */}
+      {awaitingResultMatches.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-orange-400" />
+            <h2 className="font-semibold text-sm">Awaiting Result</h2>
+            <Badge variant="secondary" className="ml-auto text-[10px]">
+              {awaitingResultMatches.length}
+            </Badge>
+          </div>
+          <div className="space-y-2">
+            {awaitingResultMatches.map((match) => (
+              <Card key={match.id} className="border-orange-500/30 bg-card">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">
+                          {match.team_1.short_name} vs {match.team_2.short_name}
+                        </p>
+                        <SyncStateBadge match={match} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {new Date(match.start_time).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">
+                      {match.prediction_count} predictions
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link href={`/admin/matches/${match.id}/result`} className="flex-1">
+                      <Button size="sm" className="w-full text-xs">
+                        Set Result
+                      </Button>
+                    </Link>
+                    <Link href={`/admin/matches/${match.id}/predictions`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full text-xs">
+                        View Predictions
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Completed Matches */}
       <section className="space-y-3">
