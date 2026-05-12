@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getLeagueMatchPredictions, getMatchDetail, getMyLeagues, FriendPrediction } from '@/lib/api';
+import { getLeagueMatchPredictions, getMatchDetail, getMyLeagues, getMatchVerdict, FriendPrediction, DugoutEvent } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trophy, Target, Star, Check, X, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MatchVerdictCard } from '@/components/MatchVerdictCard';
 
 interface MatchInfo {
   id: number;
@@ -274,7 +275,7 @@ function ConsensusStrip({ predictions, match }: { predictions: FriendPrediction[
 }
 
 export default function LeagueMatchPredictionsPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, username, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const leagueId = Number(params.leagueId);
@@ -283,6 +284,7 @@ export default function LeagueMatchPredictionsPage() {
   const [predictions, setPredictions] = useState<FriendPrediction[]>([]);
   const [match, setMatch] = useState<MatchInfo | null>(null);
   const [leagues, setLeagues] = useState<League[]>([]);
+  const [verdict, setVerdict] = useState<DugoutEvent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -309,6 +311,16 @@ export default function LeagueMatchPredictionsPage() {
       setPredictions(predsData);
       setMatch(matchData);
       setLeagues(leaguesData);
+
+      // Fetch verdict if match is completed
+      if (matchData.status === 'COMPLETED') {
+        try {
+          const v = await getMatchVerdict(leagueId, matchId);
+          setVerdict(v);
+        } catch {
+          // No verdict available — not an error
+        }
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -396,6 +408,11 @@ export default function LeagueMatchPredictionsPage() {
         </Card>
       ) : (
         <>
+          {/* Match Verdict hero for completed matches */}
+          {verdict && (
+            <MatchVerdictCard event={verdict} currentUsername={username ?? null} />
+          )}
+
           {/* Group consensus */}
           {predictions.length >= 2 && match && (
             <ConsensusStrip predictions={predictions} match={match} />

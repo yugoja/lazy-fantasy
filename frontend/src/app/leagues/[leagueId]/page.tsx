@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy, TrendingUp, TrendingDown, Minus, ArrowLeft, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { shareWithCard } from '@/lib/share';
 
 interface LeaderboardEntry {
   user_id: number;
@@ -37,7 +37,6 @@ export default function LeagueLeaderboardPage() {
   const [inviteCode, setInviteCode] = useState('');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -72,16 +71,7 @@ export default function LeagueLeaderboardPage() {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lazyfantasy.app';
     const joinUrl = `${appUrl}/join/${inviteCode}`;
     const text = `Join my Lazy Fantasy league "${leagueName}"!\n\nTap to join: ${joinUrl}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ text });
-      } else {
-        await navigator.clipboard.writeText(text);
-        toast({ description: 'Invite link copied to clipboard' });
-      }
-    } catch {
-      // user cancelled
-    }
+    await shareWithCard({ text, title: 'Lazy Fantasy — Join League' });
   };
 
   const currentUserEntry = entries.find(e => e.username === username);

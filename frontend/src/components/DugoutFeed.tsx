@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, CheckCheck, Users, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { MatchVerdictCard } from '@/components/MatchVerdictCard';
+import { useAuth } from '@/lib/auth';
 
 function getInitials(name: string) {
   return name.substring(0, 2).toUpperCase();
@@ -171,6 +173,7 @@ function eventKey(e: DugoutEvent) {
 
 export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] }) {
   const [events, setEvents] = useState(initialEvents);
+  const { username } = useAuth();
 
   const handleDismiss = async (event: DugoutEvent) => {
     // Optimistic removal
@@ -187,44 +190,51 @@ export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] })
     return (
       <section>
         <div className="flex items-center gap-2 mb-3">
-          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
           <h2 className="text-lg font-bold">The Dugout</h2>
         </div>
-        <Card className="p-6 text-center">
-          <div className="flex flex-col items-center gap-2">
-            <Users className="h-8 w-8 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">Nothing here yet — join a league and start predicting to see what your crew is up to</p>
-            <Link href="/leagues">
-              <Button size="sm" variant="outline" className="mt-1">Browse Leagues</Button>
-            </Link>
-          </div>
-        </Card>
+        <div className="py-6 text-center">
+          <p className="text-sm text-muted-foreground">Nothing here yet — predict a match to see what your crew is up to</p>
+          <Link href="/leagues">
+            <Button size="sm" variant="outline" className="mt-3">Browse Leagues</Button>
+          </Link>
+        </div>
       </section>
     );
   }
 
+  const verdictEvents = events.filter(e => e.type === 'match_verdict');
   const cardEvents = events.filter(e => e.type === 'contrarian' || e.type === 'streak');
   const rowEvents = events.filter(e => e.type === 'agreement' || e.type === 'rank_shift');
 
   return (
     <section>
       <div className="flex items-center gap-2 mb-3">
-        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+        <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
         <h2 className="text-lg font-bold">The Dugout</h2>
-        <span className="text-xs text-muted-foreground ml-auto">{events.length} updates</span>
+        <span className="text-[11px] text-muted-foreground ml-auto">{events.length} updates</span>
       </div>
 
       <div className="space-y-2">
+        {/* Verdict cards — full-width, own row */}
+        {verdictEvents.map((event) => (
+          <MatchVerdictCard
+            key={eventKey(event)}
+            event={event}
+            currentUsername={username ?? null}
+            onDismiss={() => handleDismiss(event)}
+          />
+        ))}
+
+        {/* Row events — borderless, just dividers */}
         {rowEvents.length > 0 && (
-          <Card className="border-border/50">
-            <CardContent className="p-1 divide-y divide-border/50">
-              {rowEvents.map((event) => (
-                event.type === 'rank_shift'
-                  ? <RankShiftRow key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />
-                  : <AgreementRow key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />
-              ))}
-            </CardContent>
-          </Card>
+          <div className="divide-y divide-border/40">
+            {rowEvents.map((event) => (
+              event.type === 'rank_shift'
+                ? <RankShiftRow key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />
+                : <AgreementRow key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />
+            ))}
+          </div>
         )}
 
         {cardEvents.map((event) => (

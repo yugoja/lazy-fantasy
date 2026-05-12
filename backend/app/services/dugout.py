@@ -1,11 +1,19 @@
 from collections import defaultdict
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from app.models import League, LeagueMember, Match, Prediction, User
+from app.models import League, LeagueMember, Match, MatchStatus, Prediction, User
 from app.models.dugout_dismissal import DugoutDismissal
 from app.schemas.dugout import DugoutEvent, DugoutEventType
 from app.services.league import _compute_standings, get_user_leagues
+from app.services.match_verdict import get_match_verdict
+
+
+# Caps for verdict surfacing in the dugout feed
+VERDICT_MATCHES_PER_LEAGUE = 3
+VERDICT_WINDOW_DAYS = 7
+VERDICT_MAX_TOTAL = 6
 
 
 def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
@@ -59,8 +67,9 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
 
     relevant_match_ids = list({mid for mid in locked_match_ids_by_league.values() if mid})
     if not relevant_match_ids:
-        # No locked matches with predictions → only rank shifts possible
+        # No locked matches with predictions → only rank shifts + match verdicts possible
         events: list[DugoutEvent] = []
+        events.extend(_match_verdict_events(db, user_id, leagues))
         events.extend(_rank_shift_events(db, user_id, leagues, members_by_league))
         events = [
             e for e in events
@@ -88,6 +97,7 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
         preds_by_match_user[p.match_id][p.user_id] = p
 
     events = []
+    events.extend(_match_verdict_events(db, user_id, leagues))
     events.extend(_contrarian_events(db, user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map))
     events.extend(_agreement_events(user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map))
     events.extend(_streak_events(db, user_id, leagues, members_by_league, all_member_ids, user_map, league_map))
@@ -99,15 +109,57 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
         if (e.type, e.league_id, e.match_id if e.match_id else 0, e.username) not in dismissed_keys
     ]
 
-    # Sort: rank_shift first, then contrarian, agreement, streak
+    # Verdicts surface first (the freshest result), then rank shifts, then social signals.
     priority = {
-        DugoutEventType.RANK_SHIFT: 0,
-        DugoutEventType.CONTRARIAN: 1,
-        DugoutEventType.AGREEMENT: 2,
-        DugoutEventType.STREAK: 3,
+        DugoutEventType.MATCH_VERDICT: 0,
+        DugoutEventType.RANK_SHIFT: 1,
+        DugoutEventType.CONTRARIAN: 2,
+        DugoutEventType.AGREEMENT: 3,
+        DugoutEventType.STREAK: 4,
     }
     events.sort(key=lambda e: priority[e.type])
     return events[:10]
+
+
+def _match_verdict_events(
+    db: Session,
+    user_id: int,
+    leagues: list,
+) -> list[DugoutEvent]:
+    """One verdict per (league, recent completed match) pair, capped per the constants above."""
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    cutoff = now - timedelta(days=VERDICT_WINDOW_DAYS)
+
+    # Recent completed matches with a winner set, across all tournaments
+    recent_matches = (
+        db.query(Match.id, Match.start_time)
+        .filter(
+            Match.status == MatchStatus.COMPLETED,
+            Match.result_winner_id != None,
+            Match.start_time >= cutoff,
+        )
+        .order_by(Match.start_time.desc())
+        .all()
+    )
+    if not recent_matches:
+        return []
+
+    events: list[DugoutEvent] = []
+    for league in leagues:
+        if len(events) >= VERDICT_MAX_TOTAL:
+            break
+        per_league = 0
+        for match_id, _start in recent_matches:
+            if per_league >= VERDICT_MATCHES_PER_LEAGUE:
+                break
+            if len(events) >= VERDICT_MAX_TOTAL:
+                break
+            verdict = get_match_verdict(db, league.id, match_id, user_id)
+            if verdict is None:
+                continue
+            events.append(verdict)
+            per_league += 1
+    return events
 
 
 def _contrarian_events(

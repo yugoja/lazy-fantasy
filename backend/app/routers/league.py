@@ -14,6 +14,7 @@ from app.schemas.league import (
 )
 from app.schemas.prediction import FriendPrediction
 from app.schemas.match import TeamResponse, PlayerResponse
+from app.schemas.dugout import DugoutEvent
 from app.services.auth import get_current_user
 from app.services.league import (
     create_league,
@@ -24,6 +25,7 @@ from app.services.league import (
     is_user_in_league,
     join_league,
 )
+from app.services.match_verdict import get_match_verdict
 from app.models.league import LeagueMember
 
 router = APIRouter(prefix="/leagues", tags=["leagues"])
@@ -234,3 +236,29 @@ async def get_league_match_predictions(
     # Current user first, then sort by points desc (processed) or username (unprocessed)
     results.sort(key=lambda x: (not x.is_me, -x.points_earned if x.is_processed else 0, x.username))
     return results
+
+
+@router.get("/{league_id}/matches/{match_id}/verdict", response_model=DugoutEvent)
+async def get_match_verdict_endpoint(
+    league_id: int,
+    match_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    The Match Verdict for a (league, match) pair — used as the page hero on
+    /leagues/[id]/match/[id]. Returns 404 if the match isn't completed/scored
+    or no league member predicted it.
+    """
+    league = get_league_by_id(db, league_id)
+    if not league:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+
+    if not is_user_in_league(db, current_user.id, league_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not a member of this league")
+
+    verdict = get_match_verdict(db, league_id, match_id, current_user.id)
+    if verdict is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No verdict available yet")
+
+    return verdict

@@ -169,6 +169,12 @@ export async function getMatches(tournamentId?: number) {
 
 interface TeamInfo { id: number; name: string; short_name: string; logo_url?: string | null }
 interface PlayerInfo { id: number; name: string; team_id: number; role: string }
+export interface TeamFormEntry {
+    match_id: number;
+    opponent_short_name: string;
+    result: 'W' | 'L' | 'NR';
+    start_time: string;
+}
 
 export interface MatchDetail {
     id: number;
@@ -225,16 +231,20 @@ export async function subscribePush(endpoint: string, auth: string, p256dh: stri
     });
 }
 
+export interface MatchPlayersResponse {
+    match_id: number;
+    team_1: { id: number; name: string; short_name: string };
+    team_2: { id: number; name: string; short_name: string };
+    team_1_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
+    team_2_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
+    team_1_form: TeamFormEntry[];
+    team_2_form: TeamFormEntry[];
+    lineup_announced: boolean;
+    start_time: string;
+}
+
 export async function getMatchPlayers(matchId: number) {
-    return request<{
-        match_id: number;
-        team_1: { id: number; name: string; short_name: string };
-        team_2: { id: number; name: string; short_name: string };
-        team_1_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
-        team_2_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
-        lineup_announced: boolean;
-        start_time: string;
-    }>(`/matches/${matchId}/players`);
+    return request<MatchPlayersResponse>(`/matches/${matchId}/players`);
 }
 
 // Predictions
@@ -308,8 +318,36 @@ export async function getMyF1PredictionsDetailed() {
 }
 
 // Dugout
+export interface VerdictHits {
+    winner: boolean;
+    runs_t1: boolean;
+    runs_t2: boolean;
+    wkts_t1: boolean;
+    wkts_t2: boolean;
+    pom: boolean;
+}
+
+export interface VerdictWinner {
+    user_id: number;
+    username: string;
+    display_name: string | null;
+    points_earned: number;
+    hits: VerdictHits;
+    prev_rank: number | null;
+    new_rank: number;
+}
+
+export interface VerdictRunner {
+    user_id: number;
+    username: string;
+    display_name: string | null;
+    points_earned: number;
+    prev_rank: number | null;
+    new_rank: number;
+}
+
 export interface DugoutEvent {
-    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift';
+    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift' | 'match_verdict';
     league_name: string;
     league_id: number;
     match_id: number | null;
@@ -321,6 +359,15 @@ export interface DugoutEvent {
     rank_delta: number | null;
     agreement_count: number | null;
     team_short_name: string | null;
+    // Match verdict fields
+    winners?: VerdictWinner[] | null;
+    runners_up?: VerdictRunner[] | null;
+    pom_player_name?: string | null;
+    winning_team_short?: string | null;
+    losing_team_short?: string | null;
+    match_label?: string | null;
+    top_score?: number | null;
+    runner_up_score?: number | null;
 }
 
 export async function getDugoutEvents() {
@@ -337,6 +384,10 @@ export async function dismissDugoutEvent(event: DugoutEvent) {
             subject_username: event.username,
         }),
     });
+}
+
+export async function getMatchVerdict(leagueId: number, matchId: number) {
+    return request<DugoutEvent>(`/leagues/${leagueId}/matches/${matchId}/verdict`);
 }
 
 // Tournament Picks
