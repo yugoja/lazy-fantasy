@@ -42,6 +42,9 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
     for m in all_members:
         members_by_league[m.league_id].append(m.user_id)
 
+    # Sort leagues by member count descending to prioritize largest leagues for event caps
+    leagues.sort(key=lambda l: len(members_by_league[l.id]), reverse=True)
+
     all_member_ids = list({m.user_id for m in all_members})
 
     # For each league, find the most recent locked match (start_time < now)
