@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, getMatches, getMyPredictions, getDugoutEvents, listTournaments, DugoutEvent, ApiError, TournamentSummary } from '@/lib/api';
+import { getMyLeagues, getMatches, getMyPredictions, getDugoutEvents, DugoutEvent, ApiError } from '@/lib/api';
 import { DugoutFeed } from '@/components/DugoutFeed';
 import { MatchCard } from '@/components/MatchCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronRight, Zap, Target, Trophy, Clock, Users } from 'lucide-react';
+import { ChevronRight, Clock, Users } from 'lucide-react';
 import { OnboardingChecklist } from '@/components/OnboardingChecklist';
 
 interface League {
@@ -44,7 +44,6 @@ export default function DashboardPage() {
     const [matches, setMatches] = useState<Match[]>([]);
     const [predictions, setPredictions] = useState<Prediction[]>([]);
     const [dugoutEvents, setDugoutEvents] = useState<DugoutEvent[]>([]);
-    const [openTournaments, setOpenTournaments] = useState<TournamentSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -62,20 +61,16 @@ export default function DashboardPage() {
 
     const loadData = async () => {
         try {
-            const [leaguesData, matchesData, predictionsData, dugoutData, tournamentsData] = await Promise.allSettled([
+            const [leaguesData, matchesData, predictionsData, dugoutData] = await Promise.allSettled([
                 getMyLeagues(),
                 getMatches(),
                 getMyPredictions(),
                 getDugoutEvents(),
-                listTournaments(),
             ]);
             if (leaguesData.status === 'fulfilled') setLeagues(leaguesData.value);
             if (matchesData.status === 'fulfilled') setMatches(matchesData.value);
             if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
             if (dugoutData.status === 'fulfilled') setDugoutEvents(dugoutData.value);
-            if (tournamentsData.status === 'fulfilled') {
-                setOpenTournaments(tournamentsData.value.filter(t => t.picks_window === 'open' || t.picks_window === 'open2'));
-            }
         } catch (err) {
             if (err instanceof ApiError) {
                 setError(err.message);
@@ -127,24 +122,19 @@ export default function DashboardPage() {
                 : null;
 
             return (
-                <div className="rounded-xl bg-yellow-400/10 border border-yellow-400/20 p-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-yellow-400/20 flex items-center justify-center shrink-0">
-                            <Zap className="h-5 w-5 text-yellow-400" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-base leading-tight">
-                                {count === 1 ? '1 match needs your call' : `${count} matches need your call`}
+                <div className="rounded-xl border-l-4 border-l-yellow-400 bg-yellow-400/15 p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p className="font-bold text-base leading-tight">
+                            {count === 1 ? '1 match needs your call' : `${count} matches need your call`}
+                        </p>
+                        {timeLabel && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                <Clock className="h-3 w-3" /> Next starts {timeLabel}
                             </p>
-                            {timeLabel && (
-                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                                    <Clock className="h-3 w-3" /> Next starts {timeLabel}
-                                </p>
-                            )}
-                        </div>
+                        )}
                     </div>
                     <Link href="/predictions">
-                        <Button size="sm" className="shrink-0 bg-yellow-400 hover:bg-yellow-500 text-black">Predict</Button>
+                        <Button size="sm" className="shrink-0 bg-yellow-400 hover:bg-yellow-500 text-black font-bold">Predict</Button>
                     </Link>
                 </div>
             );
@@ -165,85 +155,65 @@ export default function DashboardPage() {
                 : null;
 
             return (
-                <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
-                        <Target className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div>
-                        <p className="font-bold text-base leading-tight">You&apos;re locked in</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            All predictions made · next match {timeLabel}
-                        </p>
-                        {friendsPicksHref && (
-                            <Link href={friendsPicksHref} className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                                <Users className="h-3 w-3" />
-                                See what your league picked →
-                            </Link>
-                        )}
-                    </div>
+                <div className="rounded-xl border-l-4 border-l-primary bg-primary/10 p-4">
+                    <p className="font-bold text-base leading-tight">You&apos;re locked in</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        All predictions made · next match {timeLabel}
+                    </p>
+                    {friendsPicksHref && (
+                        <Link href={friendsPicksHref} className="inline-flex items-center gap-1 text-sm text-primary font-semibold mt-2 hover:underline">
+                            <Users className="h-3.5 w-3.5" />
+                            See what your league picked →
+                        </Link>
+                    )}
                 </div>
             );
         }
 
         return (
-            <div className="rounded-xl bg-muted/50 border border-border p-4 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Trophy className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                    <p className="font-bold text-base leading-tight">No matches yet</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">No upcoming matches right now</p>
-                </div>
+            <div className="rounded-xl border-l-4 border-l-muted-foreground/30 bg-muted/30 p-4">
+                <p className="font-bold text-base leading-tight">No matches yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Check back soon for upcoming matches</p>
             </div>
         );
     })();
 
     return (
-        <div className="container-mobile py-6 space-y-6">
-            <OnboardingChecklist
-                hasPredicted={predictions.length > 0}
-                hasLeague={leagues.length > 0}
-            />
-            {heroContent}
+        <div className="container-mobile pt-5 pb-8">
+            {/* Greeting */}
+            <p className="text-sm text-muted-foreground mb-1">
+                {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, <span className="text-foreground font-semibold">{username}</span>
+            </p>
 
-            {openTournaments.map(t => (
-                <div key={t.id} className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
-                            <Trophy className="h-5 w-5 text-purple-500" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-base leading-tight">{t.name} Picks</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                {t.picks_window === 'open2' ? 'Window 2 open — half points' : 'Predict Top 4, Batsman & Bowler'}
-                            </p>
-                        </div>
-                    </div>
-                    <Link href={`/tournaments/${t.id}/picks`}>
-                        <Button size="sm" className="shrink-0 bg-purple-500 hover:bg-purple-600 text-white">Pick Now</Button>
-                    </Link>
-                </div>
-            ))}
+            <div className="mt-4">
+                <OnboardingChecklist
+                    hasPredicted={predictions.length > 0}
+                    hasLeague={leagues.length > 0}
+                />
+            </div>
 
-            <DugoutFeed events={dugoutEvents} />
+            <div className="mt-4">
+                {heroContent}
+            </div>
 
-            <section>
+            {/* Dugout — more breathing room */}
+            <div className="mt-8">
+                <DugoutFeed events={dugoutEvents} />
+            </div>
+
+            {/* Matches — visual separator via top border */}
+            <section className="mt-8 pt-6 border-t border-border">
                 <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 className="text-lg font-bold">Upcoming Matches</h2>
-                        <p className="text-xs text-muted-foreground">{upcomingMatches.length} matches</p>
-                    </div>
+                    <h2 className="text-lg font-bold">Upcoming</h2>
                     <Link href="/predictions">
-                        <Button variant="ghost" size="sm" className="text-xs">
-                            View All
+                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                            All matches
                             <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                     </Link>
                 </div>
                 {upcomingMatches.length === 0 ? (
-                    <Card className="p-6 text-center">
-                        <p className="text-sm text-muted-foreground">No upcoming matches</p>
-                    </Card>
+                    <p className="text-sm text-muted-foreground py-6 text-center">No upcoming matches</p>
                 ) : (
                     <div className="space-y-3">
                         {upcomingMatches.map((match) => (
