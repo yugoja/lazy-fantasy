@@ -47,6 +47,10 @@ async function request<T>(
         throw apiError;
     }
 
+    if (response.status === 204) {
+        return null as unknown as T;
+    }
+
     return response.json();
 }
 
