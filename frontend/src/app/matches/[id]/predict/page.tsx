@@ -70,7 +70,7 @@ function TeamFormStrip({ form }: { form: TeamFormEntry[] }) {
 
   if (visibleForm.length === 0) {
     return (
-      <div aria-label="Recent form" className="flex h-[18px] w-full items-center justify-center">
+      <div aria-label="Recent form" className="mt-auto flex h-[18px] w-full items-center justify-center">
         <span className="text-[11px] font-medium text-muted-foreground">No form yet</span>
       </div>
     );
@@ -81,7 +81,7 @@ function TeamFormStrip({ form }: { form: TeamFormEntry[] }) {
   return (
     <div
       aria-label="Recent form"
-      className="flex w-full items-center justify-center gap-1.5"
+      className="mt-auto flex w-full items-center justify-center gap-1.5"
     >
       <span className="font-heading text-[9.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
         L5
