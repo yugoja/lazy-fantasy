@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 
 
 class TeamResponse(BaseModel):
@@ -64,6 +64,20 @@ class MatchDetailResponse(BaseModel):
         return v.isoformat()
 
 
+class TeamFormEntryResponse(BaseModel):
+    """Schema for a team's recent form entry."""
+    match_id: int
+    opponent_short_name: str
+    result: str
+    start_time: datetime
+
+    @field_serializer("start_time")
+    def serialize_start_time(self, v: datetime) -> str:
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.isoformat()
+
+
 class MatchPlayersResponse(BaseModel):
     """Schema for match players response."""
     match_id: int
@@ -71,6 +85,8 @@ class MatchPlayersResponse(BaseModel):
     team_2: TeamResponse
     team_1_players: list[PlayerResponse]
     team_2_players: list[PlayerResponse]
+    team_1_form: list[TeamFormEntryResponse] = Field(default_factory=list)
+    team_2_form: list[TeamFormEntryResponse] = Field(default_factory=list)
     lineup_announced: bool = False
     start_time: datetime
 

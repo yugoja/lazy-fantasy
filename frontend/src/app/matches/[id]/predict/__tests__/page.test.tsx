@@ -9,12 +9,14 @@ import { mockMatchPlayersResponse, mockExistingPrediction } from '@/__tests__/he
 vi.mock('@/lib/api', () => {
   class ApiError extends Error {
     status: number;
+
     constructor(status: number, message: string) {
       super(message);
       this.name = 'ApiError';
       this.status = status;
     }
   }
+
   return {
     getMatchPlayers: vi.fn(),
     getMyPredictions: vi.fn(),
@@ -36,6 +38,8 @@ describe('PredictPage', () => {
   const mockSubmitPrediction = vi.mocked(submitPrediction);
 
   beforeEach(() => {
+    vi.clearAllMocks();
+
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
       replace: vi.fn(),
@@ -45,6 +49,7 @@ describe('PredictPage', () => {
       refresh: vi.fn(),
     });
     vi.mocked(useParams).mockReturnValue({ id: '42' });
+
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       username: 'testuser',
@@ -72,82 +77,55 @@ describe('PredictPage', () => {
     });
   });
 
-  it('loads and renders team names and players', async () => {
+  it('shows current form for both teams on winner step', async () => {
     render(<PredictPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('India vs Australia')).toBeInTheDocument();
+      expect(screen.getByText('IND vs AUS')).toBeInTheDocument();
     });
-    // Players appear in multiple prediction sections
-    expect(screen.getAllByText('Kohli').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Smith').length).toBeGreaterThan(0);
+
+    expect(screen.getByText('Step 1 of 6')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Recent form')).toHaveLength(2);
+    expect(screen.queryByText('Current form')).not.toBeInTheDocument();
+    expect(screen.queryByText('3W 1L 1NR')).not.toBeInTheDocument();
+    expect(screen.getAllByText('W').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('L').length).toBeGreaterThan(0);
   });
 
-  it('pre-fills from existing prediction and shows Update label', async () => {
+  it('jumps to the summary state when an existing prediction is found', async () => {
     mockGetMyPredictions.mockResolvedValue([mockExistingPrediction]);
 
     render(<PredictPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('India vs Australia')).toBeInTheDocument();
+      expect(screen.getByText('Your Picks')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/All predictions made/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /update prediction/i })).toBeInTheDocument();
+    expect(screen.getByText('All done — ready to lock in.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /update picks/i })).toBeInTheDocument();
   });
 
-  it('shows submit disabled until all 6 filled', async () => {
-    render(<PredictPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('India vs Australia')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('0 of 6 predictions made')).toBeInTheDocument();
-    const submitBtn = screen.getByRole('button', { name: /submit/i });
-    expect(submitBtn).toBeDisabled();
-  });
-
-  it('shows success dialog after submit', async () => {
-    mockSubmitPrediction.mockResolvedValue({
-      id: 1, user_id: 1, match_id: 42, points_earned: 0, is_processed: false,
-    });
-    mockGetMyPredictions.mockResolvedValue([mockExistingPrediction]);
-    const user = userEvent.setup();
-
-    render(<PredictPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('India vs Australia')).toBeInTheDocument();
-    });
-
-    // All picks already pre-filled via mockExistingPrediction
-    const updateBtn = screen.getByRole('button', { name: /update prediction/i });
-    await user.click(updateBtn);
-
-    await waitFor(() => {
-      expect(screen.getByText('Prediction Updated!')).toBeInTheDocument();
-    });
-  });
-
-  it('shows "Prediction Updated!" dialog when editing', async () => {
+  it('shows success dialog after updating an existing prediction', async () => {
     mockGetMyPredictions.mockResolvedValue([mockExistingPrediction]);
     mockSubmitPrediction.mockResolvedValue({
-      id: 99, user_id: 1, match_id: 42, points_earned: 0, is_processed: false,
+      id: 1,
+      user_id: 1,
+      match_id: 42,
+      points_earned: 0,
+      is_processed: false,
     });
     const user = userEvent.setup();
 
     render(<PredictPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('India vs Australia')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /update picks/i })).toBeInTheDocument();
     });
 
-    const updateBtn = screen.getByRole('button', { name: /update prediction/i });
-    await user.click(updateBtn);
+    await user.click(screen.getByRole('button', { name: /update picks/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Prediction Updated!')).toBeInTheDocument();
+      expect(screen.getByText('Picks Updated!')).toBeInTheDocument();
     });
   });
 
@@ -159,11 +137,10 @@ describe('PredictPage', () => {
     render(<PredictPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('India vs Australia')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /update picks/i })).toBeInTheDocument();
     });
 
-    const updateBtn = screen.getByRole('button', { name: /update prediction/i });
-    await user.click(updateBtn);
+    await user.click(screen.getByRole('button', { name: /update picks/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Match has started')).toBeInTheDocument();
@@ -178,6 +155,7 @@ describe('PredictPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Failed to load match data')).toBeInTheDocument();
     });
-    expect(screen.getByText('Back to Matches')).toBeInTheDocument();
+
+    expect(screen.getByText('Back')).toBeInTheDocument();
   });
 });

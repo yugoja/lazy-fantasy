@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models import Match, MatchStatus, Player, Team, MatchLineup
@@ -39,13 +38,17 @@ def get_players_by_team(db: Session, team_id: int) -> list[Player]:
     return db.query(Player).filter(Player.team_id == team_id).all()
 
 
-def _get_last_match_player_ids(db: Session, team_id: int, current_match_id: int, current_match_start_time, tournament_id: int) -> set[int]:
-    """
-    Return set of player_ids that played in the most recent completed match for this team.
-    """
-    last_match = (
+def _get_recent_completed_matches(
+    db: Session,
+    team_id: int,
+    current_match_id: int,
+    current_match_start_time,
+    tournament_id: int,
+    limit: int | None = None,
+) -> list[Match]:
+    """Return recent completed matches for a team before the current match."""
+    query = (
         db.query(Match)
-        .join(MatchLineup, MatchLineup.match_id == Match.id)
         .filter(
             Match.tournament_id == tournament_id,
             Match.id != current_match_id,
@@ -54,13 +57,70 @@ def _get_last_match_player_ids(db: Session, team_id: int, current_match_id: int,
             (Match.team_1_id == team_id) | (Match.team_2_id == team_id),
         )
         .order_by(Match.start_time.desc())
-        .first()
     )
+    if limit is not None:
+        query = query.limit(limit)
+    return query.all()
+
+
+def _get_last_match_player_ids(db: Session, team_id: int, current_match_id: int, current_match_start_time, tournament_id: int) -> set[int]:
+    """
+    Return set of player_ids that played in the most recent completed match for this team.
+    """
+    recent_matches = _get_recent_completed_matches(
+        db,
+        team_id=team_id,
+        current_match_id=current_match_id,
+        current_match_start_time=current_match_start_time,
+        tournament_id=tournament_id,
+        limit=1,
+    )
+    last_match = recent_matches[0] if recent_matches else None
     if not last_match:
         return set()
 
     rows = db.query(MatchLineup).filter(MatchLineup.match_id == last_match.id).all()
     return {r.player_id for r in rows}
+
+
+def get_team_recent_form(
+    db: Session,
+    team_id: int,
+    current_match_id: int,
+    current_match_start_time,
+    tournament_id: int,
+    limit: int = 5,
+) -> list[dict[str, object]]:
+    """Return recent form for a team as W/L/NR entries, newest first."""
+    recent_matches = _get_recent_completed_matches(
+        db,
+        team_id=team_id,
+        current_match_id=current_match_id,
+        current_match_start_time=current_match_start_time,
+        tournament_id=tournament_id,
+        limit=limit,
+    )
+
+    form = []
+    for match in recent_matches:
+        opponent = match.team_2 if match.team_1_id == team_id else match.team_1
+        if match.result_winner_id == team_id:
+            result = "W"
+        elif match.result_winner_id is None:
+            result = "NR"
+        else:
+            result = "L"
+
+        form.append(
+            {
+                "match_id": match.id,
+                "opponent_short_name": opponent.short_name,
+                "result": result,
+                "start_time": match.start_time,
+            }
+        )
+
+    return form
 
 
 def get_match_players(db: Session, match_id: int) -> tuple[list[Player], list[Player], bool, set[int], set[int]] | None:

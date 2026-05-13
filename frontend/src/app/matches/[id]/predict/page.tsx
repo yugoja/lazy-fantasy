@@ -4,7 +4,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMatchPlayers, getMyPredictions, submitPrediction, ApiError } from '@/lib/api';
+import {
+  getMatchPlayers,
+  getMyPredictions,
+  submitPrediction,
+  ApiError,
+  type MatchPlayersResponse,
+  type TeamFormEntry,
+} from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,29 +26,8 @@ import {
 import { ArrowLeft, Trophy, Target, Star, CheckCircle2, Clock, Pencil, ChevronRight } from 'lucide-react';
 import { cn, getTeamLogoUrl } from '@/lib/utils';
 
-interface Player {
-  id: number;
-  name: string;
-  team_id: number;
-  role: string;
-  played_last_match: boolean;
-}
-
-interface Team {
-  id: number;
-  name: string;
-  short_name: string;
-}
-
-interface MatchData {
-  match_id: number;
-  team_1: Team;
-  team_2: Team;
-  team_1_players: Player[];
-  team_2_players: Player[];
-  lineup_announced: boolean;
-  start_time: string;
-}
+type Player = MatchPlayersResponse['team_1_players'][number];
+const FORM_MATCH_COUNT = 5;
 
 function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -70,6 +56,55 @@ function getRoleLabel(role: string) {
     wicket_keeper: 'WK', wicketkeeper: 'WK', 'wk-batter': 'WK',
   };
   return map[role.toLowerCase()] ?? role.substring(0, 4).toUpperCase();
+}
+
+function getFormBadgeClass(result: TeamFormEntry['result']) {
+  if (result === 'W') return 'bg-primary text-primary-foreground';
+  if (result === 'L') return 'bg-[#d93a2f] text-white';
+  return 'bg-muted text-muted-foreground border border-border';
+}
+
+function TeamFormStrip({ form }: { form: TeamFormEntry[] }) {
+  // API returns form newest-first — reverse for left-to-right "oldest → newest" reading.
+  const visibleForm = form.slice(0, FORM_MATCH_COUNT).slice().reverse();
+
+  if (visibleForm.length === 0) {
+    return (
+      <div aria-label="Recent form" className="flex h-[18px] w-full items-center justify-center">
+        <span className="text-[11px] font-medium text-muted-foreground">No form yet</span>
+      </div>
+    );
+  }
+
+  const lastIdx = visibleForm.length - 1;
+
+  return (
+    <div
+      aria-label="Recent form"
+      className="flex w-full items-center justify-center gap-1.5"
+    >
+      <span className="font-heading text-[9.5px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        L5
+      </span>
+      <div className="flex items-center gap-[3px]">
+        {visibleForm.map((entry, i) => {
+          const isLatest = i === lastIdx;
+          return (
+            <span
+              key={entry.match_id}
+              className={cn(
+                'inline-grid h-[18px] w-[18px] place-items-center rounded-[4px] font-heading text-[10px] font-bold leading-none tracking-wider',
+                getFormBadgeClass(entry.result),
+                isLatest && 'ml-[2px] shadow-[0_2px_0_0_hsl(var(--accent))]',
+              )}
+            >
+              {entry.result}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 
@@ -167,7 +202,7 @@ export default function PredictPage() {
   const params = useParams();
   const matchId = Number(params.id);
 
-  const [matchData, setMatchData] = useState<MatchData | null>(null);
+  const [matchData, setMatchData] = useState<MatchPlayersResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -199,11 +234,7 @@ export default function PredictPage() {
     if (!authLoading && !isAuthenticated) router.push('/login');
   }, [isAuthenticated, authLoading, router]);
 
-  useEffect(() => {
-    if (matchId && isAuthenticated) loadMatchData();
-  }, [matchId, isAuthenticated]);
-
-  const loadMatchData = async () => {
+  const loadMatchData = useCallback(async () => {
     try {
       const [matchResult, predictionsResult] = await Promise.allSettled([
         getMatchPlayers(matchId),
@@ -234,7 +265,11 @@ export default function PredictPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [matchId, router]);
+
+  useEffect(() => {
+    if (matchId && isAuthenticated) loadMatchData();
+  }, [matchId, isAuthenticated, loadMatchData]);
 
   const picks = [winnerId, mostRunsTeam1Id, mostRunsTeam2Id, mostWicketsTeam1Id, mostWicketsTeam2Id, pomId];
   const filledCount = picks.filter(Boolean).length;
@@ -300,6 +335,7 @@ export default function PredictPage() {
   const wktsT1 = findPlayer(mostWicketsTeam1Id, matchData.team_1_players);
   const wktsT2 = findPlayer(mostWicketsTeam2Id, matchData.team_2_players);
   const pomPlayer = findPlayer(pomId, allPlayers);
+  const getTeamForm = (teamId: number) => (teamId === matchData.team_1.id ? matchData.team_1_form : matchData.team_2_form);
 
   const isSummary = currentStep === PREDICTION_STEPS;
 
@@ -538,14 +574,17 @@ export default function PredictPage() {
                   {[matchData.team_1, matchData.team_2].map((team) => {
                     const isSelected = winnerId === team.id;
                     const logoSrc = getTeamLogoUrl(team.short_name);
+                    const teamForm = getTeamForm(team.id);
                     return (
                       <button
                         key={team.id}
                         type="button"
                         onClick={() => { setWinnerId(team.id); autoAdvance(); }}
                         className={cn(
-                          'relative flex flex-col items-center gap-3 py-8 px-4 rounded-2xl border-2 transition-all duration-150',
-                          isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card/60 active:scale-95'
+                          'relative flex h-full flex-col items-center gap-3 rounded-[28px] border-2 px-4 py-6 text-left transition-all duration-150',
+                          isSelected
+                            ? 'border-primary bg-primary/10 shadow-[0_18px_40px_-26px_rgba(38,214,102,0.7)]'
+                            : 'border-border bg-card/60 active:scale-[0.98]'
                         )}
                       >
                         {isSelected && <CheckCircle2 className="absolute top-3 right-3 h-4 w-4 text-primary" />}
@@ -555,10 +594,11 @@ export default function PredictPage() {
                             className="h-12 w-12 object-contain"
                             onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                         )}
-                        <div>
+                        <div className="space-y-1">
                           <div className="font-bold text-lg text-center">{team.short_name}</div>
                           <div className="text-sm text-muted-foreground text-center leading-tight mt-0.5">{team.name}</div>
                         </div>
+                        <TeamFormStrip form={teamForm} />
                       </button>
                     );
                   })}

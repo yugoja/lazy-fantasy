@@ -1,22 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
-from sqlalchemy import func
-
 from app.database import get_db
-from app.models import User, MatchLineup
+from app.models import MatchLineup
 from app.schemas.match import (
     MatchResponse,
     MatchDetailResponse,
     MatchPlayersResponse,
     TeamResponse,
     PlayerResponse,
+    TeamFormEntryResponse,
 )
-from app.services.auth import get_current_user
 from app.services.match import (
     get_upcoming_matches,
     get_match_by_id,
     get_match_players,
+    get_team_recent_form,
 )
 
 router = APIRouter(prefix="/matches", tags=["matches"])
@@ -122,6 +121,20 @@ async def get_players_for_match(
         )
 
     team_1_players, team_2_players, lineup_announced, last_t1_ids, last_t2_ids = players_result
+    team_1_form = get_team_recent_form(
+        db,
+        team_id=match.team_1_id,
+        current_match_id=match.id,
+        current_match_start_time=match.start_time,
+        tournament_id=match.tournament_id,
+    )
+    team_2_form = get_team_recent_form(
+        db,
+        team_id=match.team_2_id,
+        current_match_id=match.id,
+        current_match_start_time=match.start_time,
+        tournament_id=match.tournament_id,
+    )
 
     return MatchPlayersResponse(
         match_id=match.id,
@@ -147,6 +160,8 @@ async def get_players_for_match(
             )
             for p in team_2_players
         ],
+        team_1_form=[TeamFormEntryResponse(**entry) for entry in team_1_form],
+        team_2_form=[TeamFormEntryResponse(**entry) for entry in team_2_form],
         lineup_announced=lineup_announced,
         start_time=match.start_time,
     )
