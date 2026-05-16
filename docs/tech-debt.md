@@ -8,9 +8,9 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## High impact
 
-### 1. `[ ]` Switch local DB from SQLite to Postgres
+### 1. `[x]` Switch local DB from SQLite to Postgres
 **Gap.** `backend/app/database.py` branches engine config on `sqlite:` vs Postgres (`database.py:7-15`). Local devs run SQLite (`DATABASE_URL=sqlite:///./fantasy_cricket.db` per `.env.example`); prod runs Postgres on the droplet. Dialect differences silently mask bugs: case sensitivity, FK enforcement, JSON types, transaction isolation, `ORDER BY NULL` behavior, datetime/timezone handling.
-**Fix.** Install local Postgres (Homebrew or via the docker-compose tracked in #6). Update `.env.example` to default to a Postgres URL. Once everyone's switched, delete the SQLite branch in `database.py`.
+**Done.** `backend/.env.example` now defaults to the Docker Postgres URL. `docker-compose.yml` (#5) provides `postgres:16` matching prod major version. `backend/database.py` SQLite branch remains but is dead code — tracked for deletion in #13.
 
 ### 2. `[x]` No migration runner / version tracking — **Alembic live on prod (`a1c99c58f11a`)**
 **Gap.** `backend/migrations/pg/` was 7 loose `.sql` files with no `schema_migrations` table.
@@ -25,9 +25,9 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 **Gap.** `backend/tests/conftest.py` exists; default test DB is almost certainly SQLite for speed. Means scoring/aggregation tests can pass locally and fail on Postgres prod (transaction isolation, real FK enforcement, `ORDER BY` determinism).
 **Fix.** Move test DB to Postgres via `testcontainers-python` (spins ephemeral PG per test session) or a session-scoped fixture that targets a local Postgres `lazyfantasy_test` DB. Blocked by #1.
 
-### 5. `[ ]` No Docker / docker-compose for local stack
+### 5. `[x]` No Docker / docker-compose for local stack
 **Gap.** No `Dockerfile`, no `docker-compose.yml`. Onboarding requires: install Postgres locally, configure VAPID keys, set up Resend, pin Python version, etc. Postgres version drift between dev machines and prod (Render uses a specific PG version on the droplet) is invisible.
-**Fix.** `docker-compose.yml` with `postgres` (pinned to prod's major version) + `backend` + `frontend` services. `Makefile`: `make up`, `make down`, `make logs`. Compose runs `alembic upgrade head` automatically on backend start. Closes #1, #6, and most of #13 in one move.
+**Done.** `docker-compose.yml` has `postgres:16` + `backend` (Python 3.12-slim) + `frontend` (Node 20-alpine) services. Backend entrypoint runs `alembic upgrade head` before starting uvicorn. `Makefile` at repo root: `make up`, `make down`, `make logs`, `make reset`. `backend/docker-entrypoint.sh` runs migrations on every container start. Hot-reload via bind mounts on both services. Closes #1 (SQLite branch now dead code) and #12.
 
 ---
 
@@ -61,9 +61,9 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 **Gap.** Push notifications and `serviceWorker` registration only work on HTTPS or `localhost`. `localhost` works for desktop Chrome but breaks when testing on a phone over LAN (HTTP to LAN IP is rejected by the browser).
 **Fix.** Document `ngrok` usage in `frontend/README.md` for phone testing, or add a `mkcert` step (`make https`) that issues a local CA cert + serves frontend over HTTPS.
 
-### 12. `[ ]` No `make reset` / data-reset command
+### 12. `[x]` No `make reset` / data-reset command
 **Gap.** Wiping local DB for clean testing is manual: drop DB → recreate → run all `.sql` files in some order → seed fixtures.
-**Fix.** `make reset` in `backend/Makefile`: `dropdb $LOCAL_DB && createdb $LOCAL_DB && alembic upgrade head && python -m scripts.seed_dev`. ~10 lines. Used daily once it exists. Bundles with #2 and #3.
+**Done.** `make reset` at repo root: wipes DB volume, rebuilds containers, waits for migrations. Still needs `seed_dev.py` (#3) to be called here for full usefulness.
 
 ### 13. `[ ]` SQLite/Postgres branching in `database.py`
 **Gap.** `database.py:7-15` carries an `if settings.DATABASE_URL.startswith("sqlite"):` branch. Once everyone's on Postgres locally (#1), this branch is dead code that signals "we support both" when we shouldn't.
@@ -73,10 +73,12 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Pick-up priority (suggested)
 
-1. **#2 Alembic** — in progress. Unlocks safe schema changes everywhere.
-2. **#5 Docker compose** — closes the parity baseline; collapses #1, #4, #12 into "it just works."
-3. **#3 Seed data** + **#12 reset command** — daily quality-of-life multiplier.
-4. **#6 Anonymized prod sync** — when you need realistic data shapes for UI bug-hunting.
-5. **#9 CI** — once #2 + #4 are done, CI becomes meaningful.
-6. **#8 Type generation** — high leverage before the multi-sport refactor (`docs/multi-sport-architecture-plan.md`).
+1. ~~**#2 Alembic**~~ ✅
+2. ~~**#5 Docker compose**~~ ✅ — collapses #1, #12.
+3. **#3 Seed data** — write `backend/scripts/seed_dev.py`; wire into `make reset`.
+4. **#4 Tests on Postgres** — switch `conftest.py` to use testcontainers-python.
+5. **#9 CI** — GitHub Actions: Postgres service, pytest, frontend lint + type-check.
+6. **#6 Anonymized prod sync** — when you need realistic data shapes for UI bug-hunting.
+7. **#8 Type generation** — high leverage before the multi-sport refactor (`docs/multi-sport-architecture-plan.md`).
+8. Everything else as needed.
 7. Everything else as needed.

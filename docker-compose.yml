@@ -16,5 +16,38 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build: ./backend
+    container_name: lazyfantasy-backend
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      # Override DATABASE_URL to use the compose service hostname
+      DATABASE_URL: postgresql://lazyfantasy:lazyfantasy@postgres:5432/lazyfantasy_dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: lazyfantasy-frontend
+    env_file:
+      - path: ./frontend/.env.local
+        required: false
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
