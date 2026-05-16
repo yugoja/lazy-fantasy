@@ -1,13 +1,22 @@
-.PHONY: help migrate migration migrate-down migrate-current migrate-history test
+.PHONY: help db-up db-down migrate migration migrate-down migrate-current migrate-history reset test
 
 help:
 	@echo "Backend Makefile targets:"
+	@echo "  make db-up                         — start local Postgres (Docker)"
+	@echo "  make db-down                       — stop local Postgres (Docker)"
 	@echo "  make migrate                       — apply pending migrations (alembic upgrade head)"
 	@echo "  make migration NAME=\"description\"  — autogenerate a new revision from model diffs"
 	@echo "  make migrate-down                  — roll back one revision"
 	@echo "  make migrate-current               — show current revision"
 	@echo "  make migrate-history               — show full migration history"
+	@echo "  make reset                         — drop + recreate local DB and rerun all migrations"
 	@echo "  make test                          — run pytest"
+
+db-up:
+	docker compose -f ../docker-compose.yml up -d postgres
+
+db-down:
+	docker compose -f ../docker-compose.yml down
 
 migrate:
 	alembic upgrade head
@@ -26,6 +35,13 @@ migrate-current:
 
 migrate-history:
 	alembic history
+
+reset:
+	docker compose -f ../docker-compose.yml down -v
+	docker compose -f ../docker-compose.yml up -d postgres
+	@echo "Waiting for Postgres to be ready..."
+	@until docker compose -f ../docker-compose.yml exec -T postgres pg_isready -U lazyfantasy -d lazyfantasy_dev > /dev/null 2>&1; do sleep 1; done
+	alembic upgrade head
 
 test:
 	pytest
