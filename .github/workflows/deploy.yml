@@ -57,21 +57,13 @@ jobs:
               cd backend
               source venv/bin/activate
               pip install -q -r requirements.txt
+              alembic upgrade head
 
               # Frontend
               cd ../frontend
               npm install --prefer-offline
               npm run build
             "
-
-            # Run pending migrations
-            if [ -d "$APP_DIR/backend/migrations" ]; then
-              for sql_file in "$APP_DIR/backend/migrations"/*.sql; do
-                [ -f "$sql_file" ] || continue
-                echo "Running migration: $(basename "$sql_file")"
-                sudo -u postgres psql -d "$DB_NAME" -f "$sql_file" 2>&1 | head -5
-              done
-            fi
 
             # Restart services
             systemctl restart "$BACKEND_SVC" "$FRONTEND_SVC"

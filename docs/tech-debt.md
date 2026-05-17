@@ -45,9 +45,9 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 **Gap.** `frontend/src/types/index.ts` hand-mirrors backend Pydantic schemas. Every prediction/match shape change requires manual updates on both sides; drift is silent until a runtime error in the browser.
 **Fix.** Add `openapi-typescript` to frontend; FastAPI emits `/openapi.json` at startup; generate `src/types/api.ts` as part of `npm run dev` or a `npm run gen:types` script. Existing hand-written types in `src/types/index.ts` get replaced or augmented. Especially valuable for the upcoming multi-sport refactor (polymorphic payloads will have non-trivial union types).
 
-### 9. `[ ]` No CI workflows
+### 9. `[x]` No CI workflows
 **Gap.** No `.github/workflows/` directory. Tests and lint only run when devs remember to run them locally — and locally means SQLite (see #4), so passing locally isn't proof of prod readiness.
-**Fix.** Minimal GitHub Actions pipeline on PR + push to `main`/`staging`: boot Postgres service, install backend deps, run `alembic upgrade head`, run pytest. In parallel: install frontend deps, run `npm run test:run`, run `npm run lint`, run `tsc --noEmit`. Blocked by #2 for the migration step to be meaningful.
+**Done.** `.github/workflows/ci.yml`: two parallel jobs on PR + push to main/staging. Backend: postgres:16 service, alembic upgrade head, pytest (via TEST_DATABASE_URL — no testcontainers overhead). Frontend: npm ci, eslint, tsc --noEmit, vitest run. Also fixed deploy.yml to use `alembic upgrade head` instead of the legacy SQL-files loop.
 
 ---
 
@@ -77,7 +77,7 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 2. ~~**#5 Docker compose**~~ ✅ — collapses #1, #12.
 3. ~~**#3 Seed data**~~ ✅ — `seed_dev.py` + `make seed` / `make reset`.
 4. ~~**#4 Tests on Postgres**~~ ✅ — testcontainers, 98 passing.
-5. **#9 CI** — GitHub Actions: Postgres service, pytest, frontend lint + type-check.
+5. ~~**#9 CI**~~ ✅ — `.github/workflows/ci.yml`: backend (pytest on PG16) + frontend (lint, typecheck, vitest) in parallel.
 6. **#6 Anonymized prod sync** — when you need realistic data shapes for UI bug-hunting.
 7. **#8 Type generation** — high leverage before the multi-sport refactor (`docs/multi-sport-architecture-plan.md`).
 8. Everything else as needed.
