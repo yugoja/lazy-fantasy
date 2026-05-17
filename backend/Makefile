@@ -1,4 +1,4 @@
-.PHONY: help db-up db-down migrate migration migrate-down migrate-current migrate-history reset test
+.PHONY: help db-up db-down migrate migration migrate-down migrate-current migrate-history reset seed test
 
 help:
 	@echo "Backend Makefile targets:"
@@ -9,7 +9,8 @@ help:
 	@echo "  make migrate-down                  — roll back one revision"
 	@echo "  make migrate-current               — show current revision"
 	@echo "  make migrate-history               — show full migration history"
-	@echo "  make reset                         — drop + recreate local DB and rerun all migrations"
+	@echo "  make reset                         — drop + recreate local DB, run migrations, seed dev data"
+	@echo "  make seed                          — run seed_dev.py (idempotent, safe to re-run)"
 	@echo "  make test                          — run pytest"
 
 db-up:
@@ -42,6 +43,10 @@ reset:
 	@echo "Waiting for Postgres to be ready..."
 	@until docker compose -f ../docker-compose.yml exec -T postgres pg_isready -U lazyfantasy -d lazyfantasy_dev > /dev/null 2>&1; do sleep 1; done
 	alembic upgrade head
+	python -m scripts.seed_dev
+
+seed:
+	python -m scripts.seed_dev
 
 test:
 	pytest
