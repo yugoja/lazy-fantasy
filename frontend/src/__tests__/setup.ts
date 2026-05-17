@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
+import { createElement } from 'react';
 
 afterEach(cleanup);
 
@@ -18,14 +19,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock next/link as a plain <a> tag
-vi.mock('next/link', () => {
-  const { createElement } = require('react');
-  return {
-    default: ({ children, href, ...props }: Record<string, unknown>) => {
-      return createElement('a', { href, ...props }, children);
-    },
-  };
-});
+vi.mock('next/link', () => ({
+  default: ({ children, href, ...props }: Record<string, unknown>) =>
+    createElement('a', { href, ...props }, children),
+}));
 
 // Stub window.matchMedia
 Object.defineProperty(window, 'matchMedia', {

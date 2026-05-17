@@ -97,7 +97,7 @@ export default function JoinLeaguePage() {
             </div>
 
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">You're invited to join</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">You&apos;re invited to join</p>
               <h1 className="text-2xl font-bold">
                 {preview?.name ?? <span className="text-muted-foreground/40">Loading…</span>}
               </h1>

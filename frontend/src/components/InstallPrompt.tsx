@@ -14,6 +14,10 @@ export default function InstallPrompt() {
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
+  function handleInstalled() {
+    setVisible(false);
+  }
+
   useEffect(() => {
     // Don't show if already dismissed or running as installed PWA
     if (
@@ -41,11 +45,7 @@ export default function InstallPrompt() {
       window.removeEventListener('appinstalled', handleInstalled);
       window.removeEventListener('prediction-submitted', showAfterPrediction);
     };
-  }, []);
-
-  function handleInstalled() {
-    setVisible(false);
-  }
+  }, [handleInstalled]);
 
   async function handleInstall() {
     if (!promptEvent) return;
