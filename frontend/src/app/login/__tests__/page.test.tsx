@@ -65,7 +65,7 @@ describe('LoginPage', () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('testuser', 'password123');
-      expect(mockAuthLogin).toHaveBeenCalledWith('tok123', 'testuser');
+      expect(mockAuthLogin).toHaveBeenCalledWith('tok123', 'testuser', undefined);
       expect(mockPush).toHaveBeenCalledWith('/dashboard');
     });
   });

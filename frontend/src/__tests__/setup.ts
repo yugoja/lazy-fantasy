@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
-import { createElement } from 'react';
+import { createElement, type ReactNode } from 'react';
 
 afterEach(cleanup);
 
@@ -20,7 +20,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock next/link as a plain <a> tag
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: Record<string, unknown>) =>
+  default: ({ children, href, ...props }: { children: ReactNode; href: string; [key: string]: unknown }) =>
     createElement('a', { href, ...props }, children),
 }));
 
