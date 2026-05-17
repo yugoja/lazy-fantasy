@@ -4,8 +4,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.database import engine
-from app.models import Base
 from app.routers import auth, league, match, prediction, admin
 from app.routers import notifications, dugout, tournament_picks
 from app.services.scheduler import start_scheduler, stop_scheduler
@@ -17,9 +15,6 @@ if settings.SENTRY_DSN:
         traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
         send_default_pii=False,
     )
-
-# Create database tables
-Base.metadata.create_all(bind=engine)
 
 
 @asynccontextmanager

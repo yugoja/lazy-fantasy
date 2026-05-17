@@ -21,9 +21,9 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 **Gap.** `backend/scripts/seed_ipl2026_fixtures.py` exists but only covers fixtures. No realistic users, leagues, predictions, results, or dugout events. End-to-end smoke testing locally is manual click-throughs from an empty DB.
 **Done.** `backend/scripts/seed_dev.py`: 10 fake users (`seed_user_0..9` / `devpass`), 3 leagues with overlapping membership, 5 completed past matches with scored predictions, 3 upcoming matches with partial predictions. Idempotent — safe to re-run. Wired into `make reset` (root and `backend/Makefile`) and exposed as standalone `make seed`.
 
-### 4. `[ ]` Tests likely run on SQLite
+### 4. `[x]` Tests likely run on SQLite
 **Gap.** `backend/tests/conftest.py` exists; default test DB is almost certainly SQLite for speed. Means scoring/aggregation tests can pass locally and fail on Postgres prod (transaction isolation, real FK enforcement, `ORDER BY` determinism).
-**Fix.** Move test DB to Postgres via `testcontainers-python` (spins ephemeral PG per test session) or a session-scoped fixture that targets a local Postgres `lazyfantasy_test` DB. Blocked by #1.
+**Done.** `conftest.py` uses `testcontainers[postgres]` (postgres:16) for local runs; falls back to `TEST_DATABASE_URL` env var for CI. Session-scoped container + function-scoped transaction rollback — fast isolation without schema drop/recreate per test. Removed `Base.metadata.create_all()` from `app/main.py` (Alembic owns schema). 98 tests pass on real Postgres in ~42s.
 
 ### 5. `[x]` No Docker / docker-compose for local stack
 **Gap.** No `Dockerfile`, no `docker-compose.yml`. Onboarding requires: install Postgres locally, configure VAPID keys, set up Resend, pin Python version, etc. Postgres version drift between dev machines and prod (Render uses a specific PG version on the droplet) is invisible.
@@ -75,8 +75,8 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
 1. ~~**#2 Alembic**~~ ✅
 2. ~~**#5 Docker compose**~~ ✅ — collapses #1, #12.
-3. **#3 Seed data** — write `backend/scripts/seed_dev.py`; wire into `make reset`.
-4. **#4 Tests on Postgres** — switch `conftest.py` to use testcontainers-python.
+3. ~~**#3 Seed data**~~ ✅ — `seed_dev.py` + `make seed` / `make reset`.
+4. ~~**#4 Tests on Postgres**~~ ✅ — testcontainers, 98 passing.
 5. **#9 CI** — GitHub Actions: Postgres service, pytest, frontend lint + type-check.
 6. **#6 Anonymized prod sync** — when you need realistic data shapes for UI bug-hunting.
 7. **#8 Type generation** — high leverage before the multi-sport refactor (`docs/multi-sport-architecture-plan.md`).
