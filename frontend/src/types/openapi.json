@@ -1,0 +1,3985 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Lazy Fantasy",
+    "description": "Backend API for Lazy Fantasy \u2014 Cricket predictions",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Signup",
+        "description": "Register a new user.\n\n- **username**: Unique username\n- **email**: Valid email address\n- **password**: Password (will be hashed)",
+        "operationId": "signup_auth_signup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "description": "Login and get JWT access token.\n\nUses OAuth2 password flow - send username and password as form data.",
+        "operationId": "login_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_auth_login_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/google": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Google Auth",
+        "description": "Authenticate with Google SSO.\n\nVerifies the Google ID token, finds or creates the user, and returns a JWT.",
+        "operationId": "google_auth_auth_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleAuthRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleAuthResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get Me",
+        "description": "Get current user's profile.",
+        "operationId": "get_me_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Update Me",
+        "description": "Update current user's profile.",
+        "operationId": "update_me_auth_me_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/": {
+      "post": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Create New League",
+        "description": "Create a new league.\n\nThe current user becomes the owner and is automatically added as a member.\nA unique 6-character invite code is generated.",
+        "operationId": "create_new_league_leagues__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeagueCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeagueResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/preview/{invite_code}": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Preview League",
+        "description": "Public endpoint \u2014 returns basic league info for an invite code.\nNo auth required so the join page can show the league name before login.",
+        "operationId": "preview_league_leagues_preview__invite_code__get",
+        "parameters": [
+          {
+            "name": "invite_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Invite Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leagues/join": {
+      "post": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Join Existing League",
+        "description": "Join a league using an invite code.",
+        "operationId": "join_existing_league_leagues_join_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeagueJoin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeagueResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/my": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get My Leagues",
+        "description": "Get all leagues the current user is a member of.",
+        "operationId": "get_my_leagues_leagues_my_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LeagueResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get My Leagues Leagues My Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/leagues/{league_id}/leaderboard": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get Leaderboard",
+        "description": "Get the leaderboard for a specific league.\n\nOnly members of the league can view the leaderboard.",
+        "operationId": "get_leaderboard_leagues__league_id__leaderboard_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leagues/{league_id}/matches/{match_id}/predictions": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get League Match Predictions",
+        "description": "Get all league members' predictions for a locked match.\nOnly accessible after the match's prediction window has closed (start_time has passed).",
+        "operationId": "get_league_match_predictions_leagues__league_id__matches__match_id__predictions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FriendPrediction"
+                  },
+                  "title": "Response Get League Match Predictions Leagues  League Id  Matches  Match Id  Predictions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leagues/{league_id}/matches/{match_id}/verdict": {
+      "get": {
+        "tags": [
+          "leagues"
+        ],
+        "summary": "Get Match Verdict Endpoint",
+        "description": "The Match Verdict for a (league, match) pair \u2014 used as the page hero on\n/leagues/[id]/match/[id]. Returns 404 if the match isn't completed/scored\nor no league member predicted it.",
+        "operationId": "get_match_verdict_endpoint_leagues__league_id__matches__match_id__verdict_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "League Id"
+            }
+          },
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DugoutEvent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/matches/": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "List Matches",
+        "description": "List matches.\n\nBy default returns only upcoming (scheduled) matches.\nUse `include_completed=true` to include completed matches.\nOptionally filter by `tournament_id`.",
+        "operationId": "list_matches_matches__get",
+        "parameters": [
+          {
+            "name": "tournament_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by tournament ID",
+              "title": "Tournament Id"
+            },
+            "description": "Filter by tournament ID"
+          },
+          {
+            "name": "include_completed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include completed matches",
+              "default": false,
+              "title": "Include Completed"
+            },
+            "description": "Include completed matches"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MatchResponse"
+                  },
+                  "title": "Response List Matches Matches  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/matches/{match_id}": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "Get Match Detail",
+        "description": "Get detailed match info including results for completed matches.",
+        "operationId": "get_match_detail_matches__match_id__get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/matches/{match_id}/players": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "summary": "Get Players For Match",
+        "description": "Get all players from both teams in a match.\n\nUsed for populating dropdowns in the prediction form.",
+        "operationId": "get_players_for_match_matches__match_id__players_get",
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchPlayersResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/predictions/": {
+      "post": {
+        "tags": [
+          "predictions"
+        ],
+        "summary": "Submit Prediction",
+        "description": "Submit a prediction for a match.\n\nPredictions can only be submitted before the match starts (UTC).\nIf a prediction already exists for this match, it will be updated.\n\n**Scoring:**\n- Winner: +10 pts\n- Most Runs (Team 1): +20 pts\n- Most Runs (Team 2): +20 pts\n- Most Wickets (Team 1): +20 pts\n- Most Wickets (Team 2): +20 pts\n- Player of Match: +50 pts\n- Max total: 140 pts",
+        "operationId": "submit_prediction_predictions__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PredictionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PredictionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/predictions/my": {
+      "get": {
+        "tags": [
+          "predictions"
+        ],
+        "summary": "Get My Predictions",
+        "description": "Get all predictions made by the current user (raw IDs).",
+        "operationId": "get_my_predictions_predictions_my_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get My Predictions Predictions My Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/predictions/my/detailed": {
+      "get": {
+        "tags": [
+          "predictions"
+        ],
+        "summary": "Get My Predictions Detailed",
+        "description": "Get all predictions with match context, player names, and actual results.",
+        "operationId": "get_my_predictions_detailed_predictions_my_detailed_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionDetailResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get My Predictions Detailed Predictions My Detailed Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/admin/matches/": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Create Match",
+        "description": "Create a new match (Admin only).\n\nRequires admin privileges to create matches.",
+        "operationId": "create_match_admin_matches__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/admin/matches/{match_id}/result": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Set Match Result",
+        "description": "Set match results and trigger score calculation (Admin only).\n\nThis endpoint:\n1. Updates the match with results\n2. Sets match status to COMPLETED\n3. Triggers automatic score calculation for all predictions\n\nNote: In a production app, this should be restricted to admin users.",
+        "operationId": "set_match_result_admin_matches__match_id__result_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchResultCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/matches": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List All Matches",
+        "description": "List all matches with their status (Admin only).",
+        "operationId": "list_all_matches_admin_matches_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/admin/matches/{match_id}/predictions": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Match Predictions",
+        "description": "Get all predictions for a specific match (Admin only).",
+        "operationId": "get_match_predictions_admin_matches__match_id__predictions_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/matches/{match_id}/squad": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Match Squad",
+        "description": "Get full squad for both teams in a match (Admin only). Ignores lineup filtering.",
+        "operationId": "get_match_squad_admin_matches__match_id__squad_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/matches/{match_id}/lineup": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Match Lineup",
+        "description": "Get current lineup for a match (Admin only).",
+        "operationId": "get_match_lineup_admin_matches__match_id__lineup_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Set Match Lineup",
+        "description": "Set playing XI for a match (Admin only).\n\nAccepts 22 player IDs (11 per team). Validates all players belong to\none of the two match teams and that exactly 11 are selected per team.",
+        "operationId": "set_match_lineup_admin_matches__match_id__lineup_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLineupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/matches/{match_id}/previous-lineup": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Previous Lineup",
+        "description": "Return player IDs from the most recent prior lineup for each team in this match.\nUsed to pre-fill the lineup form so admins only need to make small adjustments.",
+        "operationId": "get_previous_lineup_admin_matches__match_id__previous_lineup_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/matches/{match_id}/link": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Link Match To Cricapi",
+        "description": "Link a match to a CricAPI external_match_id and validate the ID.",
+        "operationId": "link_match_to_cricapi_admin_matches__match_id__link_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkMatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Unlink Match From Cricapi",
+        "description": "Remove CricAPI link from a match and reset sync state.",
+        "operationId": "unlink_match_from_cricapi_admin_matches__match_id__link_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/matches/{match_id}/sync-status": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Match Sync Status",
+        "description": "Get current CricAPI sync state + live preview for a match.",
+        "operationId": "get_match_sync_status_admin_matches__match_id__sync_status_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/matches/{match_id}/sync": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Trigger Manual Sync",
+        "description": "Force an immediate sync cycle for a specific match.",
+        "operationId": "trigger_manual_sync_admin_matches__match_id__sync_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/matches/{match_id}/player-mapping": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Player Mapping",
+        "description": "Show resolved and unresolved CricAPI player name mappings for a match.",
+        "operationId": "get_player_mapping_admin_matches__match_id__player_mapping_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Save Player Mapping",
+        "description": "Save cricapi_player_id on Player records (one-time bootstrap per season).",
+        "operationId": "save_player_mapping_admin_matches__match_id__player_mapping_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkPlayerMappingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/series/{series_id}/matches": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List Series Matches",
+        "description": "List CricAPI matches in a series (for finding the right external_match_id).",
+        "operationId": "list_series_matches_admin_series__series_id__matches_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Series Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tournaments/{tournament_id}/picks-window": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Set Picks Window",
+        "description": "Set the tournament picks window state (Admin only).",
+        "operationId": "set_picks_window_admin_tournaments__tournament_id__picks_window_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tournament_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tournament Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPicksWindowRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tournaments/{tournament_id}/picks-result": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Set Picks Result",
+        "description": "Set tournament Top 4 + player results and trigger picks scoring (Admin only).",
+        "operationId": "set_picks_result_admin_tournaments__tournament_id__picks_result_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tournament_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tournament Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPicksResultRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/vapid-public-key": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Get Vapid Public Key",
+        "description": "Return the VAPID public key for the frontend to use when subscribing.",
+        "operationId": "get_vapid_public_key_notifications_vapid_public_key_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/push/subscribe": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Subscribe",
+        "description": "Save a push subscription for the current user.",
+        "operationId": "subscribe_notifications_push_subscribe_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscribeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Unsubscribe",
+        "description": "Remove a push subscription.",
+        "operationId": "unsubscribe_notifications_push_subscribe_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscribeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/dugout/": {
+      "get": {
+        "tags": [
+          "dugout"
+        ],
+        "summary": "Get Dugout",
+        "operationId": "get_dugout_dugout__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DugoutEvent"
+                  },
+                  "type": "array",
+                  "title": "Response Get Dugout Dugout  Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/dugout/dismiss": {
+      "post": {
+        "tags": [
+          "dugout"
+        ],
+        "summary": "Dismiss Dugout Event",
+        "operationId": "dismiss_dugout_event_dugout_dismiss_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DugoutDismissRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/tournaments/": {
+      "get": {
+        "tags": [
+          "tournament-picks"
+        ],
+        "summary": "List Tournaments",
+        "description": "List all tournaments.",
+        "operationId": "list_tournaments_tournaments__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response List Tournaments Tournaments  Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/tournaments/{tournament_id}/picks": {
+      "get": {
+        "tags": [
+          "tournament-picks"
+        ],
+        "summary": "Get My Picks",
+        "description": "Get the current user's tournament picks and window state.",
+        "operationId": "get_my_picks_tournaments__tournament_id__picks_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tournament_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tournament Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TournamentPicksResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "tournament-picks"
+        ],
+        "summary": "Submit Picks",
+        "description": "Submit or update tournament picks (only when window is open or open2).",
+        "operationId": "submit_picks_tournaments__tournament_id__picks_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tournament_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tournament Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TournamentPicksSubmit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TournamentPicksResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tournaments/{tournament_id}/teams": {
+      "get": {
+        "tags": [
+          "tournament-picks"
+        ],
+        "summary": "List Teams",
+        "description": "List all teams participating in the tournament.",
+        "operationId": "list_teams_tournaments__tournament_id__teams_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tournament_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tournament Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamPickOption"
+                  },
+                  "title": "Response List Teams Tournaments  Tournament Id  Teams Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tournaments/{tournament_id}/players": {
+      "get": {
+        "tags": [
+          "tournament-picks"
+        ],
+        "summary": "List Players",
+        "description": "List all players in the tournament for pick dropdowns.",
+        "operationId": "list_players_tournaments__tournament_id__players_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tournament_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Tournament Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlayerPickOption"
+                  },
+                  "title": "Response List Players Tournaments  Tournament Id  Players Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "description": "Health check endpoint.",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Health check endpoint.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_login_auth_login_post": {
+        "properties": {
+          "grant_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^password$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "format": "password",
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_auth_login_post"
+      },
+      "BulkPlayerMappingRequest": {
+        "properties": {
+          "mappings": {
+            "items": {
+              "$ref": "#/components/schemas/PlayerMappingItem"
+            },
+            "type": "array",
+            "title": "Mappings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mappings"
+        ],
+        "title": "BulkPlayerMappingRequest",
+        "description": "Save cricapi_player_id on one or more Player records."
+      },
+      "DugoutDismissRequest": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/DugoutEventType"
+          },
+          "league_id": {
+            "type": "integer",
+            "title": "League Id"
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          },
+          "subject_username": {
+            "type": "string",
+            "title": "Subject Username"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "league_id",
+          "subject_username"
+        ],
+        "title": "DugoutDismissRequest"
+      },
+      "DugoutEvent": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/DugoutEventType"
+          },
+          "league_name": {
+            "type": "string",
+            "title": "League Name"
+          },
+          "league_id": {
+            "type": "integer",
+            "title": "League Id"
+          },
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "is_me": {
+            "type": "boolean",
+            "title": "Is Me",
+            "default": false
+          },
+          "streak_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Streak Count"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "rank_delta": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Delta"
+          },
+          "agreement_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreement Count"
+          },
+          "team_short_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Short Name"
+          },
+          "winners": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VerdictWinner"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winners"
+          },
+          "runners_up": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VerdictRunner"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runners Up"
+          },
+          "pom_player_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pom Player Name"
+          },
+          "winning_team_short": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winning Team Short"
+          },
+          "losing_team_short": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Losing Team Short"
+          },
+          "match_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Label"
+          },
+          "top_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top Score"
+          },
+          "runner_up_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runner Up Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "league_name",
+          "league_id",
+          "username"
+        ],
+        "title": "DugoutEvent"
+      },
+      "DugoutEventType": {
+        "type": "string",
+        "enum": [
+          "contrarian",
+          "agreement",
+          "streak",
+          "rank_shift",
+          "match_verdict"
+        ],
+        "title": "DugoutEventType"
+      },
+      "FriendPrediction": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "is_me": {
+            "type": "boolean",
+            "title": "Is Me"
+          },
+          "points_earned": {
+            "type": "integer",
+            "title": "Points Earned"
+          },
+          "is_processed": {
+            "type": "boolean",
+            "title": "Is Processed"
+          },
+          "predicted_winner": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "predicted_most_runs_team1_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "predicted_most_runs_team2_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "predicted_most_wickets_team1_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "predicted_most_wickets_team2_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "predicted_pom_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "actual_winner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeamResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_most_runs_team1_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_most_runs_team2_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_most_wickets_team1_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_most_wickets_team2_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_pom_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "is_me",
+          "points_earned",
+          "is_processed",
+          "predicted_winner",
+          "predicted_most_runs_team1_player",
+          "predicted_most_runs_team2_player",
+          "predicted_most_wickets_team1_player",
+          "predicted_most_wickets_team2_player",
+          "predicted_pom_player"
+        ],
+        "title": "FriendPrediction",
+        "description": "A league member's prediction for a match, shown in the league activity feed."
+      },
+      "GoogleAuthRequest": {
+        "properties": {
+          "credential": {
+            "type": "string",
+            "title": "Credential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credential"
+        ],
+        "title": "GoogleAuthRequest",
+        "description": "Schema for Google SSO login."
+      },
+      "GoogleAuthResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "username"
+        ],
+        "title": "GoogleAuthResponse",
+        "description": "Schema for Google SSO response (JWT + username for frontend login)."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LeaderboardEntry": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "total_points": {
+            "type": "integer",
+            "title": "Total Points"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "rank_delta": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank Delta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "username",
+          "total_points",
+          "rank"
+        ],
+        "title": "LeaderboardEntry",
+        "description": "Schema for a leaderboard entry."
+      },
+      "LeaderboardResponse": {
+        "properties": {
+          "league_id": {
+            "type": "integer",
+            "title": "League Id"
+          },
+          "league_name": {
+            "type": "string",
+            "title": "League Name"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "league_id",
+          "league_name",
+          "entries"
+        ],
+        "title": "LeaderboardResponse",
+        "description": "Schema for leaderboard response."
+      },
+      "LeagueCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sport": {
+            "type": "string",
+            "title": "Sport",
+            "default": "cricket"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "LeagueCreate",
+        "description": "Schema for creating a new league."
+      },
+      "LeagueJoin": {
+        "properties": {
+          "invite_code": {
+            "type": "string",
+            "title": "Invite Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "invite_code"
+        ],
+        "title": "LeagueJoin",
+        "description": "Schema for joining a league."
+      },
+      "LeagueResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "invite_code": {
+            "type": "string",
+            "title": "Invite Code"
+          },
+          "owner_id": {
+            "type": "integer",
+            "title": "Owner Id"
+          },
+          "sport": {
+            "type": "string",
+            "title": "Sport",
+            "default": "cricket"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "invite_code",
+          "owner_id"
+        ],
+        "title": "LeagueResponse",
+        "description": "Schema for league response."
+      },
+      "LinkMatchRequest": {
+        "properties": {
+          "external_match_id": {
+            "type": "string",
+            "title": "External Match Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "external_match_id"
+        ],
+        "title": "LinkMatchRequest",
+        "description": "Link a match to a CricAPI external_match_id."
+      },
+      "MatchCreate": {
+        "properties": {
+          "tournament_id": {
+            "type": "integer",
+            "title": "Tournament Id"
+          },
+          "team_1_id": {
+            "type": "integer",
+            "title": "Team 1 Id"
+          },
+          "team_2_id": {
+            "type": "integer",
+            "title": "Team 2 Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tournament_id",
+          "team_1_id",
+          "team_2_id",
+          "start_time"
+        ],
+        "title": "MatchCreate",
+        "description": "Schema for creating a match."
+      },
+      "MatchDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "tournament_id": {
+            "type": "integer",
+            "title": "Tournament Id"
+          },
+          "team_1": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "team_2": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "winner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeamResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "most_runs_team1_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "most_runs_team2_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "most_wickets_team1_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "most_wickets_team2_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pom_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tournament_id",
+          "team_1",
+          "team_2",
+          "start_time",
+          "status"
+        ],
+        "title": "MatchDetailResponse",
+        "description": "Schema for match detail with results."
+      },
+      "MatchPlayersResponse": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "team_1": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "team_2": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "team_1_players": {
+            "items": {
+              "$ref": "#/components/schemas/PlayerResponse"
+            },
+            "type": "array",
+            "title": "Team 1 Players"
+          },
+          "team_2_players": {
+            "items": {
+              "$ref": "#/components/schemas/PlayerResponse"
+            },
+            "type": "array",
+            "title": "Team 2 Players"
+          },
+          "team_1_form": {
+            "items": {
+              "$ref": "#/components/schemas/TeamFormEntryResponse"
+            },
+            "type": "array",
+            "title": "Team 1 Form"
+          },
+          "team_2_form": {
+            "items": {
+              "$ref": "#/components/schemas/TeamFormEntryResponse"
+            },
+            "type": "array",
+            "title": "Team 2 Form"
+          },
+          "lineup_announced": {
+            "type": "boolean",
+            "title": "Lineup Announced",
+            "default": false
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "team_1",
+          "team_2",
+          "team_1_players",
+          "team_2_players",
+          "start_time"
+        ],
+        "title": "MatchPlayersResponse",
+        "description": "Schema for match players response."
+      },
+      "MatchResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "tournament_id": {
+            "type": "integer",
+            "title": "Tournament Id"
+          },
+          "team_1": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "team_2": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "lineup_announced": {
+            "type": "boolean",
+            "title": "Lineup Announced",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tournament_id",
+          "team_1",
+          "team_2",
+          "start_time",
+          "status"
+        ],
+        "title": "MatchResponse",
+        "description": "Schema for match response."
+      },
+      "MatchResultCreate": {
+        "properties": {
+          "result_winner_id": {
+            "type": "integer",
+            "title": "Result Winner Id"
+          },
+          "result_most_runs_team1_player_id": {
+            "type": "integer",
+            "title": "Result Most Runs Team1 Player Id"
+          },
+          "result_most_runs_team2_player_id": {
+            "type": "integer",
+            "title": "Result Most Runs Team2 Player Id"
+          },
+          "result_most_wickets_team1_player_id": {
+            "type": "integer",
+            "title": "Result Most Wickets Team1 Player Id"
+          },
+          "result_most_wickets_team2_player_id": {
+            "type": "integer",
+            "title": "Result Most Wickets Team2 Player Id"
+          },
+          "result_pom_player_id": {
+            "type": "integer",
+            "title": "Result Pom Player Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result_winner_id",
+          "result_most_runs_team1_player_id",
+          "result_most_runs_team2_player_id",
+          "result_most_wickets_team1_player_id",
+          "result_most_wickets_team2_player_id",
+          "result_pom_player_id"
+        ],
+        "title": "MatchResultCreate",
+        "description": "Schema for setting match results."
+      },
+      "PlayerMappingItem": {
+        "properties": {
+          "provider_id": {
+            "type": "string",
+            "title": "Provider Id"
+          },
+          "player_id": {
+            "type": "integer",
+            "title": "Player Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider_id",
+          "player_id"
+        ],
+        "title": "PlayerMappingItem"
+      },
+      "PlayerPickOption": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "team_id": {
+            "type": "integer",
+            "title": "Team Id"
+          },
+          "team_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "role",
+          "team_id"
+        ],
+        "title": "PlayerPickOption"
+      },
+      "PlayerResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "team_id": {
+            "type": "integer",
+            "title": "Team Id"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "played_last_match": {
+            "type": "boolean",
+            "title": "Played Last Match",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "team_id",
+          "role"
+        ],
+        "title": "PlayerResponse",
+        "description": "Schema for player response."
+      },
+      "PredictionCreate": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "predicted_winner_id": {
+            "type": "integer",
+            "title": "Predicted Winner Id"
+          },
+          "predicted_most_runs_team1_player_id": {
+            "type": "integer",
+            "title": "Predicted Most Runs Team1 Player Id"
+          },
+          "predicted_most_runs_team2_player_id": {
+            "type": "integer",
+            "title": "Predicted Most Runs Team2 Player Id"
+          },
+          "predicted_most_wickets_team1_player_id": {
+            "type": "integer",
+            "title": "Predicted Most Wickets Team1 Player Id"
+          },
+          "predicted_most_wickets_team2_player_id": {
+            "type": "integer",
+            "title": "Predicted Most Wickets Team2 Player Id"
+          },
+          "predicted_pom_player_id": {
+            "type": "integer",
+            "title": "Predicted Pom Player Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "predicted_winner_id",
+          "predicted_most_runs_team1_player_id",
+          "predicted_most_runs_team2_player_id",
+          "predicted_most_wickets_team1_player_id",
+          "predicted_most_wickets_team2_player_id",
+          "predicted_pom_player_id"
+        ],
+        "title": "PredictionCreate",
+        "description": "Schema for creating a prediction."
+      },
+      "PredictionDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "points_earned": {
+            "type": "integer",
+            "title": "Points Earned"
+          },
+          "is_processed": {
+            "type": "boolean",
+            "title": "Is Processed"
+          },
+          "team_1": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "team_2": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "predicted_winner": {
+            "$ref": "#/components/schemas/TeamResponse"
+          },
+          "predicted_most_runs_team1_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "predicted_most_runs_team2_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "predicted_most_wickets_team1_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "predicted_most_wickets_team2_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "predicted_pom_player": {
+            "$ref": "#/components/schemas/PlayerResponse"
+          },
+          "actual_winner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeamResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_most_runs_team1_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_most_runs_team2_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_most_wickets_team1_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_most_wickets_team2_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_pom_player": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "match_id",
+          "points_earned",
+          "is_processed",
+          "team_1",
+          "team_2",
+          "start_time",
+          "status",
+          "predicted_winner",
+          "predicted_most_runs_team1_player",
+          "predicted_most_runs_team2_player",
+          "predicted_most_wickets_team1_player",
+          "predicted_most_wickets_team2_player",
+          "predicted_pom_player"
+        ],
+        "title": "PredictionDetailResponse",
+        "description": "Enriched prediction with match context and player names."
+      },
+      "PredictionResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "predicted_winner_id": {
+            "type": "integer",
+            "title": "Predicted Winner Id"
+          },
+          "predicted_most_runs_team1_player_id": {
+            "type": "integer",
+            "title": "Predicted Most Runs Team1 Player Id"
+          },
+          "predicted_most_runs_team2_player_id": {
+            "type": "integer",
+            "title": "Predicted Most Runs Team2 Player Id"
+          },
+          "predicted_most_wickets_team1_player_id": {
+            "type": "integer",
+            "title": "Predicted Most Wickets Team1 Player Id"
+          },
+          "predicted_most_wickets_team2_player_id": {
+            "type": "integer",
+            "title": "Predicted Most Wickets Team2 Player Id"
+          },
+          "predicted_pom_player_id": {
+            "type": "integer",
+            "title": "Predicted Pom Player Id"
+          },
+          "points_earned": {
+            "type": "integer",
+            "title": "Points Earned"
+          },
+          "is_processed": {
+            "type": "boolean",
+            "title": "Is Processed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "match_id",
+          "predicted_winner_id",
+          "predicted_most_runs_team1_player_id",
+          "predicted_most_runs_team2_player_id",
+          "predicted_most_wickets_team1_player_id",
+          "predicted_most_wickets_team2_player_id",
+          "predicted_pom_player_id",
+          "points_earned",
+          "is_processed"
+        ],
+        "title": "PredictionResponse",
+        "description": "Schema for prediction response."
+      },
+      "ProfileUpdate": {
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "display_name"
+        ],
+        "title": "ProfileUpdate",
+        "description": "Schema for updating user profile."
+      },
+      "PushSubscribeRequest": {
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint"
+          },
+          "auth": {
+            "type": "string",
+            "title": "Auth"
+          },
+          "p256dh": {
+            "type": "string",
+            "title": "P256Dh"
+          }
+        },
+        "type": "object",
+        "required": [
+          "endpoint",
+          "auth",
+          "p256dh"
+        ],
+        "title": "PushSubscribeRequest"
+      },
+      "SetLineupRequest": {
+        "properties": {
+          "player_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Player Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "player_ids"
+        ],
+        "title": "SetLineupRequest",
+        "description": "Schema for setting match playing XI."
+      },
+      "SetPicksResultRequest": {
+        "properties": {
+          "result_top4_team_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Result Top4 Team Ids"
+          },
+          "result_best_batsman_player_id": {
+            "type": "integer",
+            "title": "Result Best Batsman Player Id"
+          },
+          "result_best_bowler_player_id": {
+            "type": "integer",
+            "title": "Result Best Bowler Player Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result_top4_team_ids",
+          "result_best_batsman_player_id",
+          "result_best_bowler_player_id"
+        ],
+        "title": "SetPicksResultRequest"
+      },
+      "SetPicksWindowRequest": {
+        "properties": {
+          "window": {
+            "type": "string",
+            "title": "Window"
+          }
+        },
+        "type": "object",
+        "required": [
+          "window"
+        ],
+        "title": "SetPicksWindowRequest"
+      },
+      "SyncStatusResponse": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "external_match_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Match Id"
+          },
+          "sync_state": {
+            "type": "string",
+            "title": "Sync State"
+          },
+          "last_synced_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Synced At"
+          },
+          "sync_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sync Error"
+          },
+          "cricapi_preview": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cricapi Preview"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "external_match_id",
+          "sync_state",
+          "last_synced_at",
+          "sync_error"
+        ],
+        "title": "SyncStatusResponse"
+      },
+      "TeamFormEntryResponse": {
+        "properties": {
+          "match_id": {
+            "type": "integer",
+            "title": "Match Id"
+          },
+          "opponent_short_name": {
+            "type": "string",
+            "title": "Opponent Short Name"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "match_id",
+          "opponent_short_name",
+          "result",
+          "start_time"
+        ],
+        "title": "TeamFormEntryResponse",
+        "description": "Schema for a team's recent form entry."
+      },
+      "TeamPickOption": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "short_name": {
+            "type": "string",
+            "title": "Short Name"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "short_name"
+        ],
+        "title": "TeamPickOption"
+      },
+      "TeamResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "short_name": {
+            "type": "string",
+            "title": "Short Name"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "short_name"
+        ],
+        "title": "TeamResponse",
+        "description": "Schema for team response."
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "title": "Token",
+        "description": "Schema for JWT token response."
+      },
+      "TournamentPicksResponse": {
+        "properties": {
+          "tournament_id": {
+            "type": "integer",
+            "title": "Tournament Id"
+          },
+          "tournament_name": {
+            "type": "string",
+            "title": "Tournament Name"
+          },
+          "picks_window": {
+            "type": "string",
+            "title": "Picks Window"
+          },
+          "top4_team_ids": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Top4 Team Ids"
+          },
+          "best_batsman_player_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Batsman Player Id"
+          },
+          "best_bowler_player_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Bowler Player Id"
+          },
+          "points_earned": {
+            "type": "integer",
+            "title": "Points Earned"
+          },
+          "is_window2": {
+            "type": "boolean",
+            "title": "Is Window2"
+          },
+          "is_processed": {
+            "type": "boolean",
+            "title": "Is Processed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tournament_id",
+          "tournament_name",
+          "picks_window",
+          "top4_team_ids",
+          "best_batsman_player_id",
+          "best_bowler_player_id",
+          "points_earned",
+          "is_window2",
+          "is_processed"
+        ],
+        "title": "TournamentPicksResponse"
+      },
+      "TournamentPicksSubmit": {
+        "properties": {
+          "top4_team_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Top4 Team Ids"
+          },
+          "best_batsman_player_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Batsman Player Id"
+          },
+          "best_bowler_player_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Bowler Player Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "top4_team_ids"
+        ],
+        "title": "TournamentPicksSubmit"
+      },
+      "UserCreate": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "password"
+        ],
+        "title": "UserCreate",
+        "description": "Schema for user registration."
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "email"
+        ],
+        "title": "UserResponse",
+        "description": "Schema for user response (excludes password)."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerdictHits": {
+        "properties": {
+          "winner": {
+            "type": "boolean",
+            "title": "Winner"
+          },
+          "runs_t1": {
+            "type": "boolean",
+            "title": "Runs T1"
+          },
+          "runs_t2": {
+            "type": "boolean",
+            "title": "Runs T2"
+          },
+          "wkts_t1": {
+            "type": "boolean",
+            "title": "Wkts T1"
+          },
+          "wkts_t2": {
+            "type": "boolean",
+            "title": "Wkts T2"
+          },
+          "pom": {
+            "type": "boolean",
+            "title": "Pom"
+          }
+        },
+        "type": "object",
+        "required": [
+          "winner",
+          "runs_t1",
+          "runs_t2",
+          "wkts_t1",
+          "wkts_t2",
+          "pom"
+        ],
+        "title": "VerdictHits"
+      },
+      "VerdictRunner": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "points_earned": {
+            "type": "integer",
+            "title": "Points Earned"
+          },
+          "prev_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Rank"
+          },
+          "new_rank": {
+            "type": "integer",
+            "title": "New Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "username",
+          "points_earned",
+          "new_rank"
+        ],
+        "title": "VerdictRunner"
+      },
+      "VerdictWinner": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "points_earned": {
+            "type": "integer",
+            "title": "Points Earned"
+          },
+          "hits": {
+            "$ref": "#/components/schemas/VerdictHits"
+          },
+          "prev_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Rank"
+          },
+          "new_rank": {
+            "type": "integer",
+            "title": "New Rank"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "username",
+          "points_earned",
+          "hits",
+          "new_rank"
+        ],
+        "title": "VerdictWinner"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/auth/login"
+          }
+        }
+      }
+    }
+  }
+}

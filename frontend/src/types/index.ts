@@ -1,3 +1,41 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPE GENERATION NOTE
+//
+// `src/types/api.ts` is auto-generated from the FastAPI OpenAPI spec snapshot at
+// `src/types/openapi.json`.  To regenerate after a backend schema change:
+//
+//   1. cd /path/to/lazy-fantasy
+//   2. backend/venv/bin/python backend/scripts/export_openapi.py   # refresh snapshot
+//   3. cd frontend && npm run gen:types                             # regenerate api.ts
+//   4. Commit both openapi.json and api.ts
+//
+// The hand-written types below are CANDIDATES for replacement with their
+// generated equivalents from `api.ts` (components["schemas"][...]):
+//
+//   Hand-written type         → Generated schema
+//   ──────────────────────────────────────────────
+//   User                      → (no direct schema; see /auth/me response)
+//   Token                     → (implicit in login response body)
+//   Team                      → components["schemas"]["TeamResponse"]
+//   Player                    → components["schemas"]["PlayerResponse"]
+//   Match                     → components["schemas"]["MatchResponse"]
+//   MatchPlayers              → components["schemas"]["MatchPlayersResponse"]
+//   League                    → components["schemas"]["LeagueResponse"]
+//   LeaderboardEntry          → components["schemas"]["LeaderboardEntry"]
+//   Leaderboard               → components["schemas"]["LeaderboardResponse"]
+//   Prediction                → components["schemas"]["PredictionResponse"]
+//   SignupRequest             → (no dedicated schema; sent as JSON body)
+//   LoginRequest              → components["schemas"]["Body_login_auth_login_post"]
+//   CreateLeagueRequest       → components["schemas"]["LeagueCreate"]
+//   JoinLeagueRequest         → components["schemas"]["LeagueJoin"]
+//   PredictionRequest         → components["schemas"]["PredictionCreate"]
+//
+// F1 types (F1Race, F1RaceDetail, F1Prediction, etc.) are NOT yet in the
+// generated spec — the F1 router is not wired into main.py — so keep them here.
+//
+// Do NOT replace these types yet; that refactor is tracked as a follow-up PR.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // API Response Types
 
 export interface User {

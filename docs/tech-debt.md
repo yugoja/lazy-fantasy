@@ -41,9 +41,9 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 **Gap.** `app/services/scheduler.py:_send_match_reminders()` runs every 5 min via APScheduler in-process, looking for matches starting 55–65 min from now. Locally, you almost never have a match in that window — reminders silently work in prod and break locally without you ever knowing.
 **Fix.** Add `backend/scripts/fire_reminder_for_match.py <match_id>` that invokes the scheduler's send logic directly with widened time bounds. Manual trigger for local testing. Bonus: a `/admin/debug/fire_reminder/{match_id}` endpoint gated to dev mode.
 
-### 8. `[ ]` Backend ↔ frontend type drift
+### 8. `[x]` Backend ↔ frontend type drift
 **Gap.** `frontend/src/types/index.ts` hand-mirrors backend Pydantic schemas. Every prediction/match shape change requires manual updates on both sides; drift is silent until a runtime error in the browser.
-**Fix.** Add `openapi-typescript` to frontend; FastAPI emits `/openapi.json` at startup; generate `src/types/api.ts` as part of `npm run dev` or a `npm run gen:types` script. Existing hand-written types in `src/types/index.ts` get replaced or augmented. Especially valuable for the upcoming multi-sport refactor (polymorphic payloads will have non-trivial union types).
+**Done.** `openapi-typescript@7` added to frontend devDependencies. `backend/scripts/export_openapi.py` imports the FastAPI app without starting a server and writes `frontend/src/types/openapi.json` (committed snapshot). `npm run gen:types` runs `openapi-typescript src/types/openapi.json -o src/types/api.ts` to produce `src/types/api.ts` (also committed). A comment block at the top of `src/types/index.ts` maps each hand-written type to its generated `components["schemas"][...]` equivalent and marks them as migration candidates for a follow-up PR. F1 types remain hand-written as the F1 router is not yet wired into `main.py`.
 
 ### 9. `[x]` No CI workflows
 **Gap.** No `.github/workflows/` directory. Tests and lint only run when devs remember to run them locally — and locally means SQLite (see #4), so passing locally isn't proof of prod readiness.
@@ -80,6 +80,6 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 5. ~~**#5 Docker compose**~~ ✅ — full stack (`make up`), collapses #1, #12.
 6. ~~**#9 CI**~~ ✅ — parallel backend (pytest/PG16) + frontend (lint/typecheck/vitest); shipped to prod 2026-05-18.
 7. ~~**#12 make reset**~~ ✅
-8. **#8 Type generation** — `openapi-typescript`; high leverage before multi-sport refactor.
+8. ~~**#8 Type generation**~~ ✅ — `openapi-typescript` snapshot + `gen:types` script; call sites migration is a follow-up PR.
 9. **#13 Delete SQLite branch** — 8-line cleanup, unblock after #8.
 10. Remainder (#6, #7, #10, #11) — low urgency, pick up as needed.
