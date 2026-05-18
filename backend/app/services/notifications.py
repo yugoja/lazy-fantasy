@@ -55,8 +55,12 @@ def send_reminder_email(user_email: str, team_1: str, team_2: str, match_time: s
         return False
 
 
-def send_push_notification(endpoint: str, auth: str, p256dh: str, team_1: str, team_2: str) -> bool:
-    """Send a Web Push notification. Returns True on success."""
+def send_push_notification(endpoint: str, auth: str, p256dh: str, team_1: str, team_2: str) -> bool | None:
+    """Send a Web Push notification.
+
+    Returns True on success, None if the subscription is expired (410 Gone —
+    caller should delete it), False for any other failure (keep subscription).
+    """
     if not settings.VAPID_PRIVATE_KEY or not settings.VAPID_CLAIMS_EMAIL:
         logger.warning("VAPID keys not configured — skipping push notification")
         return False
@@ -80,11 +84,10 @@ def send_push_notification(endpoint: str, auth: str, p256dh: str, team_1: str, t
         )
         return True
     except WebPushException as e:
-        # 410 Gone means the subscription is no longer valid
         if "410" in str(e):
             logger.info(f"Push subscription expired (410): {endpoint[:50]}...")
-        else:
-            logger.error(f"Push notification failed: {e}")
+            return None  # signal: delete this subscription
+        logger.error(f"Push notification failed: {e}")
         return False
     except Exception as e:
         logger.error(f"Push notification error: {e}")

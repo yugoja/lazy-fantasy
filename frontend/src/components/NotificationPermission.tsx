@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { getVapidPublicKey } from '@/lib/api';
-import { registerPushSubscription } from '@/lib/push';
+import { registerPushSubscription, resyncPushSubscription } from '@/lib/push';
 
 const PROMPTED_KEY = 'push-permission-prompted';
 
@@ -13,14 +13,16 @@ export default function NotificationPermission() {
   const [vapidKey, setVapidKey] = useState<string | null>(null);
 
   useEffect(() => {
-    if (
-      !isAuthenticated ||
-      !('Notification' in window) ||
-      !('serviceWorker' in navigator) ||
-      !('PushManager' in window) ||
-      Notification.permission !== 'default' ||
-      localStorage.getItem(PROMPTED_KEY)
-    ) return;
+    if (!isAuthenticated || !('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    if (Notification.permission === 'granted') {
+      // User already granted permission — silently ensure their subscription is
+      // registered with the server (handles the case where our DB lost their sub)
+      resyncPushSubscription();
+      return;
+    }
+
+    if (Notification.permission !== 'default' || localStorage.getItem(PROMPTED_KEY)) return;
 
     // Fetch VAPID public key — if not configured, skip silently
     getVapidPublicKey()

@@ -58,23 +58,30 @@ def _send_match_reminders() -> None:
             push_count = 0
             stale_ids = []
             for sub in subscriptions:
-                success = send_push_notification(sub.endpoint, sub.auth, sub.p256dh, team_1, team_2)
-                if success:
+                result = send_push_notification(sub.endpoint, sub.auth, sub.p256dh, team_1, team_2)
+                if result is True:
                     push_count += 1
-                else:
+                elif result is None:
+                    # None means 410 Gone — subscription is no longer valid
                     stale_ids.append(sub.id)
 
-            # Remove stale push subscriptions (410 Gone)
+            # Remove expired push subscriptions (410 Gone only)
             if stale_ids:
                 db.query(PushSubscription).filter(PushSubscription.id.in_(stale_ids)).delete(synchronize_session=False)
 
-            # Log that reminder was sent
-            db.add(ReminderLog(match_id=match.id))
+            # Only log the reminder as sent if there were subscriptions to attempt.
+            # If the DB had zero subscriptions (e.g. all previously wiped), skip logging
+            # so the next scheduler run can retry once subscriptions re-sync.
+            attempted = len(subscriptions)
+            if attempted > 0:
+                db.add(ReminderLog(match_id=match.id))
+
             db.commit()
 
             logger.info(
                 f"Reminders sent for match {team_1} vs {team_2}: "
                 f"{email_count} emails, {push_count} pushes"
+                + (" (no subscriptions — will retry)" if attempted == 0 else "")
             )
 
     except Exception as e:

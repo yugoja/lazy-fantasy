@@ -63,3 +63,35 @@ export async function enablePushNotifications(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Silently re-sync the push subscription with the server.
+ * Called on load when the user has already granted permission — ensures the
+ * server has their subscription even if it was lost (e.g. DB wipe or key change).
+ * No-op if push is unsupported or permission is not granted.
+ */
+export async function resyncPushSubscription(): Promise<void> {
+  if (!isPushSupported()) return;
+  if (Notification.permission !== 'granted') return;
+
+  try {
+    const { public_key } = await getVapidPublicKey();
+    const registration = await navigator.serviceWorker.ready;
+    const existing = await registration.pushManager.getSubscription();
+
+    if (existing) {
+      // Re-send existing subscription to server (upsert — server deduplicates by endpoint)
+      const { endpoint, keys } = existing.toJSON() as {
+        endpoint: string;
+        keys: { auth: string; p256dh: string };
+      };
+      await subscribePush(endpoint, keys.auth, keys.p256dh);
+    } else {
+      // No subscription in browser — re-register with current VAPID key
+      // (permission already granted, so no prompt shown)
+      await registerPushSubscription(public_key);
+    }
+  } catch {
+    // Silently ignore — this is best-effort
+  }
+}
