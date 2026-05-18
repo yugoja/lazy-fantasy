@@ -73,12 +73,13 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done
 
 ## Pick-up priority (suggested)
 
-1. ~~**#2 Alembic**~~ ✅
-2. ~~**#5 Docker compose**~~ ✅ — collapses #1, #12.
+1. ~~**#1 SQLite → Postgres locally**~~ ✅
+2. ~~**#2 Alembic**~~ ✅ — live on prod since 2026-05-16.
 3. ~~**#3 Seed data**~~ ✅ — `seed_dev.py` + `make seed` / `make reset`.
 4. ~~**#4 Tests on Postgres**~~ ✅ — testcontainers, 98 passing.
-5. ~~**#9 CI**~~ ✅ — `.github/workflows/ci.yml`: backend (pytest on PG16) + frontend (lint, typecheck, vitest) in parallel.
-6. **#6 Anonymized prod sync** — when you need realistic data shapes for UI bug-hunting.
-7. **#8 Type generation** — high leverage before the multi-sport refactor (`docs/multi-sport-architecture-plan.md`).
-8. Everything else as needed.
-7. Everything else as needed.
+5. ~~**#5 Docker compose**~~ ✅ — full stack (`make up`), collapses #1, #12.
+6. ~~**#9 CI**~~ ✅ — parallel backend (pytest/PG16) + frontend (lint/typecheck/vitest); shipped to prod 2026-05-18.
+7. ~~**#12 make reset**~~ ✅
+8. **#8 Type generation** — `openapi-typescript`; high leverage before multi-sport refactor.
+9. **#13 Delete SQLite branch** — 8-line cleanup, unblock after #8.
+10. Remainder (#6, #7, #10, #11) — low urgency, pick up as needed.
