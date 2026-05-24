@@ -45,6 +45,8 @@ export const mockMatchPlayersResponse = {
   ],
   lineup_announced: false,
   start_time: new Date(Date.now() + 3600000).toISOString(),
+  sport: 'cricket',
+  stage: null,
   ...mockPlayers,
 };
 
