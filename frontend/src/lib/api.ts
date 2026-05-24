@@ -198,6 +198,7 @@ export async function getMatchDetail(matchId: number) {
 }
 
 export interface PredictionDetail {
+    sport?: 'cricket';
     id: number;
     match_id: number;
     points_earned: number;
@@ -224,6 +225,47 @@ export async function getMyPredictionsDetailed() {
     return request<PredictionDetail[]>('/predictions/my/detailed');
 }
 
+export interface FootballPlayerPickDetail {
+    player: PlayerInfo;
+    points: number | null;
+}
+
+export interface FootballPredictionDetail {
+    sport: 'football';
+    id: number;
+    match_id: number;
+    points_earned: number;
+    is_processed: boolean;
+    team_1: TeamInfo;
+    team_2: TeamInfo;
+    start_time: string;
+    status: string;
+    stage: string | null;
+    team1_goals: number;
+    team2_goals: number;
+    advance_winner: TeamInfo | null;
+    player_picks: FootballPlayerPickDetail[];
+    actual_team1_goals_reg: number | null;
+    actual_team2_goals_reg: number | null;
+    actual_team1_goals_et: number | null;
+    actual_team2_goals_et: number | null;
+    actual_shootout_winner: TeamInfo | null;
+    result_score: number | null;
+}
+
+/**
+ * Fetch the current user's football prediction for a single match (for
+ * prefilling the football predict flow), or null if none exists.
+ * Hits the sport-tagged /predictions/my/detailed endpoint and narrows.
+ */
+export async function getMyFootballPredictionDetail(matchId: number): Promise<FootballPredictionDetail | null> {
+    const all = await request<Array<PredictionDetail | FootballPredictionDetail>>('/predictions/my/detailed');
+    const match = all.find(
+        (p): p is FootballPredictionDetail => p.sport === 'football' && p.match_id === matchId,
+    );
+    return match ?? null;
+}
+
 export async function getVapidPublicKey() {
     return request<{ public_key: string }>('/notifications/vapid-public-key');
 }
@@ -245,6 +287,8 @@ export interface MatchPlayersResponse {
     team_2_form: TeamFormEntry[];
     lineup_announced: boolean;
     start_time: string;
+    sport: string;
+    stage: string | null;
 }
 
 export async function getMatchPlayers(matchId: number) {
@@ -268,6 +312,35 @@ export async function submitPrediction(data: {
         points_earned: number;
         is_processed: boolean;
     }>('/predictions/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    });
+}
+
+export interface FootballPredictionRequest {
+    match_id: number;
+    team1_goals: number;
+    team2_goals: number;
+    advance_winner_id: number | null;
+    player_pick_1_id: number;
+    player_pick_2_id: number;
+    player_pick_3_id: number;
+}
+
+export async function submitFootballPrediction(data: FootballPredictionRequest) {
+    return request<{
+        id: number;
+        user_id: number;
+        match_id: number;
+        team1_goals: number;
+        team2_goals: number;
+        advance_winner_id: number | null;
+        player_pick_1_id: number;
+        player_pick_2_id: number;
+        player_pick_3_id: number;
+        points_earned: number;
+        is_processed: boolean;
+    }>('/predictions/football', {
         method: 'POST',
         body: JSON.stringify(data),
     });
