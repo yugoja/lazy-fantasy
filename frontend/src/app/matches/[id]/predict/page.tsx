@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { ArrowLeft, Trophy, Target, Star, CheckCircle2, Clock, Pencil, ChevronRight } from 'lucide-react';
 import { cn, getTeamLogoUrl } from '@/lib/utils';
+import { FootballPredictFlow } from '@/components/predict/FootballPredictFlow';
 
 type Player = MatchPlayersResponse['team_1_players'][number];
 const FORM_MATCH_COUNT = 5;
@@ -243,6 +244,10 @@ export default function PredictPage() {
       if (matchResult.status === 'fulfilled') {
         const data = matchResult.value;
         if (new Date(data.start_time) <= new Date()) { router.push('/predictions'); return; }
+        // Playoffs with an undecided line-up use a "TBD" placeholder — nothing to predict yet.
+        if (data.team_1.short_name === 'TBD' || data.team_2.short_name === 'TBD') {
+          router.push(`/matches/${matchId}`); return;
+        }
         setMatchData(data);
       } else {
         setError('Failed to load match data');
@@ -320,6 +325,11 @@ export default function PredictPage() {
         </Card>
       </div>
     );
+  }
+
+  // Football matches use a dedicated 3-step flow (scoreline + 3 player picks).
+  if (matchData.sport === 'football') {
+    return <FootballPredictFlow matchId={matchId} matchData={matchData} />;
   }
 
   const allPlayers = [...matchData.team_1_players, ...matchData.team_2_players];

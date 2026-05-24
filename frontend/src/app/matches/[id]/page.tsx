@@ -74,6 +74,8 @@ export default function MatchDetailPage() {
 
   const isCompleted = match.status === 'COMPLETED';
   const isScheduled = match.status === 'SCHEDULED';
+  // Playoffs with an undecided line-up are seeded with a "TBD" placeholder team.
+  const isTbd = match.team_1.short_name === 'TBD' || match.team_2.short_name === 'TBD';
   const flag1 = getTeamLogoUrl(match.team_1.short_name);
   const flag2 = getTeamLogoUrl(match.team_2.short_name);
 
@@ -236,7 +238,13 @@ export default function MatchDetailPage() {
       )}
 
       {/* Action for scheduled matches */}
-      {isScheduled && (
+      {isScheduled && isTbd && (
+        <div className="w-full text-center text-sm text-muted-foreground rounded-md border border-dashed border-border py-3">
+          Teams to be decided — check back once the line-up is set.
+        </div>
+      )}
+
+      {isScheduled && !isTbd && (
         <Link href={`/matches/${matchId}/predict`}>
           <Button className="w-full" size="lg">
             Make Prediction

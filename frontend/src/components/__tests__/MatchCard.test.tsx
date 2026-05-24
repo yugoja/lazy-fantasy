@@ -60,6 +60,24 @@ describe('MatchCard', () => {
     expect(btn).toBeInTheDocument();
   });
 
+  it('hides the prediction button and shows a placeholder for TBD teams', () => {
+    render(
+      <MatchCard
+        {...baseProps}
+        team1={{ name: 'To Be Decided', short_name: 'TBD' }}
+        team2={{ name: 'To Be Decided', short_name: 'TBD' }}
+      />
+    );
+    expect(screen.queryByRole('button', { name: /Make Prediction/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/Teams to be decided/i)).toBeInTheDocument();
+  });
+
+  it('hides the prediction button when only one team is TBD', () => {
+    render(<MatchCard {...baseProps} team2={{ name: 'To Be Decided', short_name: 'TBD' }} />);
+    expect(screen.queryByRole('button', { name: /Make Prediction/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/Teams to be decided/i)).toBeInTheDocument();
+  });
+
   it('shows "View Live" button for LIVE status', () => {
     render(<MatchCard {...baseProps} status="LIVE" />);
     const btn = screen.getByRole('button', { name: /View Live/i });

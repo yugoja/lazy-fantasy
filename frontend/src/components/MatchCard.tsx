@@ -84,6 +84,9 @@ export function MatchCard({
   const isUpcoming = status === 'UPCOMING' || status === 'SCHEDULED';
   const { timeLeft: countdown, isUrgent } = useCountdown(startTime);
   const isLocked = countdown === 'Locked';
+  // Playoffs whose line-up isn't decided yet are seeded with a "TBD" placeholder
+  // team — there's nothing to predict until the teams are set.
+  const isTbd = team1.short_name === 'TBD' || team2.short_name === 'TBD';
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -195,7 +198,13 @@ export function MatchCard({
         </div>
 
         {/* Action Button */}
-        {isUpcoming && !isLocked && (
+        {isUpcoming && isTbd && (
+          <div className="w-full text-center text-xs text-muted-foreground rounded-md border border-dashed border-border py-2">
+            Teams to be decided
+          </div>
+        )}
+
+        {isUpcoming && !isLocked && !isTbd && (
           <Link href={`/matches/${id}/predict`}>
             <Button className={cn('w-full', hasPredicted && 'border-primary text-primary')} size="sm" variant={hasPredicted ? 'outline' : 'default'}>
               {hasPredicted ? 'Update Prediction' : 'Make Prediction'}
