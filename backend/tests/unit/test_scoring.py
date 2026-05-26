@@ -114,3 +114,66 @@ class TestScoringLogic:
 
         assert prediction.points_earned == 30  # 10 + 20
         assert prediction.is_processed is True
+
+    def test_knockout_doubles_score(
+        self, db_session, test_user, completed_match, test_teams
+    ):
+        """Knockout (playoff) matches double every prediction's points."""
+        from app.models.prediction import Prediction
+        from app.models.player import Player
+
+        team1, team2 = test_teams
+        team2_players = db_session.query(Player).filter(
+            Player.team_id == team2.id
+        ).all()
+
+        # Mark the match as a playoff (Final) — drives the 2x multiplier.
+        completed_match.stage = "FINAL"
+        db_session.commit()
+
+        # Winner + most runs (team1) correct (10 + 20 = 30 base), rest wrong.
+        prediction = Prediction(
+            user_id=test_user.id,
+            match_id=completed_match.id,
+            predicted_winner_id=completed_match.result_winner_id,  # Correct
+            predicted_most_runs_team1_player_id=completed_match.result_most_runs_team1_player_id,  # Correct
+            predicted_most_runs_team2_player_id=team2_players[1].id,  # Wrong
+            predicted_most_wickets_team1_player_id=team2_players[2].id,  # Wrong
+            predicted_most_wickets_team2_player_id=team2_players[5].id,  # Wrong
+            predicted_pom_player_id=team2_players[0].id,  # Wrong
+        )
+        db_session.add(prediction)
+        db_session.commit()
+
+        calculate_scores(db_session, completed_match.id)
+        db_session.refresh(prediction)
+
+        assert prediction.points_earned == 60  # (10 + 20) * 2
+        assert prediction.is_processed is True
+
+    def test_perfect_knockout_prediction_score(
+        self, db_session, test_user, completed_match
+    ):
+        """A flawless playoff card is worth the doubled 280-point ceiling."""
+        from app.models.prediction import Prediction
+
+        completed_match.stage = "Q1"
+        db_session.commit()
+
+        prediction = Prediction(
+            user_id=test_user.id,
+            match_id=completed_match.id,
+            predicted_winner_id=completed_match.result_winner_id,
+            predicted_most_runs_team1_player_id=completed_match.result_most_runs_team1_player_id,
+            predicted_most_runs_team2_player_id=completed_match.result_most_runs_team2_player_id,
+            predicted_most_wickets_team1_player_id=completed_match.result_most_wickets_team1_player_id,
+            predicted_most_wickets_team2_player_id=completed_match.result_most_wickets_team2_player_id,
+            predicted_pom_player_id=completed_match.result_pom_player_id,
+        )
+        db_session.add(prediction)
+        db_session.commit()
+
+        calculate_scores(db_session, completed_match.id)
+        db_session.refresh(prediction)
+
+        assert prediction.points_earned == 280  # 140 * 2

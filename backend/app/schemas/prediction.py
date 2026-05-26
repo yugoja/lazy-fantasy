@@ -76,6 +76,10 @@ class PredictionDetailResponse(BaseModel):
     team_2: TeamResponse
     start_time: datetime
     status: str
+    # Playoff stage (Q1/ELIM/Q2/FINAL) for knockouts; None for group matches.
+    stage: Optional[str] = None
+    # True when this match doubles all points (knockout). Group matches: False.
+    is_knockout: bool = False
     # What the user predicted (resolved to names)
     predicted_winner: TeamResponse
     predicted_most_runs_team1_player: PlayerResponse

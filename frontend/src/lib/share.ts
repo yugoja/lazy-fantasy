@@ -62,6 +62,7 @@ function verdictUrl(event: DugoutEvent): string {
 function buildVerdictText(event: DugoutEvent): string {
   const winners = event.winners ?? [];
   const topScore = event.top_score ?? 0;
+  const maxScore = event.max_score ?? 140;
   const league = event.league_name;
   const matchLabel = event.match_label ?? `M${event.match_id}`;
   const url = verdictUrl(event);
@@ -70,7 +71,7 @@ function buildVerdictText(event: DugoutEvent): string {
   const isCold = !event.is_me && topScore <= COLD_THRESHOLD;
 
   if (isYou) {
-    return `Just ran the table at ${league}. ${topScore} of 140 in match ${matchLabel}.\n${url}`;
+    return `Just ran the table at ${league}. ${topScore} of ${maxScore} in match ${matchLabel}.\n${url}`;
   }
 
   if (isCold) {
@@ -92,7 +93,7 @@ function buildVerdictText(event: DugoutEvent): string {
 
   // Solo (not you, not cold)
   const name = winners[0] ? (winners[0].display_name || winners[0].username) : verdictDisplayName(event);
-  return `${name} ran the table at ${league}. ${topScore} of 140 in match ${matchLabel}.\n${url}`;
+  return `${name} ran the table at ${league}. ${topScore} of ${maxScore} in match ${matchLabel}.\n${url}`;
 }
 
 export async function shareVerdict(event: DugoutEvent): Promise<void> {

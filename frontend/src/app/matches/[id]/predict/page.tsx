@@ -30,6 +30,10 @@ import { FootballPredictFlow } from '@/components/predict/FootballPredictFlow';
 type Player = MatchPlayersResponse['team_1_players'][number];
 const FORM_MATCH_COUNT = 5;
 
+// IPL playoff stages double every prediction's points (see backend
+// scoring_cricket.KNOCKOUT_STAGES). Group matches leave stage null.
+const CRICKET_KNOCKOUT_STAGES = new Set(['Q1', 'ELIM', 'Q2', 'FINAL']);
+
 function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 }
@@ -349,6 +353,10 @@ export default function PredictPage() {
 
   const isSummary = currentStep === PREDICTION_STEPS;
 
+  // Knockout (playoff) matches double every category's points.
+  const isKnockout = !!matchData.stage && CRICKET_KNOCKOUT_STAGES.has(matchData.stage);
+  const mult = isKnockout ? 2 : 1;
+
   // Step config
   const stepConfig = [
     {
@@ -505,7 +513,7 @@ export default function PredictPage() {
 
                   {/* Pts + edit */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-muted-foreground">+{s.pts}</span>
+                    <span className="text-xs text-muted-foreground">+{s.pts * mult}</span>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(i)}
@@ -520,8 +528,8 @@ export default function PredictPage() {
 
               {/* Potential total */}
               <div className="flex items-center justify-between px-4 py-3 bg-primary/5">
-                <span className="text-sm text-muted-foreground">Potential total</span>
-                <span className="font-bold text-base text-primary">Up to 140 pts</span>
+                <span className="text-sm text-muted-foreground">Potential total{isKnockout ? ' ⚡2×' : ''}</span>
+                <span className="font-bold text-base text-primary">Up to {140 * mult} pts</span>
               </div>
             </div>
 
@@ -569,7 +577,7 @@ export default function PredictPage() {
                   })()}
                 </div>
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-sm text-muted-foreground">+{activeStep.pts} pts if correct</p>
+                  <p className="text-sm text-muted-foreground">+{activeStep.pts * mult} pts if correct</p>
                   {activeStep.currentValue && (
                     <span className="text-sm text-primary font-medium">✓ {activeStep.currentValue}</span>
                   )}
@@ -663,12 +671,12 @@ export default function PredictPage() {
               <div key={row.label} className="flex items-center justify-between px-4 py-2.5">
                 <span className="text-xs text-muted-foreground">{row.label}</span>
                 <span className="font-semibold text-sm">{row.value}</span>
-                <span className="text-[10px] text-muted-foreground">+{row.pts} pts</span>
+                <span className="text-[10px] text-muted-foreground">+{row.pts * mult} pts</span>
               </div>
             ))}
             <div className="flex items-center justify-between px-4 py-2.5 bg-primary/5">
-              <span className="text-xs text-muted-foreground">Potential total</span>
-              <span className="font-bold text-primary">Up to 140 pts</span>
+              <span className="text-xs text-muted-foreground">Potential total{isKnockout ? ' ⚡2×' : ''}</span>
+              <span className="font-bold text-primary">Up to {140 * mult} pts</span>
             </div>
           </div>
           <div className="flex flex-col gap-3">

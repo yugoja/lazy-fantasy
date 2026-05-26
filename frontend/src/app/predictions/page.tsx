@@ -16,6 +16,15 @@ import { ShareButton } from '@/components/ShareButton';
 import { shareWithCard } from '@/lib/share';
 import { generateUpcomingCard, generateResultCard } from '@/lib/share-card';
 
+// IPL playoff stage code → human label (matches backend Match.stage values set
+// by seed_ipl2026_knockouts.py). Knockouts double every prediction's points.
+const CRICKET_STAGE_LABELS: Record<string, string> = {
+  Q1: 'Qualifier 1',
+  ELIM: 'Eliminator',
+  Q2: 'Qualifier 2',
+  FINAL: 'Final',
+};
+
 interface Match {
   id: number;
   team_1: { id: number; name: string; short_name: string; flag_code?: string };
@@ -205,7 +214,7 @@ export default function PredictionsPage() {
     return [
       `🏏 ${winner} beat ${loser} — results are in!`,
       '',
-      `I got ${pred.points_earned}/140 on Lazy Fantasy (${correctCount}/6 correct) 🎯`,
+      `I got ${pred.points_earned}/${pred.is_knockout ? 280 : 140} on Lazy Fantasy (${correctCount}/6 correct)${pred.is_knockout ? ' ⚡2× playoff' : ''} 🎯`,
       '',
       scorecard,
       '',
@@ -376,6 +385,8 @@ export default function PredictionsPage() {
     const flag1 = getTeamLogoUrl(pred.team_1.short_name);
     const flag2 = getTeamLogoUrl(pred.team_2.short_name);
     const isProcessed = pred.is_processed;
+    // Knockout (IPL playoff) matches double every category's points.
+    const mult = pred.is_knockout ? 2 : 1;
 
     const categories = [
       {
@@ -448,19 +459,24 @@ export default function PredictionsPage() {
             </div>
             {isProcessed ? (
               <Badge variant={pred.points_earned > 0 ? 'default' : 'secondary'} className="text-[10px]">
-                +{pred.points_earned} pts
+                +{pred.points_earned} pts{pred.is_knockout ? ' ×2' : ''}
               </Badge>
             ) : (
               <Badge variant="outline" className="text-[10px]">Pending</Badge>
             )}
           </div>
 
-          {/* Date */}
+          {/* Date + knockout stage */}
           <p className="text-[10px] text-muted-foreground">
             {new Date(pred.start_time).toLocaleDateString('en-US', {
               month: 'short', day: 'numeric',
             })}
             {' '}&middot; {pred.status}
+            {pred.is_knockout && (
+              <span className="ml-1 font-semibold text-yellow-400">
+                &middot; {CRICKET_STAGE_LABELS[pred.stage ?? ''] ?? 'Playoff'} ⚡2×
+              </span>
+            )}
           </p>
 
           {/* Prediction breakdown */}
@@ -483,7 +499,7 @@ export default function PredictionsPage() {
                   {isCorrect && (
                     <div className="flex items-center gap-1 shrink-0">
                       <Check className="h-3.5 w-3.5 text-green-400" />
-                      <span className="text-[10px] font-semibold text-green-400">+{cat.pts}</span>
+                      <span className="text-[10px] font-semibold text-green-400">+{cat.pts * mult}</span>
                     </div>
                   )}
                   {isWrong && (
@@ -493,7 +509,7 @@ export default function PredictionsPage() {
                     </div>
                   )}
                   {!isProcessed && (
-                    <span className="text-[10px] text-muted-foreground shrink-0">+{cat.pts}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">+{cat.pts * mult}</span>
                   )}
                 </div>
               );
@@ -559,7 +575,8 @@ export default function PredictionsPage() {
     const processedCricket = detailedPredictions.filter(
       (p): p is PredictionDetail => p.is_processed && p.sport !== 'football',
     );
-    const maxPoints = processedCricket.length * 140;
+    // Knockout matches double the per-match ceiling (140 → 280).
+    const maxPoints = processedCricket.reduce((s, p) => s + (p.is_knockout ? 280 : 140), 0);
 
     const categoryStats = [
       {

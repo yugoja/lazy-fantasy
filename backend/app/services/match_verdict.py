@@ -19,7 +19,7 @@ from app.schemas.dugout import (
     VerdictWinner,
 )
 from app.services.league import _compute_standings
-from app.services.scoring_cricket import compute_hits
+from app.services.scoring_cricket import compute_hits, max_score
 
 
 def get_match_verdict(
@@ -167,4 +167,5 @@ def get_match_verdict(
         match_label=match_label,
         top_score=top_score,
         runner_up_score=runner_up_score,
+        max_score=max_score(match),
     )
