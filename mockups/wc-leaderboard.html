@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lazy Fantasy WC · Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #0a0f1c;
+  --stub: #161f30;
+  --stub-2: #1b2538;
+  --line: rgba(255,255,255,0.07);
+  --line-strong: rgba(255,255,255,0.16);
+  --text: #f4f6fb;
+  --text-dim: #8b97b5;
+  --text-mute: #5d6886;
+  --green: #26d666;
+  --green-soft: rgba(38,214,102,0.12);
+  --red: #ff5a6e;
+  --red-soft: rgba(255,90,110,0.10);
+  --gold: #f39c3a;
+  --wc: #c9a44c;
+  --silver: #c0c8d4;
+  --bronze: #c97f3e;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #050811; color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh; display: grid; place-items: center; padding: 24px;
+}
+.app {
+  width: 100%; max-width: 430px; height: 920px;
+  background: var(--bg); position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+  border-radius: 28px;
+}
+
+/* topbar */
+.topbar {
+  flex-shrink: 0;
+  padding: 18px 22px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.back {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--stub); border: 1px solid var(--line);
+  display: grid; place-items: center; cursor: pointer;
+  color: var(--text-dim);
+}
+.title-stack { text-align: center; flex: 1; }
+.title-stack .t1 {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 15px;
+  letter-spacing: -0.005em;
+}
+.title-stack .t2 {
+  font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--wc); margin-top: 2px;
+}
+.share-btn {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--stub); border: 1px solid var(--line);
+  display: grid; place-items: center; cursor: pointer;
+  color: var(--text-dim);
+}
+
+/* league switcher */
+.league-switcher {
+  flex-shrink: 0;
+  margin: 0 22px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #1a2236 0%, #0f1626 100%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ls-left { display: flex; align-items: center; gap: 12px; }
+.ls-mark {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--wc), #8a6b22);
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 800; font-size: 14px;
+  color: #0a0a0a;
+}
+.ls-info .ls-name {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 15px;
+}
+.ls-info .ls-meta {
+  font-size: 11.5px; color: var(--text-dim); margin-top: 2px;
+}
+.ls-chev {
+  color: var(--text-mute); font-size: 18px;
+}
+
+/* podium */
+.podium {
+  flex-shrink: 0;
+  padding: 22px 22px 4px;
+  position: relative;
+}
+.podium-row {
+  display: grid; grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: end; gap: 6px;
+  position: relative;
+}
+.podium-spot {
+  display: flex; flex-direction: column; align-items: center;
+  position: relative;
+}
+.ps-rank {
+  position: absolute;
+  bottom: -8px;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 800; font-size: 11px;
+  color: #0a0a0a; z-index: 3;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.ps-rank.r1 { background: var(--wc); }
+.ps-rank.r2 { background: var(--silver); }
+.ps-rank.r3 { background: var(--bronze); }
+.ps-av {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 17px;
+  position: relative; z-index: 2;
+  border: 3px solid var(--bg);
+}
+.podium-spot.first .ps-av {
+  width: 64px; height: 64px; font-size: 19px;
+  box-shadow: 0 0 0 3px var(--wc), 0 0 24px rgba(201,164,76,0.4);
+}
+.podium-spot.second .ps-av { box-shadow: 0 0 0 2px var(--silver); }
+.podium-spot.third .ps-av { box-shadow: 0 0 0 2px var(--bronze); }
+.ps-name {
+  margin-top: 14px;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px;
+  text-align: center; letter-spacing: -0.005em;
+}
+.ps-pts {
+  margin-top: 2px;
+  font-family: 'Space Grotesk'; font-weight: 600; font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+.podium-spot.first .ps-pts { color: var(--wc); }
+.ps-block {
+  margin-top: 12px;
+  width: 100%; max-width: 100px;
+  background: linear-gradient(180deg, var(--stub-2), var(--stub));
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--silver);
+  border-radius: 8px 8px 0 0;
+  text-align: center;
+  font-family: 'Space Grotesk'; font-weight: 800; font-size: 18px;
+  padding: 14px 0 22px;
+  color: var(--text-mute);
+  letter-spacing: 0.04em;
+}
+.podium-spot.first .ps-block {
+  border-top-color: var(--wc); padding: 20px 0 28px;
+  color: var(--wc);
+}
+.podium-spot.third .ps-block { border-top-color: var(--bronze); padding: 8px 0 18px; }
+.podium-spot.second { order: 1; }
+.podium-spot.first  { order: 2; }
+.podium-spot.third  { order: 3; }
+.podium-row { direction: ltr; }
+
+/* tabs */
+.tabs {
+  flex-shrink: 0;
+  margin: 8px 22px 0;
+  display: flex; gap: 4px;
+  background: var(--stub); border: 1px solid var(--line);
+  border-radius: 10px; padding: 4px;
+}
+.tab {
+  flex: 1; padding: 9px 10px;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 12px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-mute); cursor: pointer; border: none; background: transparent;
+  border-radius: 6px; text-align: center;
+}
+.tab.active { background: var(--stub-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-strong); }
+
+/* table */
+.lb-body { flex: 1; overflow-y: auto; padding: 14px 22px 110px; }
+.lb-body::-webkit-scrollbar { width: 0; }
+
+.lb-header-row {
+  display: grid; grid-template-columns: 28px 1fr auto auto auto;
+  gap: 10px; padding: 8px 6px 10px;
+  font-family: 'Space Grotesk'; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-mute);
+  border-bottom: 1px solid var(--line);
+}
+.lb-header-row span:nth-child(3),
+.lb-header-row span:nth-child(4),
+.lb-header-row span:nth-child(5) { text-align: right; min-width: 38px; }
+
+.lb-row {
+  display: grid; grid-template-columns: 28px 1fr auto auto auto;
+  align-items: center; gap: 10px;
+  padding: 12px 6px;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.lb-row:hover { background: rgba(255,255,255,0.015); }
+.lb-row.me {
+  background: linear-gradient(90deg, rgba(38,214,102,0.06), transparent 80%);
+  margin: 0 -10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border-left: 2px solid var(--green);
+  border-bottom-color: transparent;
+}
+.lb-rank-cell {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px;
+  color: var(--text-mute); font-variant-numeric: tabular-nums;
+}
+.lb-rank-cell.r1 { color: var(--wc); }
+.lb-rank-cell.r2 { color: var(--silver); }
+.lb-rank-cell.r3 { color: var(--bronze); }
+.lb-row.me .lb-rank-cell { color: var(--green); }
+
+.lb-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.lb-av {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 11px;
+  flex-shrink: 0;
+}
+.lb-user-stack { min-width: 0; }
+.lb-user-name {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13.5px;
+  letter-spacing: -0.005em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lb-user-meta {
+  font-size: 11px; color: var(--text-mute); margin-top: 2px;
+  display: flex; align-items: center; gap: 6px;
+}
+.lb-user-meta .streak { color: var(--gold); font-weight: 600; }
+
+.lb-cell {
+  font-family: 'Space Grotesk'; font-weight: 600; font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  min-width: 38px; text-align: right;
+}
+.lb-cell.pts {
+  font-weight: 700; font-size: 15px; color: var(--text);
+}
+.lb-row.me .lb-cell.pts { color: var(--green); }
+
+.lb-delta {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 11px;
+  padding: 3px 7px; border-radius: 5px; min-width: 36px; text-align: center;
+}
+.lb-delta.up { background: rgba(38,214,102,0.14); color: var(--green); }
+.lb-delta.down { background: var(--red-soft); color: var(--red); }
+.lb-delta.flat { background: rgba(255,255,255,0.04); color: var(--text-mute); }
+.lb-delta.new { background: rgba(201,164,76,0.16); color: var(--wc); }
+
+/* sticky me-bar */
+.me-bar {
+  position: absolute; left: 22px; right: 22px; bottom: 24px;
+  padding: 12px 14px;
+  background: var(--stub-2);
+  border: 1px solid rgba(38,214,102,0.4);
+  border-radius: 14px;
+  display: grid; grid-template-columns: 28px 1fr auto auto;
+  align-items: center; gap: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 4px rgba(38,214,102,0.06);
+  backdrop-filter: blur(6px);
+}
+.me-bar .rank {
+  font-family: 'Space Grotesk'; font-weight: 800; font-size: 14px;
+  color: var(--green); font-variant-numeric: tabular-nums;
+}
+.me-bar .av {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #2a3850, #1a2236);
+  border: 1px solid var(--line-strong);
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 11px;
+}
+.me-bar .info { display: flex; flex-direction: column; gap: 2px; }
+.me-bar .nm {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13.5px;
+}
+.me-bar .sub { font-size: 11px; color: var(--text-mute); }
+.me-bar .pts {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 17px;
+  color: var(--green); font-variant-numeric: tabular-nums;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </div>
+    <div class="title-stack">
+      <div class="t1">Leaderboard</div>
+      <div class="t2">WORLD CUP '26 · MD2</div>
+    </div>
+    <div class="share-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    </div>
+  </div>
+
+  <div class="league-switcher">
+    <div class="ls-left">
+      <div class="ls-mark">OS</div>
+      <div class="ls-info">
+        <div class="ls-name">Office Squad</div>
+        <div class="ls-meta">28 players · invite code <b style="color:var(--text)">WC4242</b></div>
+      </div>
+    </div>
+    <span class="ls-chev">⌄</span>
+  </div>
+
+  <div class="podium">
+    <div class="podium-row">
+
+      <div class="podium-spot second">
+        <div class="ps-av" style="background:#3a4c6e; color:var(--text);">KR</div>
+        <div class="ps-rank r2">2</div>
+        <div class="ps-name">Karthik</div>
+        <div class="ps-pts">206 pts</div>
+        <div class="ps-block">2nd</div>
+      </div>
+
+      <div class="podium-spot first">
+        <div class="ps-av" style="background:linear-gradient(135deg,#c9a44c,#8a6b22); color:#0a0a0a;">PR</div>
+        <div class="ps-rank r1">1</div>
+        <div class="ps-name">Priya</div>
+        <div class="ps-pts">218 pts</div>
+        <div class="ps-block">1st</div>
+      </div>
+
+      <div class="podium-spot third">
+        <div class="ps-av" style="background:#5d4a2e; color:var(--text);">YK</div>
+        <div class="ps-rank r3">3</div>
+        <div class="ps-name">You</div>
+        <div class="ps-pts">194 pts</div>
+        <div class="ps-block">3rd</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active">Overall</button>
+    <button class="tab">This MD</button>
+    <button class="tab">Streaks</button>
+  </div>
+
+  <div class="lb-body">
+    <div class="lb-header-row">
+      <span>#</span>
+      <span>Player</span>
+      <span>MD2</span>
+      <span>Pts</span>
+      <span>Δ</span>
+    </div>
+
+    <div class="lb-row">
+      <span class="lb-rank-cell r1">1</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:linear-gradient(135deg,#c9a44c,#8a6b22); color:#0a0a0a;">PR</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">Priya</div>
+          <div class="lb-user-meta"><span class="streak">🔥 6</span> · 74% accuracy</div>
+        </div>
+      </div>
+      <span class="lb-cell">48</span>
+      <span class="lb-cell pts">218</span>
+      <span class="lb-delta up">↑ 2</span>
+    </div>
+
+    <div class="lb-row">
+      <span class="lb-rank-cell r2">2</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:#3a4c6e;">KR</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">Karthik</div>
+          <div class="lb-user-meta">🔥 3 · 67% accuracy</div>
+        </div>
+      </div>
+      <span class="lb-cell">22</span>
+      <span class="lb-cell pts">206</span>
+      <span class="lb-delta flat">—</span>
+    </div>
+
+    <div class="lb-row me">
+      <span class="lb-rank-cell">3</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:#5d4a2e;">YK</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">You</div>
+          <div class="lb-user-meta"><span class="streak">🔥 4</span> · 68% accuracy</div>
+        </div>
+      </div>
+      <span class="lb-cell">42</span>
+      <span class="lb-cell pts">194</span>
+      <span class="lb-delta up">↑ 4</span>
+    </div>
+
+    <div class="lb-row">
+      <span class="lb-rank-cell">4</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:#2a3850;">AM</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">Aman</div>
+          <div class="lb-user-meta">61% accuracy</div>
+        </div>
+      </div>
+      <span class="lb-cell">15</span>
+      <span class="lb-cell pts">181</span>
+      <span class="lb-delta down">↓ 1</span>
+    </div>
+
+    <div class="lb-row">
+      <span class="lb-rank-cell">5</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:#4a3a5d;">SN</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">Sneha</div>
+          <div class="lb-user-meta">59% accuracy</div>
+        </div>
+      </div>
+      <span class="lb-cell">10</span>
+      <span class="lb-cell pts">175</span>
+      <span class="lb-delta down">↓ 2</span>
+    </div>
+
+    <div class="lb-row">
+      <span class="lb-rank-cell">6</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:#3a5d4a;">RH</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">Rohan</div>
+          <div class="lb-user-meta">56% accuracy</div>
+        </div>
+      </div>
+      <span class="lb-cell">38</span>
+      <span class="lb-cell pts">168</span>
+      <span class="lb-delta up">↑ 3</span>
+    </div>
+
+    <div class="lb-row">
+      <span class="lb-rank-cell">7</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:#5d3a3a;">DV</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">Devika</div>
+          <div class="lb-user-meta">52% accuracy</div>
+        </div>
+      </div>
+      <span class="lb-cell">5</span>
+      <span class="lb-cell pts">152</span>
+      <span class="lb-delta down">↓ 1</span>
+    </div>
+
+    <div class="lb-row">
+      <span class="lb-rank-cell">8</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:#3a3a5d;">JN</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">Janvi</div>
+          <div class="lb-user-meta">Joined MD2</div>
+        </div>
+      </div>
+      <span class="lb-cell">45</span>
+      <span class="lb-cell pts">145</span>
+      <span class="lb-delta new">NEW</span>
+    </div>
+
+    <div class="lb-row">
+      <span class="lb-rank-cell">9</span>
+      <div class="lb-user">
+        <div class="lb-av" style="background:#5d553a;">VK</div>
+        <div class="lb-user-stack">
+          <div class="lb-user-name">Vikram</div>
+          <div class="lb-user-meta">48% accuracy</div>
+        </div>
+      </div>
+      <span class="lb-cell">8</span>
+      <span class="lb-cell pts">139</span>
+      <span class="lb-delta down">↓ 4</span>
+    </div>
+
+  </div>
+
+  <div class="me-bar">
+    <span class="rank">#3</span>
+    <div class="av">YK</div>
+    <div class="info">
+      <div class="nm">You</div>
+      <div class="sub">12 pts behind 2nd · 24 ahead of 4th</div>
+    </div>
+    <div class="pts">194</div>
+  </div>
+</div>
+
+</body>
+</html>

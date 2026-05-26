@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>V2 · Versus Splitscreen — ESP vs FRA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: oklch(14% 0.018 260);
+  --ink: oklch(96% 0.005 240);
+  --ink-dim: oklch(70% 0.02 250);
+  --ink-mute: oklch(50% 0.025 255);
+  --green: oklch(68% 0.20 145);
+  --hl: oklch(78% 0.18 88);
+  --esp-1: oklch(50% 0.24 28);
+  --esp-2: oklch(28% 0.18 28);
+  --fra-1: oklch(45% 0.18 258);
+  --fra-2: oklch(22% 0.14 258);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: oklch(8% 0.014 250);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh;
+  display: grid; place-items: center;
+  padding: 24px;
+}
+.app {
+  width: 100%; max-width: 430px; height: 920px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.7);
+  border-radius: 28px;
+}
+
+/* tournament tag bar */
+.bar {
+  flex-shrink: 0;
+  padding: 16px 22px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Space Grotesk'; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--ink-mute);
+  border-bottom: 1px solid oklch(22% 0.018 250);
+  z-index: 5;
+}
+.bar .group { color: oklch(72% 0.14 88); }
+.bar .lock {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--ink-dim);
+}
+.bar .lock .pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--hl);
+  animation: pulse 1.8s infinite;
+}
+@keyframes pulse { 0%,100% { opacity:.35; transform: scale(.85);} 50% { opacity: 1; transform: scale(1);} }
+
+/* main split */
+.split {
+  flex: 1;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+.half {
+  position: relative;
+  padding: 22px 18px 22px;
+  cursor: pointer;
+  transition: 0.4s cubic-bezier(0.2,0.8,0.2,1);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.half::-webkit-scrollbar { width: 0; }
+.half.esp {
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 0%, oklch(34% 0.20 28), oklch(20% 0.14 28) 70%);
+}
+.half.fra {
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 0%, oklch(32% 0.16 258), oklch(18% 0.10 258) 70%);
+}
+.half::before {
+  content:''; position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(135deg, transparent 0 14px, oklch(0% 0 0 / 0.04) 14px 15px);
+  pointer-events: none;
+}
+.half.selected.esp {
+  box-shadow: inset 0 0 0 3px var(--hl);
+}
+.half.selected.fra {
+  box-shadow: inset 0 0 0 3px var(--hl);
+}
+
+.half-h {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.crest {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px;
+}
+.crest.esp { background: linear-gradient(180deg, oklch(60% 0.25 28), #fff, oklch(60% 0.25 28)); color: #0a0a0a; }
+.crest.fra { background: linear-gradient(90deg, oklch(38% 0.18 258) 0 33%, #fff 33% 66%, oklch(58% 0.22 28) 66%); color: #0a0a0a; }
+.team-tag {
+  font-family: 'Bebas Neue';
+  font-size: 36px; line-height: 0.9;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+.team-mini {
+  font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.26em; text-transform: uppercase;
+  color: oklch(85% 0.05 60); margin-top: 2px;
+}
+
+.win-bubble {
+  position: relative; z-index: 1;
+  padding: 10px 0 12px;
+  border-top: 1px dashed oklch(100% 0 0 / 0.18);
+  border-bottom: 1px dashed oklch(100% 0 0 / 0.18);
+  font-family: 'Space Grotesk'; font-weight: 700;
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: oklch(86% 0.03 60);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.win-bubble .pct { color: var(--hl); font-variant-numeric: tabular-nums; }
+.half.selected .win-bubble {
+  color: var(--hl);
+  border-color: var(--hl);
+}
+.win-bubble .badge {
+  font-family: 'Space Grotesk'; font-size: 9px; font-weight: 700;
+  background: oklch(0% 0 0 / 0.35); color: oklch(85% 0 0);
+  padding: 3px 7px; letter-spacing: 0.18em;
+}
+.half.selected .win-bubble .badge {
+  background: var(--hl); color: oklch(15% 0.018 60);
+}
+
+.half-h2 {
+  position: relative; z-index: 1;
+  margin: 16px 0 8px;
+  font-family: 'Space Grotesk'; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.26em; text-transform: uppercase;
+  color: oklch(85% 0.03 60); opacity: 0.7;
+  display: flex; justify-content: space-between;
+}
+.half-h2 .pts {
+  color: var(--hl); opacity: 1;
+}
+
+.player {
+  position: relative; z-index: 1;
+  padding: 10px 12px;
+  margin-bottom: 7px;
+  background: oklch(0% 0 0 / 0.18);
+  border: 1px solid oklch(100% 0 0 / 0.08);
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.player:hover { background: oklch(0% 0 0 / 0.30); }
+.player .num {
+  font-family: 'Bebas Neue'; font-size: 22px;
+  color: oklch(85% 0.04 60); width: 22px; text-align: right;
+  opacity: 0.55;
+}
+.player .pn {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px;
+  letter-spacing: -0.005em;
+}
+.player .pm {
+  font-family: 'Space Grotesk'; font-size: 10.5px;
+  color: oklch(82% 0.04 60); opacity: 0.65;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
+}
+.player .pp { flex: 1; min-width: 0; }
+.player .tag {
+  font-family: 'Bebas Neue'; font-size: 11px;
+  letter-spacing: 0.18em;
+  padding: 2px 6px;
+  background: var(--hl); color: oklch(15% 0.018 60);
+}
+.player.selected {
+  background: var(--hl);
+  border-color: var(--hl);
+  color: oklch(15% 0.018 60);
+}
+.player.selected .num { color: oklch(15% 0.018 60); opacity: 1; }
+.player.selected .pm { color: oklch(20% 0.018 60); opacity: 0.7; }
+.player.selected .tag { background: oklch(15% 0.018 60); color: var(--hl); }
+.player.dim { opacity: 0.35; }
+
+/* center spine — score */
+.spine {
+  position: absolute;
+  top: 0; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 130px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+  padding-top: 70px;
+  pointer-events: none;
+  z-index: 4;
+}
+.spine::before {
+  content:''; position: absolute; top: 0; bottom: 0;
+  left: 50%; width: 1px;
+  background: linear-gradient(180deg,
+    transparent,
+    oklch(100% 0 0 / 0.10) 10%,
+    oklch(100% 0 0 / 0.10) 90%,
+    transparent);
+}
+
+.score-tower {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid oklch(22% 0.018 250);
+  padding: 10px 12px 14px;
+  pointer-events: auto;
+  box-shadow: 0 20px 40px oklch(0% 0 0 / 0.5);
+}
+.score-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.score-d {
+  font-family: 'Bebas Neue';
+  font-size: 72px; line-height: 0.82;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  cursor: pointer; user-select: none;
+  min-width: 38px; text-align: center;
+}
+.score-d.bump { animation: bump 0.28s ease-out; }
+@keyframes bump { 0%{transform:scale(1)} 45%{transform:scale(1.12)} 100%{transform:scale(1)} }
+.score-d.esp { color: oklch(78% 0.20 28); }
+.score-d.fra { color: oklch(72% 0.14 258); }
+.x-sep {
+  font-family: 'Bebas Neue'; font-size: 40px;
+  color: oklch(45% 0.02 250);
+  letter-spacing: 0;
+}
+.spine .label {
+  font-family: 'Space Grotesk'; font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-top: 2px;
+}
+.spine .bonus {
+  margin-top: 4px;
+  font-family: 'Bebas Neue'; font-size: 16px; letter-spacing: 0.1em;
+  color: var(--hl);
+}
+.score-ctrls {
+  display: flex; gap: 4px;
+  margin-top: 4px;
+  pointer-events: auto;
+}
+.score-ctrls .grp {
+  display: flex; gap: 2px;
+}
+.sc-btn {
+  width: 24px; height: 22px;
+  background: oklch(20% 0.018 250); color: var(--ink-dim);
+  border: 1px solid oklch(28% 0.02 250);
+  font-family: 'Bebas Neue'; font-size: 16px;
+  cursor: pointer; line-height: 1;
+}
+.sc-btn:active { background: var(--hl); color: oklch(15% 0.018 60); }
+
+.versus-token {
+  position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  font-family: 'Bebas Neue'; font-size: 26px;
+  background: var(--bg);
+  color: var(--hl);
+  letter-spacing: 0.16em;
+  padding: 6px 12px;
+  border: 1px solid oklch(22% 0.018 250);
+  pointer-events: none;
+  z-index: 3;
+  display: none; /* hidden because we have score tower */
+}
+
+/* lock zone */
+.lock-bar {
+  flex-shrink: 0;
+  padding: 14px 18px 20px;
+  border-top: 1px solid oklch(22% 0.018 250);
+  background: oklch(11% 0.014 250);
+  display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+  z-index: 6;
+}
+.lock-meter {
+  display: flex; flex-direction: column;
+}
+.lock-pts {
+  font-family: 'Bebas Neue';
+  font-size: 34px; line-height: 0.9; letter-spacing: 0.04em;
+  color: var(--hl);
+  font-variant-numeric: tabular-nums;
+}
+.lock-state {
+  font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-mute); margin-top: 2px;
+}
+.lock-progress {
+  height: 4px; background: oklch(22% 0.018 250);
+  position: relative;
+  overflow: hidden;
+}
+.lock-progress .fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: var(--green);
+  width: 0; transition: width 0.4s ease;
+}
+.lock-progress .ticks {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 19%, oklch(0% 0 0 / 0.6) 19% 20%);
+}
+.lock-btn {
+  height: 52px; padding: 0 22px;
+  background: var(--hl); color: oklch(15% 0.018 60);
+  border: none; cursor: pointer;
+  font-family: 'Bebas Neue'; font-size: 22px;
+  letter-spacing: 0.16em;
+}
+.lock-btn:disabled { background: oklch(22% 0.018 250); color: var(--ink-mute); cursor: not-allowed; }
+.lock-btn:not(:disabled):hover { background: var(--green); }
+
+/* hint chip */
+.hint {
+  position: absolute; left: 50%; bottom: 130px;
+  transform: translateX(-50%);
+  font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-mute);
+  background: oklch(11% 0.014 250 / 0.85);
+  padding: 5px 10px;
+  border: 1px solid oklch(22% 0.018 250);
+  z-index: 5;
+}
+.hint b { color: var(--hl); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="bar">
+    <span class="group">WC '26 · GRP D · MD2</span>
+    <span class="lock"><span class="pulse"></span>04:22:18 to lock</span>
+  </div>
+
+  <div class="split">
+    <div class="half esp" data-side="esp">
+      <div class="half-h">
+        <div class="crest esp">ESP</div>
+        <div style="text-align:right;">
+          <div class="team-tag">SPAIN</div>
+          <div class="team-mini">La Roja</div>
+        </div>
+      </div>
+      <div class="win-bubble">
+        <span>Win <span class="pct">52%</span></span>
+        <span class="badge">TAP TO PICK</span>
+      </div>
+
+      <div class="half-h2"><span>Impact picks</span><span class="pts">+10 each</span></div>
+      <div class="player-list" data-team="ESP"></div>
+    </div>
+
+    <div class="half fra" data-side="fra">
+      <div class="half-h">
+        <div style="text-align:left;">
+          <div class="team-tag">FRANCE</div>
+          <div class="team-mini">Les Bleus</div>
+        </div>
+        <div class="crest fra">FRA</div>
+      </div>
+      <div class="win-bubble">
+        <span class="badge">TAP TO PICK</span>
+        <span>Win <span class="pct">34%</span></span>
+      </div>
+
+      <div class="half-h2"><span>Impact picks</span><span class="pts">+10 each</span></div>
+      <div class="player-list" data-team="FRA"></div>
+    </div>
+
+    <div class="spine">
+      <div class="score-tower">
+        <div class="score-row">
+          <span class="score-d esp" id="sA">2</span>
+          <span class="x-sep">·</span>
+          <span class="score-d fra" id="sB">1</span>
+        </div>
+        <div class="label">Final score</div>
+        <div class="bonus">+15 IF EXACT</div>
+        <div class="score-ctrls">
+          <div class="grp">
+            <button class="sc-btn" data-s="a" data-d="-1">−</button>
+            <button class="sc-btn" data-s="a" data-d="1">+</button>
+          </div>
+          <div class="grp">
+            <button class="sc-btn" data-s="b" data-d="-1">−</button>
+            <button class="sc-btn" data-s="b" data-d="1">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint">Or a <b>draw</b>? tap the centre score</div>
+  </div>
+
+  <div class="lock-bar">
+    <div class="lock-meter">
+      <span class="lock-pts" id="ptsN">5</span>
+      <span class="lock-state" id="ptsState">pick 3 players</span>
+    </div>
+    <div class="lock-progress"><div class="fill" id="fill"></div><div class="ticks"></div></div>
+    <button class="lock-btn" id="lockBtn" disabled>LOCK</button>
+  </div>
+</div>
+
+<script>
+const players = {
+  ESP: [
+    ['Lamine Yamal','8G · 18 caps','HOT'],
+    ['Nico Williams','5G · 16 caps',''],
+    ['Pedri','4G · 24 caps',''],
+    ['Á. Morata','36G · 78 caps',''],
+    ['Rodri','Ballon d\'Or','★'],
+  ],
+  FRA: [
+    ['K. Mbappé','51G · 92 caps','GOAT'],
+    ['O. Dembélé','7G · 54 caps','HOT'],
+    ['B. Barcola','2G · 11 caps',''],
+    ['A. Tchouaméni','1G · 38 caps',''],
+    ['Désiré Doué','3G · 9 caps',''],
+  ]
+};
+const state = { winner: null, score: {a:2,b:1}, picks: [] };
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function renderLists() {
+  document.querySelectorAll('.player-list').forEach(list => {
+    const team = list.dataset.team;
+    list.innerHTML = '';
+    players[team].forEach(([n, m, t], i) => {
+      const sel = state.picks.find(p => p.t === team && p.n === n);
+      const full = state.picks.length >= 3 && !sel;
+      const row = document.createElement('div');
+      row.className = 'player' + (sel ? ' selected' : '') + (full ? ' dim' : '');
+      row.innerHTML = `
+        <span class="num">${(i+1).toString().padStart(2,'0')}</span>
+        <div class="pp">
+          <div class="pn">${n}</div>
+          <div class="pm">${m}</div>
+        </div>
+        ${t ? `<span class="tag">${t}</span>` : ''}
+      `;
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (full) return;
+        const i = state.picks.findIndex(p => p.t === team && p.n === n);
+        if (i >= 0) state.picks.splice(i,1);
+        else state.picks.push({t: team, n});
+        renderLists(); recalc();
+      });
+      list.appendChild(row);
+    });
+  });
+}
+
+document.querySelectorAll('.half').forEach(h => {
+  h.addEventListener('click', () => {
+    document.querySelectorAll('.half').forEach(x => x.classList.remove('selected'));
+    h.classList.add('selected');
+    state.winner = h.dataset.side;
+    recalc();
+  });
+});
+
+// Tap center score to toggle DRAW
+$('.score-tower').addEventListener('click', (e) => {
+  e.stopPropagation();
+});
+
+function bump(s) {
+  const el = s === 'a' ? $('#sA') : $('#sB');
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
+$$('.sc-btn').forEach(b => b.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const s = b.dataset.s, d = +b.dataset.d;
+  const n = Math.max(0, Math.min(9, state.score[s] + d));
+  if (n === state.score[s]) return;
+  state.score[s] = n;
+  $(s==='a'?'#sA':'#sB').textContent = n;
+  bump(s); recalc();
+}));
+$$('.score-d').forEach(d => d.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const s = d.id === 'sA' ? 'a' : 'b';
+  state.score[s] = (state.score[s] + 1) % 10;
+  d.textContent = state.score[s]; bump(s); recalc();
+}));
+
+function recalc() {
+  let pts = (state.winner ? 5 : 0) + state.picks.length * 10;
+  if (state.winner === 'esp' && state.score.a > state.score.b) pts += 15;
+  if (state.winner === 'fra' && state.score.b > state.score.a) pts += 15;
+  $('#ptsN').textContent = pts;
+  const ready = state.winner && state.picks.length === 3;
+  $('#lockBtn').disabled = !ready;
+  $('#ptsState').textContent = !state.winner ? 'pick a winner'
+    : state.picks.length < 3 ? `pick ${3 - state.picks.length} more` : 'ready';
+  const max = 50;
+  $('#fill').style.width = `${Math.min(100, pts / max * 100)}%`;
+}
+
+renderLists(); recalc();
+</script>
+</body>
+</html>

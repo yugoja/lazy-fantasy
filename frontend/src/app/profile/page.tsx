@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, getMyPredictionsDetailed, PredictionDetail, updateProfile } from '@/lib/api';
+import { getMyLeagues, getMyPredictionsDetailed, PredictionDetail, FootballPredictionDetail, updateProfile } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +39,7 @@ export default function ProfilePage() {
   const { isAuthenticated, isLoading: authLoading, username, displayName, logout, setDisplayName } = useAuth();
   const router = useRouter();
   const [leagues, setLeagues] = useState<League[]>([]);
-  const [predictions, setPredictions] = useState<PredictionDetail[]>([]);
+  const [predictions, setPredictions] = useState<Array<PredictionDetail | FootballPredictionDetail>>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Display name editing
@@ -107,14 +107,15 @@ export default function ProfilePage() {
 
   const processed = predictions.filter(p => p.is_processed);
   const totalPoints = processed.reduce((sum, p) => sum + p.points_earned, 0);
-  const correctWins = processed.filter(p => p.actual_winner && p.predicted_winner.id === p.actual_winner.id).length;
-  const accuracy = processed.length > 0 ? Math.round((correctWins / processed.length) * 100) : 0;
+  const processedCricket = processed.filter((p): p is PredictionDetail => p.sport !== 'football');
+  const correctWins = processedCricket.filter(p => p.actual_winner && p.predicted_winner.id === p.actual_winner.id).length;
+  const accuracy = processedCricket.length > 0 ? Math.round((correctWins / processedCricket.length) * 100) : 0;
 
-  const sortedProcessed = [...processed].sort(
+  const sortedCricket = [...processedCricket].sort(
     (a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime()
   );
   let streak = 0;
-  for (const p of sortedProcessed) {
+  for (const p of sortedCricket) {
     if (p.actual_winner && p.predicted_winner.id === p.actual_winner.id) {
       streak++;
     } else {

@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Match Verdict · States</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --paper: oklch(97% 0.012 85);
+  --paper-2: oklch(93% 0.018 85);
+  --ink: oklch(22% 0.03 260);
+  --ink-mute: oklch(48% 0.025 260);
+  --rule: oklch(86% 0.02 85);
+
+  --navy: oklch(15% 0.025 260);
+  --navy-2: oklch(20% 0.035 260);
+  --line: oklch(30% 0.04 260);
+  --line-strong: oklch(38% 0.04 260);
+  --text-l: oklch(95% 0.01 260);
+  --text-dim-l: oklch(70% 0.03 260);
+  --text-mute-l: oklch(55% 0.03 260);
+
+  --green: oklch(70% 0.18 145);
+  --green-soft: oklch(70% 0.18 145 / 0.12);
+  --gold: oklch(75% 0.16 60);
+  --crimson: oklch(60% 0.21 25);
+  --frost: oklch(75% 0.06 240);
+
+  --mi: oklch(40% 0.16 250);
+  --rcb: oklch(48% 0.21 25);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Inter', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+body { background: var(--paper); }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: transparent; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: clamp(36px, 5vw, 64px) clamp(20px, 4vw, 48px) 140px; }
+
+/* === HEAD === */
+.page-head { margin-bottom: 48px; max-width: 720px; }
+.page-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 16px;
+}
+.page-eyebrow::before {
+  content: '●'; margin-right: 10px; color: var(--green);
+}
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-size: clamp(36px, 5.6vw, 56px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+}
+.page-title em { font-style: italic; font-weight: 400; }
+.page-sub {
+  font-size: 16px; color: var(--ink-mute);
+  margin-top: 18px; line-height: 1.55;
+  max-width: 580px;
+}
+
+/* === GRID === */
+.states {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+  margin-top: 48px;
+}
+@media (max-width: 880px) {
+  .states { grid-template-columns: 1fr; }
+}
+.state {
+  display: flex; flex-direction: column;
+  gap: 16px;
+}
+.state-meta {
+  display: flex; align-items: baseline; gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--rule);
+}
+.state-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.18em;
+  color: var(--ink-mute);
+}
+.state-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.state-note {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  margin-left: auto;
+}
+.state-stage {
+  background: var(--navy);
+  border-radius: 18px;
+  padding: 30px 24px;
+  display: grid; place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* =================================================== */
+/* VERDICT CARD                                          */
+/* =================================================== */
+.v {
+  width: 100%; max-width: 360px;
+  background: var(--navy);
+  border-radius: 16px;
+  padding: 20px 20px 18px;
+  color: var(--text-l);
+  font-family: 'Inter';
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -20px rgba(0,0,0,0.45);
+  border: 1px solid oklch(28% 0.04 260);
+}
+.v::before {
+  content:''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, oklch(70% 0.18 145 / 0.15), transparent 65%);
+  pointer-events: none;
+}
+.v > * { position: relative; }
+
+/* you-won variant: gold tint instead of green */
+.v.is-you::before {
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, oklch(75% 0.16 60 / 0.18), transparent 65%);
+}
+/* cold variant: muted, even */
+.v.is-cold::before {
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, oklch(60% 0.04 240 / 0.18), transparent 65%);
+}
+
+.v-kicker {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Space Grotesk';
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--text-mute-l);
+}
+.v-kicker .right {
+  color: var(--gold);
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.v.is-cold .v-kicker .right { color: var(--frost); }
+.v.is-you .v-kicker .right { color: var(--gold); }
+.v-kicker .right::before {
+  content:'';
+  width: 6px; height: 6px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.v-fixture {
+  margin-top: 12px;
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--line);
+  font-family: 'Space Grotesk';
+}
+.v-fix-crest {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.v-fix-mi { background: var(--mi); color: var(--text-l); }
+.v-fix-rcb { background: var(--rcb); color: var(--text-l); }
+
+.v-fix-vs {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13.5px;
+  color: var(--text-mute-l);
+  margin: 0 2px;
+  letter-spacing: 0;
+}
+.v-fix-won {
+  box-shadow: 0 0 0 1.5px oklch(75% 0.16 60 / 0.55);
+}
+.v-fix-lost { opacity: 0.5; }
+
+.v-fix-pom {
+  margin-left: auto;
+  font-family: 'Space Grotesk';
+  font-weight: 600; font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--gold);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.v-fix-pom::before {
+  content: '★';
+  font-size: 11px;
+}
+.v.is-cold .v-fix-pom { color: var(--frost); }
+.v.is-cold .v-fix-won { box-shadow: 0 0 0 1.5px oklch(75% 0.06 240 / 0.55); }
+
+/* Headline */
+.v-headline {
+  margin-top: 18px;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.0;
+  letter-spacing: -0.022em;
+  color: var(--text-l);
+}
+.v-headline em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold);
+}
+.v.is-cold .v-headline em { color: var(--frost); }
+
+.v-sub {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-dim-l);
+  line-height: 1.4;
+  font-family: 'Inter';
+}
+.v-sub b { color: var(--text-l); font-weight: 600; }
+.v-sub i {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold);
+}
+.v.is-cold .v-sub i { color: var(--frost); }
+
+/* ===== WINNER PANEL (default) ===== */
+.v-winner {
+  margin-top: 16px;
+  padding: 14px;
+  background: linear-gradient(180deg, var(--green-soft), oklch(70% 0.18 145 / 0.02));
+  border: 1.5px solid oklch(70% 0.18 145 / 0.4);
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 14px; align-items: center;
+}
+.v.is-you .v-winner {
+  background: linear-gradient(180deg, oklch(75% 0.16 60 / 0.12), oklch(75% 0.16 60 / 0.02));
+  border-color: oklch(75% 0.16 60 / 0.5);
+}
+.v.is-cold .v-winner {
+  background: linear-gradient(180deg, oklch(40% 0.04 240 / 0.4), transparent);
+  border-color: oklch(50% 0.04 240 / 0.5);
+  border-style: solid;
+}
+
+.v-av {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 15px;
+  letter-spacing: 0.03em;
+  position: relative;
+}
+.v-av.tone-green {
+  background: linear-gradient(135deg, oklch(75% 0.16 145), oklch(55% 0.18 145));
+  color: var(--navy);
+}
+.v-av.tone-gold {
+  background: linear-gradient(135deg, oklch(82% 0.14 60), oklch(60% 0.18 60));
+  color: var(--navy);
+}
+.v-av.tone-blue {
+  background: linear-gradient(135deg, oklch(75% 0.13 240), oklch(55% 0.16 240));
+  color: var(--navy);
+}
+.v-av.tone-rose {
+  background: linear-gradient(135deg, oklch(78% 0.13 25), oklch(58% 0.18 25));
+  color: var(--navy);
+}
+.v-av.tone-frost {
+  background: linear-gradient(135deg, oklch(80% 0.05 240), oklch(60% 0.08 240));
+  color: var(--navy);
+}
+.v-av.ring-green::after,
+.v-av.ring-gold::after {
+  content:''; position: absolute; inset: -3px;
+  border-radius: 50%;
+}
+.v-av.ring-green::after { border: 1.5px solid oklch(70% 0.18 145 / 0.5); }
+.v-av.ring-gold::after { border: 1.5px solid oklch(75% 0.16 60 / 0.55); }
+
+.v-winner-name {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 16px;
+  letter-spacing: -0.005em;
+}
+.v-winner-tags {
+  margin-top: 4px;
+  display: flex; gap: 8px; flex-wrap: wrap;
+  font-family: 'Space Grotesk';
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-mute-l);
+}
+.v-tag-up { color: var(--gold); display: inline-flex; gap: 3px; align-items: center; }
+.v-tag-up::before { content:'↑'; font-size: 11px; }
+.v-tag-down { color: var(--frost); display: inline-flex; gap: 3px; align-items: center; }
+.v-tag-down::before { content:'↓'; font-size: 11px; }
+.v-tag-flat { color: var(--text-mute-l); }
+.v-tag-flat::before { content: '—'; margin-right: 3px; }
+
+.v-score-big {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 34px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.v.is-cold .v-score-big { color: var(--frost); }
+.v.is-you .v-score-big { color: var(--gold); }
+.v-score-big sub {
+  font-size: 10.5px; font-weight: 500;
+  color: var(--text-mute-l);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  vertical-align: 5px; margin-left: 2px;
+}
+
+/* ===== TIE PANEL (2-way) ===== */
+.v-tie-2 {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1.5px solid oklch(75% 0.16 60 / 0.4);
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(180deg, oklch(75% 0.16 60 / 0.10), oklch(75% 0.16 60 / 0.02));
+  position: relative;
+}
+.v-tie-2::before {
+  content: 'TIED';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  font-family: 'Space Grotesk';
+  font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  background: var(--navy);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid oklch(75% 0.16 60 / 0.5);
+}
+.v-tie-cell {
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 10px; align-items: center;
+}
+.v-tie-cell + .v-tie-cell {
+  border-left: 1px dashed oklch(75% 0.16 60 / 0.4);
+}
+.v-tie-av {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 12.5px;
+}
+.v-tie-name {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 13.5px;
+  letter-spacing: -0.005em;
+  line-height: 1.0;
+}
+.v-tie-pts {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 22px;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-top: 3px;
+}
+.v-tie-pts sub {
+  font-size: 9px; font-weight: 500;
+  color: var(--text-mute-l);
+  letter-spacing: 0.16em; text-transform: uppercase;
+  vertical-align: 4px; margin-left: 2px;
+}
+
+/* ===== TIE PANEL (3-way) ===== */
+.v-tie-3 {
+  margin-top: 16px;
+  padding: 14px 14px 12px;
+  border: 1.5px solid oklch(75% 0.16 60 / 0.4);
+  border-radius: 12px;
+  background: linear-gradient(180deg, oklch(75% 0.16 60 / 0.10), oklch(75% 0.16 60 / 0.02));
+}
+.v-tie-3-head {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: 'Space Grotesk';
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.v-tie-3-head .pts {
+  font-family: 'Space Grotesk';
+  font-size: 24px; font-weight: 700;
+  letter-spacing: -0.03em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+}
+.v-tie-3-head .pts sub {
+  font-size: 9px; font-weight: 500;
+  color: var(--text-mute-l);
+  letter-spacing: 0.16em; text-transform: uppercase;
+  vertical-align: 3px; margin-left: 2px;
+}
+.v-tie-3-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 6px 0;
+  border-top: 1px dashed oklch(75% 0.16 60 / 0.3);
+  font-family: 'Space Grotesk';
+}
+.v-tie-3-row:first-of-type { border-top: 0; padding-top: 0; }
+.v-tie-3-av {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 11.5px;
+}
+.v-tie-3-name {
+  font-weight: 600; font-size: 13.5px;
+  letter-spacing: -0.005em;
+}
+.v-tie-3-shift {
+  font-family: 'Space Grotesk';
+  font-weight: 600; font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.v-tie-3-shift.up { color: var(--gold); }
+.v-tie-3-shift.flat { color: var(--text-mute-l); }
+.v-tie-3-shift.down { color: var(--frost); }
+
+/* ===== HITS ===== */
+.v-hits {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.v-hit {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 7px 4px;
+  background: oklch(30% 0.04 260 / 0.4);
+  border-radius: 8px;
+  font-family: 'Space Grotesk';
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-dim-l);
+}
+.v-hit-mark {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 11px;
+}
+.v-hit-mark.hit { background: var(--green); color: var(--navy); }
+.v.is-you .v-hit-mark.hit { background: var(--gold); color: var(--navy); }
+.v.is-cold .v-hit-mark.hit { background: var(--frost); color: var(--navy); }
+.v-hit-mark.miss {
+  background: transparent;
+  border: 1.5px solid var(--line);
+  color: var(--text-mute-l);
+}
+.v-hit-mark.miss::after { content: '−'; font-weight: 700; }
+
+/* Hits in tie state: two compact rows */
+.v-tie-hits {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.v-tie-hits-row {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 8px;
+  background: oklch(30% 0.04 260 / 0.4);
+  border-radius: 8px;
+  font-family: 'Space Grotesk';
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.v-tie-hits-row .init {
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  margin-right: 2px;
+}
+.v-tie-hits-row .mark {
+  width: 14px; height: 14px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 9px;
+}
+.v-tie-hits-row .mark.hit { background: var(--green); color: var(--navy); }
+.v-tie-hits-row .mark.miss {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-mute-l);
+}
+.v-tie-hits-row .mark.miss::after { content: '·'; }
+
+/* ===== RUNNERS ===== */
+.v-runners {
+  margin-top: 12px;
+  display: grid; gap: 6px;
+}
+.v-run {
+  display: grid;
+  grid-template-columns: 18px 26px 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 7px 12px;
+  background: var(--navy-2);
+  border-radius: 8px;
+  font-family: 'Inter';
+  font-size: 12.5px;
+}
+.v-run-rank {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 11.5px;
+  color: var(--text-mute-l);
+}
+.v-run-av {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.v-run-name {
+  font-weight: 500;
+  color: var(--text-l);
+}
+.v-run-name small {
+  color: var(--text-mute-l);
+  font-size: 10px;
+  margin-left: 6px;
+}
+.v-run-pts {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-l);
+}
+.v-run-pts small {
+  font-size: 9.5px; font-weight: 500;
+  color: var(--text-mute-l);
+  margin-left: 2px; letter-spacing: 0.06em;
+}
+
+/* ===== CTA ===== */
+.v-cta {
+  margin-top: 14px;
+  display: flex; gap: 8px;
+}
+.v-btn {
+  flex: 1; height: 40px;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 12.5px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; cursor: pointer;
+}
+.v-btn-primary {
+  background: var(--green); color: oklch(15% 0.04 145);
+}
+.v.is-you .v-btn-primary { background: var(--gold); color: oklch(20% 0.06 60); }
+.v.is-cold .v-btn-primary {
+  background: var(--frost); color: oklch(18% 0.04 240);
+}
+.v-btn-ghost {
+  background: transparent;
+  color: var(--text-dim-l);
+  border: 1.5px solid var(--line);
+}
+
+/* ===== FOOT ===== */
+.foot {
+  margin-top: 80px;
+  padding-top: 26px;
+  border-top: 1px solid var(--rule);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="page-eyebrow">Match Verdict · v2</div>
+    <h1 class="page-title">Same card, <em>seven scoreboards.</em></h1>
+    <p class="page-sub">
+      Copy tightened. Tie states for two and three. A "you won" variant, the
+      brutal weekend where 30 wins it, and a one-point thriller.
+    </p>
+  </header>
+
+  <div class="states">
+
+    <!-- ============ STATE 01 · FLAWLESS SOLO ============ -->
+    <div class="state">
+      <div class="state-meta">
+        <span class="state-num">01</span>
+        <span class="state-name">Flawless solo</span>
+        <span class="state-note">100/100, clear daylight</span>
+      </div>
+      <div class="state-stage">
+        <div class="v">
+          <div class="v-kicker"><span>Aag Lagao League · M24</span><span class="right">Verdict</span></div>
+          <div class="v-fixture">
+            <div class="v-fix-crest v-fix-mi v-fix-lost">MI</div>
+            <span class="v-fix-vs">vs</span>
+            <div class="v-fix-crest v-fix-rcb v-fix-won">RCB</div>
+            <span class="v-fix-pom">V. Kohli · POM</span>
+          </div>
+          <h3 class="v-headline"><em>Anjali</em> ran the table.</h3>
+          <p class="v-sub">Called all four. <i>Flawless card of the season.</i></p>
+
+          <div class="v-winner">
+            <div class="v-av tone-green ring-green">AK</div>
+            <div>
+              <div class="v-winner-name">Anjali Krishnan</div>
+              <div class="v-winner-tags">
+                <span class="v-tag-up">1 spot · now #1</span>
+              </div>
+            </div>
+            <div class="v-score-big">100<sub>/100</sub></div>
+          </div>
+
+          <div class="v-hits">
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Winner</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Runs MI</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Wkts RCB</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>POM</div>
+          </div>
+
+          <div class="v-runners">
+            <div class="v-run">
+              <span class="v-run-rank">2</span>
+              <span class="v-run-av tone-blue">YK</span>
+              <span class="v-run-name">Yuvraj K. <small>was #1</small></span>
+              <span class="v-run-pts">70<small>pts</small></span>
+            </div>
+            <div class="v-run">
+              <span class="v-run-rank">3</span>
+              <span class="v-run-av tone-rose">SK</span>
+              <span class="v-run-name">Sarika K. <small>held #3</small></span>
+              <span class="v-run-pts">60<small>pts</small></span>
+            </div>
+          </div>
+
+          <div class="v-cta">
+            <button class="v-btn v-btn-primary">Drop in group →</button>
+            <button class="v-btn v-btn-ghost">Table</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STATE 02 · CLEAR WINNER ============ -->
+    <div class="state">
+      <div class="state-meta">
+        <span class="state-num">02</span>
+        <span class="state-name">Clear winner</span>
+        <span class="state-note">solid lead, not flawless</span>
+      </div>
+      <div class="state-stage">
+        <div class="v">
+          <div class="v-kicker"><span>Aag Lagao League · M24</span><span class="right">Verdict</span></div>
+          <div class="v-fixture">
+            <div class="v-fix-crest v-fix-mi v-fix-lost">MI</div>
+            <span class="v-fix-vs">vs</span>
+            <div class="v-fix-crest v-fix-rcb v-fix-won">RCB</div>
+            <span class="v-fix-pom">V. Kohli · POM</span>
+          </div>
+          <h3 class="v-headline"><em>Yuvraj</em> takes M24.</h3>
+          <p class="v-sub">70 pts. <i>20 clear of the chasing pack.</i></p>
+
+          <div class="v-winner">
+            <div class="v-av tone-blue ring-green">YK</div>
+            <div>
+              <div class="v-winner-name">Yuvraj K.</div>
+              <div class="v-winner-tags">
+                <span class="v-tag-flat">held #1</span>
+              </div>
+            </div>
+            <div class="v-score-big">70<sub>/140</sub></div>
+          </div>
+
+          <div class="v-hits">
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Winner</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Runs MI</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Wkts MI</div>
+            <div class="v-hit"><span class="v-hit-mark miss"></span>POM</div>
+          </div>
+
+          <div class="v-runners">
+            <div class="v-run">
+              <span class="v-run-rank">2</span>
+              <span class="v-run-av tone-green">AK</span>
+              <span class="v-run-name">Anjali K.</span>
+              <span class="v-run-pts">50<small>pts</small></span>
+            </div>
+            <div class="v-run">
+              <span class="v-run-rank">3</span>
+              <span class="v-run-av tone-rose">SK</span>
+              <span class="v-run-name">Sarika K.</span>
+              <span class="v-run-pts">50<small>pts</small></span>
+            </div>
+          </div>
+
+          <div class="v-cta">
+            <button class="v-btn v-btn-primary">Drop in group →</button>
+            <button class="v-btn v-btn-ghost">Table</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STATE 03 · TIE AT TOP (2-way) ============ -->
+    <div class="state">
+      <div class="state-meta">
+        <span class="state-num">03</span>
+        <span class="state-name">Two-way tie</span>
+        <span class="state-note">no outright winner</span>
+      </div>
+      <div class="state-stage">
+        <div class="v">
+          <div class="v-kicker"><span>Aag Lagao League · M24</span><span class="right">Split call</span></div>
+          <div class="v-fixture">
+            <div class="v-fix-crest v-fix-mi v-fix-lost">MI</div>
+            <span class="v-fix-vs">vs</span>
+            <div class="v-fix-crest v-fix-rcb v-fix-won">RCB</div>
+            <span class="v-fix-pom">V. Kohli · POM</span>
+          </div>
+          <h3 class="v-headline"><em>Tie</em> at the top.</h3>
+          <p class="v-sub">Anjali & Yuvraj both on 80. <i>No outright winner.</i></p>
+
+          <div class="v-tie-2">
+            <div class="v-tie-cell">
+              <div class="v-tie-av tone-green">AK</div>
+              <div>
+                <div class="v-tie-name">Anjali</div>
+                <div class="v-tie-pts">80<sub>pts</sub></div>
+              </div>
+            </div>
+            <div class="v-tie-cell">
+              <div class="v-tie-av tone-blue">YK</div>
+              <div>
+                <div class="v-tie-name">Yuvraj</div>
+                <div class="v-tie-pts">80<sub>pts</sub></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="v-tie-hits">
+            <div class="v-tie-hits-row">
+              <span class="init">AK</span>
+              <span class="mark hit">✓</span><span class="mark hit">✓</span>
+              <span class="mark hit">✓</span><span class="mark miss"></span>
+            </div>
+            <div class="v-tie-hits-row">
+              <span class="init">YK</span>
+              <span class="mark hit">✓</span><span class="mark hit">✓</span>
+              <span class="mark miss"></span><span class="mark hit">✓</span>
+            </div>
+          </div>
+
+          <div class="v-runners">
+            <div class="v-run">
+              <span class="v-run-rank">3</span>
+              <span class="v-run-av tone-rose">SK</span>
+              <span class="v-run-name">Sarika K.</span>
+              <span class="v-run-pts">50<small>pts</small></span>
+            </div>
+            <div class="v-run">
+              <span class="v-run-rank">4</span>
+              <span class="v-run-av tone-gold">RM</span>
+              <span class="v-run-name">Rohan M.</span>
+              <span class="v-run-pts">30<small>pts</small></span>
+            </div>
+          </div>
+
+          <div class="v-cta">
+            <button class="v-btn v-btn-primary">Drop in group →</button>
+            <button class="v-btn v-btn-ghost">Table</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STATE 04 · TIE AT TOP (3-way) ============ -->
+    <div class="state">
+      <div class="state-meta">
+        <span class="state-num">04</span>
+        <span class="state-name">Three-way tie</span>
+        <span class="state-note">league in shambles</span>
+      </div>
+      <div class="state-stage">
+        <div class="v">
+          <div class="v-kicker"><span>Aag Lagao League · M24</span><span class="right">No call</span></div>
+          <div class="v-fixture">
+            <div class="v-fix-crest v-fix-mi v-fix-lost">MI</div>
+            <span class="v-fix-vs">vs</span>
+            <div class="v-fix-crest v-fix-rcb v-fix-won">RCB</div>
+            <span class="v-fix-pom">V. Kohli · POM</span>
+          </div>
+          <h3 class="v-headline"><em>Three</em> on 60.</h3>
+          <p class="v-sub">Anjali, Yuvraj, Sarika — <i>joint top.</i></p>
+
+          <div class="v-tie-3">
+            <div class="v-tie-3-head">
+              <span>Joint top · 60 pts</span>
+              <span class="pts">3<sub>tied</sub></span>
+            </div>
+            <div class="v-tie-3-row">
+              <div class="v-tie-3-av tone-green">AK</div>
+              <span class="v-tie-3-name">Anjali Krishnan</span>
+              <span class="v-tie-3-shift up">↑3 · was #4</span>
+            </div>
+            <div class="v-tie-3-row">
+              <div class="v-tie-3-av tone-blue">YK</div>
+              <span class="v-tie-3-name">Yuvraj K.</span>
+              <span class="v-tie-3-shift flat">— held #1</span>
+            </div>
+            <div class="v-tie-3-row">
+              <div class="v-tie-3-av tone-rose">SK</div>
+              <span class="v-tie-3-name">Sarika K.</span>
+              <span class="v-tie-3-shift up">↑1 · was #2</span>
+            </div>
+          </div>
+
+          <div class="v-runners">
+            <div class="v-run">
+              <span class="v-run-rank">4</span>
+              <span class="v-run-av tone-gold">RM</span>
+              <span class="v-run-name">Rohan M.</span>
+              <span class="v-run-pts">30<small>pts</small></span>
+            </div>
+            <div class="v-run">
+              <span class="v-run-rank">5</span>
+              <span class="v-run-av tone-frost">VS</span>
+              <span class="v-run-name">Vikram S.</span>
+              <span class="v-run-pts">10<small>pts</small></span>
+            </div>
+          </div>
+
+          <div class="v-cta">
+            <button class="v-btn v-btn-primary">Drop in group →</button>
+            <button class="v-btn v-btn-ghost">Full table</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STATE 05 · YOU WON ============ -->
+    <div class="state">
+      <div class="state-meta">
+        <span class="state-num">05</span>
+        <span class="state-name">You won</span>
+        <span class="state-note">viewer is the MVP</span>
+      </div>
+      <div class="state-stage">
+        <div class="v is-you">
+          <div class="v-kicker"><span>Aag Lagao League · M24</span><span class="right">You won</span></div>
+          <div class="v-fixture">
+            <div class="v-fix-crest v-fix-mi v-fix-lost">MI</div>
+            <span class="v-fix-vs">vs</span>
+            <div class="v-fix-crest v-fix-rcb v-fix-won">RCB</div>
+            <span class="v-fix-pom">V. Kohli · POM</span>
+          </div>
+          <h3 class="v-headline"><em>You</em> ran the table.</h3>
+          <p class="v-sub">100/100. <i>Best card on the board.</i></p>
+
+          <div class="v-winner">
+            <div class="v-av tone-gold ring-gold">SK</div>
+            <div>
+              <div class="v-winner-name">You · @sarika9</div>
+              <div class="v-winner-tags">
+                <span class="v-tag-up">3 spots · now #1</span>
+              </div>
+            </div>
+            <div class="v-score-big">100<sub>/100</sub></div>
+          </div>
+
+          <div class="v-hits">
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Winner</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Runs MI</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Wkts RCB</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>POM</div>
+          </div>
+
+          <div class="v-runners">
+            <div class="v-run">
+              <span class="v-run-rank">2</span>
+              <span class="v-run-av tone-green">AK</span>
+              <span class="v-run-name">Anjali K. <small>was #1</small></span>
+              <span class="v-run-pts">50<small>pts</small></span>
+            </div>
+            <div class="v-run">
+              <span class="v-run-rank">3</span>
+              <span class="v-run-av tone-blue">YK</span>
+              <span class="v-run-name">Yuvraj K. <small>was #2</small></span>
+              <span class="v-run-pts">30<small>pts</small></span>
+            </div>
+          </div>
+
+          <div class="v-cta">
+            <button class="v-btn v-btn-primary">Brag now →</button>
+            <button class="v-btn v-btn-ghost">Save card</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STATE 06 · COLD WEEKEND ============ -->
+    <div class="state">
+      <div class="state-meta">
+        <span class="state-num">06</span>
+        <span class="state-name">Brutal weekend</span>
+        <span class="state-note">30 somehow wins it</span>
+      </div>
+      <div class="state-stage">
+        <div class="v is-cold">
+          <div class="v-kicker"><span>Aag Lagao League · M24</span><span class="right">Rough one</span></div>
+          <div class="v-fixture">
+            <div class="v-fix-crest v-fix-mi v-fix-lost">MI</div>
+            <span class="v-fix-vs">vs</span>
+            <div class="v-fix-crest v-fix-rcb v-fix-won">RCB</div>
+            <span class="v-fix-pom">V. Kohli · POM</span>
+          </div>
+          <h3 class="v-headline"><em>30</em> wins it. Yes really.</h3>
+          <p class="v-sub">Brutal weekend. <i>Anjali takes it with 30.</i></p>
+
+          <div class="v-winner">
+            <div class="v-av tone-frost">AK</div>
+            <div>
+              <div class="v-winner-name">Anjali K.</div>
+              <div class="v-winner-tags">
+                <span class="v-tag-flat">held #2</span>
+              </div>
+            </div>
+            <div class="v-score-big">30<sub>/140</sub></div>
+          </div>
+
+          <div class="v-hits">
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Winner</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Runs MI</div>
+            <div class="v-hit"><span class="v-hit-mark miss"></span>Wkts</div>
+            <div class="v-hit"><span class="v-hit-mark miss"></span>POM</div>
+          </div>
+
+          <div class="v-runners">
+            <div class="v-run">
+              <span class="v-run-rank">2</span>
+              <span class="v-run-av tone-blue">YK</span>
+              <span class="v-run-name">Yuvraj K.</span>
+              <span class="v-run-pts">20<small>pts</small></span>
+            </div>
+            <div class="v-run">
+              <span class="v-run-rank">3</span>
+              <span class="v-run-av tone-rose">SK</span>
+              <span class="v-run-name">Sarika K.</span>
+              <span class="v-run-pts">10<small>pts</small></span>
+            </div>
+          </div>
+
+          <div class="v-cta">
+            <button class="v-btn v-btn-primary">Apologise in group →</button>
+            <button class="v-btn v-btn-ghost">Table</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STATE 07 · TIGHT MARGIN ============ -->
+    <div class="state">
+      <div class="state-meta">
+        <span class="state-num">07</span>
+        <span class="state-name">By a whisker</span>
+        <span class="state-note">edged by 5</span>
+      </div>
+      <div class="state-stage">
+        <div class="v">
+          <div class="v-kicker"><span>Aag Lagao League · M24</span><span class="right">Photo finish</span></div>
+          <div class="v-fixture">
+            <div class="v-fix-crest v-fix-mi v-fix-lost">MI</div>
+            <span class="v-fix-vs">vs</span>
+            <div class="v-fix-crest v-fix-rcb v-fix-won">RCB</div>
+            <span class="v-fix-pom">V. Kohli · POM</span>
+          </div>
+          <h3 class="v-headline"><em>Anjali</em>, by 5.</h3>
+          <p class="v-sub">Yuvraj missed POM by a single pick. <i>Brutal.</i></p>
+
+          <div class="v-winner">
+            <div class="v-av tone-green ring-green">AK</div>
+            <div>
+              <div class="v-winner-name">Anjali K.</div>
+              <div class="v-winner-tags">
+                <span class="v-tag-up">1 spot · now #1</span>
+              </div>
+            </div>
+            <div class="v-score-big">75<sub>/140</sub></div>
+          </div>
+
+          <div class="v-hits">
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Winner</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>Runs MI</div>
+            <div class="v-hit"><span class="v-hit-mark miss"></span>Wkts</div>
+            <div class="v-hit"><span class="v-hit-mark hit">✓</span>POM</div>
+          </div>
+
+          <div class="v-runners">
+            <div class="v-run">
+              <span class="v-run-rank">2</span>
+              <span class="v-run-av tone-blue">YK</span>
+              <span class="v-run-name">Yuvraj K. <small>was #1 · −5</small></span>
+              <span class="v-run-pts">70<small>pts</small></span>
+            </div>
+            <div class="v-run">
+              <span class="v-run-rank">3</span>
+              <span class="v-run-av tone-rose">SK</span>
+              <span class="v-run-name">Sarika K.</span>
+              <span class="v-run-pts">40<small>pts</small></span>
+            </div>
+          </div>
+
+          <div class="v-cta">
+            <button class="v-btn v-btn-primary">Drop in group →</button>
+            <button class="v-btn v-btn-ghost">Table</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <span>Match Verdict · v2 · 7 states</span>
+    <span>Copy halved, humour on</span>
+  </div>
+
+</div>
+
+</body>
+</html>

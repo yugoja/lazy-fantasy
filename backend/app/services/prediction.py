@@ -1,7 +1,13 @@
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
-from app.models import Match, MatchStatus, Player, Prediction
+from app.models import (
+    FootballPrediction,
+    Match,
+    MatchStatus,
+    Player,
+    Prediction,
+)
 
 
 def get_prediction_by_user_and_match(
@@ -141,6 +147,60 @@ def update_prediction(
     prediction.predicted_most_wickets_team1_player_id = predicted_most_wickets_team1_player_id
     prediction.predicted_most_wickets_team2_player_id = predicted_most_wickets_team2_player_id
     prediction.predicted_pom_player_id = predicted_pom_player_id
+    db.commit()
+    db.refresh(prediction)
+    return prediction
+
+
+def create_football_prediction(
+    db: Session,
+    user_id: int,
+    match_id: int,
+    team1_goals: int,
+    team2_goals: int,
+    advance_winner_id: int | None,
+    player_pick_ids: tuple[int, int, int],
+) -> Prediction:
+    """Create a football prediction (shared row + 1:1 football child)."""
+    prediction = Prediction(
+        user_id=user_id,
+        match_id=match_id,
+        points_earned=0,
+        is_processed=False,
+    )
+    prediction.football = FootballPrediction(
+        team1_goals=team1_goals,
+        team2_goals=team2_goals,
+        advance_winner_id=advance_winner_id,
+        player_pick_1_id=player_pick_ids[0],
+        player_pick_2_id=player_pick_ids[1],
+        player_pick_3_id=player_pick_ids[2],
+    )
+    db.add(prediction)
+    db.commit()
+    db.refresh(prediction)
+    return prediction
+
+
+def update_football_prediction(
+    db: Session,
+    prediction: Prediction,
+    team1_goals: int,
+    team2_goals: int,
+    advance_winner_id: int | None,
+    player_pick_ids: tuple[int, int, int],
+) -> Prediction:
+    """Update an existing football prediction's child row."""
+    fp = prediction.football
+    if fp is None:
+        fp = FootballPrediction(prediction_id=prediction.id)
+        prediction.football = fp
+    fp.team1_goals = team1_goals
+    fp.team2_goals = team2_goals
+    fp.advance_winner_id = advance_winner_id
+    fp.player_pick_1_id = player_pick_ids[0]
+    fp.player_pick_2_id = player_pick_ids[1]
+    fp.player_pick_3_id = player_pick_ids[2]
     db.commit()
     db.refresh(prediction)
     return prediction

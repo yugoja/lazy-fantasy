@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -111,47 +111,45 @@ export function OnboardingChecklist({
   const completedCount = steps.filter((s) => s.done).length;
 
   return (
-    <Card className="border-primary/20 bg-primary/5">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-sm font-semibold">Get started</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {completedCount} of {steps.length} done
-            </p>
-          </div>
-          <button
-            onClick={handleDismiss}
-            className="text-muted-foreground hover:text-foreground p-1"
-            aria-label="Dismiss"
-          >
-            <X className="h-4 w-4" />
-          </button>
+    <div className="rounded-xl border-l-4 border-l-primary bg-primary/5 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-sm font-bold">Get started</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {completedCount}/{steps.length} done
+          </p>
         </div>
+        <button
+          onClick={handleDismiss}
+          className="text-muted-foreground hover:text-foreground p-1"
+          aria-label="Dismiss"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
 
-        <div className="space-y-3">
-          {steps.map((step) => (
-            <div key={step.label} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                {step.done ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                ) : (
-                  <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
+      <div className="space-y-3">
+        {steps.map((step) => (
+          <div key={step.label} className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {step.done ? (
+                <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+              ) : (
+                <Circle className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+              )}
+              <span
+                className={cn(
+                  'text-sm truncate',
+                  step.done && 'line-through text-muted-foreground',
                 )}
-                <span
-                  className={cn(
-                    'text-sm truncate',
-                    step.done && 'line-through text-muted-foreground',
-                  )}
-                >
-                  {step.label}
-                </span>
-              </div>
-              {!step.done && step.action}
+              >
+                {step.label}
+              </span>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+            {!step.done && step.action}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

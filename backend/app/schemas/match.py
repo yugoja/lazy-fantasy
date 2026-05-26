@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Optional
 from pydantic import BaseModel, Field, field_serializer
 
 
@@ -89,6 +90,8 @@ class MatchPlayersResponse(BaseModel):
     team_2_form: list[TeamFormEntryResponse] = Field(default_factory=list)
     lineup_announced: bool = False
     start_time: datetime
+    sport: str = "cricket"
+    stage: Optional[str] = None  # football: GROUP/R32/R16/QF/SF/THIRD/FINAL
 
     @field_serializer("start_time")
     def serialize_start_time(self, v: datetime) -> str:

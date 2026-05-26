@@ -24,6 +24,11 @@ class Match(Base):
         Enum(MatchStatus), default=MatchStatus.SCHEDULED
     )
 
+    # Football stage, drives the knockout 2x scoring multiplier. Null for cricket.
+    # Canonical values: GROUP | R32 | R16 | QF | SF | THIRD | FINAL
+    # (kept in sync with app.services.scoring_football.KNOCKOUT_STAGES).
+    stage: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+
     # CricAPI sync fields
     external_match_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     sync_state: Mapped[str] = mapped_column(String(20), default="unlinked")
@@ -62,6 +67,12 @@ class Match(Base):
     most_wickets_team2_player = relationship("Player", foreign_keys=[result_most_wickets_team2_player_id])
     pom_player = relationship("Player", foreign_keys=[result_pom_player_id])
     predictions = relationship("Prediction", back_populates="match")
+    football_result = relationship(
+        "FootballMatchResult",
+        back_populates="match",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Match(id={self.id}, {self.team_1_id} vs {self.team_2_id})>"

@@ -1,5 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel
+from typing import Optional
+from pydantic import BaseModel, Field
 
 
 class MatchCreate(BaseModel):
@@ -18,6 +19,33 @@ class MatchResultCreate(BaseModel):
     result_most_wickets_team1_player_id: int
     result_most_wickets_team2_player_id: int
     result_pom_player_id: int
+
+
+class FootballPlayerEventInput(BaseModel):
+    """Per-player events for a football match result (WC2026 spec §10).
+
+    `team_goals_conceded` is intentionally absent — the server derives it from
+    the final scoreline and the player's team, so it can't desync.
+    """
+    player_id: int
+    minutes_played: int = Field(default=0, ge=0, le=120)
+    goals: int = Field(default=0, ge=0)
+    assists: int = Field(default=0, ge=0)
+    ingame_pen_saves: int = Field(default=0, ge=0)
+    shootout_pen_saves: int = Field(default=0, ge=0)
+    red_card: bool = False
+    own_goals: int = Field(default=0, ge=0)
+    ingame_pen_misses: int = Field(default=0, ge=0)
+
+
+class FootballMatchResultCreate(BaseModel):
+    """Schema for setting a football match result + per-player events."""
+    team1_goals_reg: int = Field(ge=0, le=30)
+    team2_goals_reg: int = Field(ge=0, le=30)
+    team1_goals_et: Optional[int] = Field(default=None, ge=0, le=30)
+    team2_goals_et: Optional[int] = Field(default=None, ge=0, le=30)
+    shootout_winner_id: Optional[int] = None
+    player_events: list[FootballPlayerEventInput] = Field(default_factory=list)
 
 
 class SetLineupRequest(BaseModel):

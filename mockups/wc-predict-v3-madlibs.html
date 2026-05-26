@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>V3 · Mad Libs — ESP vs FRA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: oklch(96% 0.012 95);
+  --bg-2: oklch(92% 0.018 92);
+  --ink: oklch(20% 0.025 80);
+  --ink-dim: oklch(42% 0.03 75);
+  --ink-mute: oklch(60% 0.025 70);
+  --rule: oklch(82% 0.022 88);
+  --hl: oklch(58% 0.22 28);
+  --hl-2: oklch(72% 0.20 88);
+  --green: oklch(54% 0.18 145);
+  --teal: oklch(58% 0.12 200);
+  --esp: oklch(54% 0.24 28);
+  --fra: oklch(38% 0.16 258);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: oklch(88% 0.018 92);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh;
+  display: grid; place-items: center;
+  padding: 24px;
+}
+.app {
+  width: 100%; max-width: 430px; height: 920px;
+  background:
+    radial-gradient(ellipse 80% 50% at 100% 0%, oklch(94% 0.04 88), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, oklch(94% 0.04 60), transparent 60%),
+    var(--bg);
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.4);
+  border-radius: 28px;
+}
+
+.bar {
+  flex-shrink: 0;
+  padding: 18px 24px 14px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.bar-l {
+  font-family: 'Fraunces'; font-weight: 500; font-style: italic;
+  font-size: 16px; letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.bar-l small {
+  font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--ink-mute);
+  display: block; margin-top: 2px;
+  font-style: normal;
+}
+.bar-r {
+  font-family: 'Space Grotesk'; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-mute);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.bar-r .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--hl);
+  animation: blink 1.6s infinite;
+}
+@keyframes blink { 0%,100% { opacity:.35;} 50% { opacity: 1;} }
+
+.heading {
+  flex-shrink: 0;
+  padding: 6px 24px 14px;
+}
+.heading h1 {
+  margin: 0;
+  font-family: 'Fraunces'; font-weight: 400;
+  font-size: 30px; line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.heading h1 em {
+  font-style: italic;
+  color: var(--hl);
+}
+.heading .lede {
+  margin-top: 6px;
+  font-size: 12.5px; color: var(--ink-mute);
+}
+
+/* the sentence canvas */
+.sentence {
+  flex: 1; overflow-y: auto;
+  padding: 14px 24px 130px;
+  font-family: 'Fraunces';
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.34;
+  color: var(--ink);
+  letter-spacing: -0.012em;
+}
+.sentence::-webkit-scrollbar { width: 0; }
+.sentence p {
+  margin: 0 0 22px;
+}
+.sentence p + p { font-size: 26px; }
+
+/* blanks (tappable tokens) */
+.blank {
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  padding: 2px 12px 4px;
+  margin: 0 1px;
+  background: oklch(98% 0.02 88);
+  border-bottom: 2px dashed var(--ink-mute);
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 500;
+  color: var(--ink-mute);
+  transition: 0.2s;
+  white-space: nowrap;
+}
+.blank::after {
+  content: '⌄';
+  font-family: 'Space Grotesk'; font-style: normal;
+  font-size: 12px;
+  margin-left: 6px;
+  opacity: 0.5;
+}
+.blank.filled {
+  background: var(--ink);
+  color: var(--bg);
+  font-style: normal;
+  font-weight: 500;
+  border-bottom-color: transparent;
+  border-bottom: 2px solid var(--ink);
+}
+.blank.filled.team-esp {
+  background: var(--esp);
+  border-bottom-color: var(--esp);
+}
+.blank.filled.team-fra {
+  background: var(--fra);
+  border-bottom-color: var(--fra);
+}
+.blank.filled.score {
+  background: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.blank.filled::after { content: ''; }
+.blank.open {
+  background: var(--hl-2);
+  color: var(--ink);
+  border-bottom-color: var(--hl);
+}
+
+/* tiny "+pts" tag */
+.blank .pts {
+  position: absolute;
+  top: -10px; right: -6px;
+  font-family: 'Space Grotesk'; font-style: normal;
+  font-size: 9px; font-weight: 700;
+  background: var(--hl-2);
+  color: var(--ink);
+  padding: 2px 5px;
+  letter-spacing: 0.06em;
+  border-radius: 3px;
+  transform: rotate(4deg);
+}
+
+/* picker drawer */
+.drawer {
+  position: absolute;
+  left: 16px; right: 16px;
+  bottom: 110px;
+  background: oklch(98% 0.012 88);
+  border: 1.5px solid var(--ink);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+  padding: 14px 14px 16px;
+  z-index: 8;
+  transform: translateY(20px); opacity: 0; pointer-events: none;
+  transition: 0.32s cubic-bezier(0.2,0.85,0.25,1);
+  max-height: 340px;
+  overflow-y: auto;
+}
+.drawer::-webkit-scrollbar { width: 0; }
+.drawer.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+.drawer-h {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 8px;
+}
+.drawer-title {
+  font-family: 'Fraunces'; font-weight: 500; font-style: italic;
+  font-size: 18px;
+}
+.drawer-x {
+  font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-mute); cursor: pointer;
+  background: transparent; border: none;
+}
+
+/* picker options */
+.opt-grid { display: grid; gap: 6px; }
+.opt {
+  display: grid; grid-template-columns: 28px 1fr auto;
+  align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--rule);
+  cursor: pointer;
+  transition: 0.12s;
+}
+.opt:hover { background: oklch(94% 0.025 88); }
+.opt .key {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 11px;
+  letter-spacing: 0.16em;
+  background: var(--ink); color: var(--bg);
+  padding: 4px 7px; text-align: center;
+}
+.opt .key.esp { background: var(--esp); }
+.opt .key.fra { background: var(--fra); }
+.opt .key.draw { background: oklch(60% 0.02 80); }
+.opt .pt {
+  font-family: 'Fraunces'; font-weight: 500;
+  font-size: 16px;
+}
+.opt .pt em { font-style: italic; }
+.opt .sm {
+  font-family: 'Space Grotesk'; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.opt .sm b { color: var(--hl); }
+
+.scorenum-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+}
+.snn {
+  padding: 14px 0;
+  background: var(--bg-2); border: 1px solid var(--rule);
+  font-family: 'Fraunces'; font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  text-align: center; cursor: pointer;
+}
+.snn:hover { background: var(--hl-2); }
+.snn.selected { background: var(--ink); color: var(--bg); }
+
+.popular-strip {
+  margin-top: 12px;
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.pop-chip {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 11px;
+  letter-spacing: 0.12em;
+  padding: 5px 9px;
+  background: transparent; border: 1px solid var(--rule);
+  cursor: pointer; color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+}
+.pop-chip.hot { color: var(--hl); border-color: var(--hl); }
+.pop-chip:hover { background: var(--ink); color: var(--bg); }
+
+.opt.psel { background: var(--ink); color: var(--bg); }
+.opt.psel .sm { color: oklch(70% 0.03 60); }
+.opt.psel .sm b { color: var(--hl-2); }
+.opt.psel .key { background: var(--hl-2); color: var(--ink); }
+
+/* footer */
+.footer {
+  flex-shrink: 0;
+  padding: 14px 22px 22px;
+  border-top: 1.5px solid var(--ink);
+  display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center;
+  background: var(--bg);
+  z-index: 6;
+}
+.tally {
+  display: flex; flex-direction: column;
+}
+.tally .n {
+  font-family: 'Fraunces'; font-weight: 500;
+  font-size: 30px; line-height: 1; letter-spacing: -0.02em;
+}
+.tally .n em { font-style: italic; color: var(--hl); }
+.tally .lbl {
+  font-family: 'Space Grotesk'; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-mute); margin-top: 4px;
+}
+.lock-btn {
+  height: 54px; padding: 0 22px;
+  background: var(--ink); color: var(--bg);
+  border: none; cursor: pointer;
+  font-family: 'Fraunces'; font-weight: 500; font-size: 19px;
+  font-style: italic; letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.lock-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.lock-btn:not(:disabled):hover { background: var(--hl); }
+.lock-btn .arrow {
+  font-family: 'Fraunces'; font-weight: 400;
+  font-size: 24px;
+  transition: transform 0.2s;
+}
+.lock-btn:not(:disabled):hover .arrow { transform: translateX(4px); }
+
+/* scrim */
+.scrim {
+  position: absolute; inset: 0;
+  background: oklch(20% 0.025 80 / 0.35);
+  z-index: 7; opacity: 0; pointer-events: none; transition: 0.25s;
+}
+.scrim.on { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="bar">
+    <div class="bar-l">
+      Lazy Fantasy
+      <small>SPAIN vs FRANCE · GRP D</small>
+    </div>
+    <div class="bar-r"><span class="dot"></span>4h 22m left</div>
+  </div>
+
+  <div class="heading">
+    <h1>Fill in <em>your call</em>.</h1>
+    <div class="lede">Tap the underlined words. We'll do the points math.</div>
+  </div>
+
+  <div class="sentence">
+    <p>
+      I reckon <button class="blank filled team-esp" data-kind="winner" id="bWinner">Spain<span class="pts">+5</span></button> will edge it
+      <button class="blank filled score" data-kind="score" id="bScore">2&nbsp;–&nbsp;1<span class="pts">+15</span></button> over <span style="color:var(--ink-dim)">France</span>.
+    </p>
+    <p>
+      My three to watch:
+      <button class="blank" data-kind="p1" id="bP1">a name</button>,
+      <button class="blank" data-kind="p2" id="bP2">a name</button>,
+      and <button class="blank" data-kind="p3" id="bP3">one bold pick</button>.
+    </p>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- WINNER DRAWER -->
+  <div class="drawer" id="dWinner">
+    <div class="drawer-h">
+      <div class="drawer-title">Who edges it?</div>
+      <button class="drawer-x" data-close>close</button>
+    </div>
+    <div class="opt-grid">
+      <div class="opt" data-pick-w="esp">
+        <span class="key esp">ESP</span>
+        <span class="pt"><em>Spain</em> edges it</span>
+        <span class="sm">52% · <b>+5</b></span>
+      </div>
+      <div class="opt" data-pick-w="draw">
+        <span class="key draw">X</span>
+        <span class="pt"><em>It's a draw</em></span>
+        <span class="sm">14% · <b>+5</b></span>
+      </div>
+      <div class="opt" data-pick-w="fra">
+        <span class="key fra">FRA</span>
+        <span class="pt"><em>France</em> edges it</span>
+        <span class="sm">34% · <b>+5</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORE DRAWER -->
+  <div class="drawer" id="dScore">
+    <div class="drawer-h">
+      <div class="drawer-title">Call the score —</div>
+      <button class="drawer-x" data-close>close</button>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding: 4px 0 10px;">
+      <div>
+        <div style="font-family:'Space Grotesk';font-size:9.5px;font-weight:700;letter-spacing:.22em;color:var(--ink-mute);margin-bottom:4px;">ESP</div>
+        <div class="scorenum-grid" id="snA"></div>
+      </div>
+      <span style="font-family:'Fraunces'; font-style:italic; font-size:24px; color:var(--ink-mute);">vs</span>
+      <div>
+        <div style="font-family:'Space Grotesk';font-size:9.5px;font-weight:700;letter-spacing:.22em;color:var(--ink-mute);margin-bottom:4px;">FRA</div>
+        <div class="scorenum-grid" id="snB"></div>
+      </div>
+    </div>
+    <div class="popular-strip">
+      <span style="font-family:'Space Grotesk';font-size:9.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-mute);align-self:center;margin-right:4px;">Group fav</span>
+      <button class="pop-chip hot" data-q="1-1">1-1 ♥</button>
+      <button class="pop-chip" data-q="2-1">2-1</button>
+      <button class="pop-chip" data-q="1-2">1-2</button>
+      <button class="pop-chip" data-q="2-2">2-2</button>
+    </div>
+  </div>
+
+  <!-- PLAYER DRAWER -->
+  <div class="drawer" id="dPlayer">
+    <div class="drawer-h">
+      <div class="drawer-title" id="pDrawerTitle">A name —</div>
+      <button class="drawer-x" data-close>close</button>
+    </div>
+    <div class="opt-grid" id="pOpts"></div>
+  </div>
+
+  <div class="footer">
+    <div class="tally">
+      <div class="n">up to <em><span id="tallyN">20</span></em> pts</div>
+      <div class="lbl"><span id="tallyState">add 3 names</span></div>
+    </div>
+    <button class="lock-btn" id="lockBtn" disabled>
+      Lock it in <span class="arrow">→</span>
+    </button>
+  </div>
+</div>
+
+<script>
+const players = [
+  {t:'ESP', n:'Lamine Yamal', m:'RW · 8 G in 18 caps', tag:'ON FIRE'},
+  {t:'ESP', n:'Nico Williams', m:'LW · 5 G in 16 caps', tag:''},
+  {t:'ESP', n:'Pedri', m:'CM · 4 G in 24 caps', tag:''},
+  {t:'ESP', n:'Á. Morata', m:'ST · 36 G in 78 caps', tag:''},
+  {t:'ESP', n:'Rodri', m:'Ballon d\'Or', tag:'★'},
+  {t:'FRA', n:'K. Mbappé', m:'CF · 51 G in 92 caps', tag:'GOAT'},
+  {t:'FRA', n:'O. Dembélé', m:'RW · 7 G in 54 caps', tag:'ON FIRE'},
+  {t:'FRA', n:'B. Barcola', m:'LW · 2 G in 11 caps', tag:''},
+  {t:'FRA', n:'A. Tchouaméni', m:'CDM · 1 G in 38 caps', tag:''},
+  {t:'FRA', n:'Désiré Doué', m:'AM · 3 G in 9 caps', tag:''},
+];
+const state = { w:'esp', score:{a:2,b:1}, picks:[null,null,null] };
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+let currentKind = null;
+function open(kind) {
+  closeAll();
+  currentKind = kind;
+  $('#scrim').classList.add('on');
+  document.querySelectorAll('.blank').forEach(b => b.classList.remove('open'));
+  if (kind === 'winner') { $('#dWinner').classList.add('open'); $('#bWinner').classList.add('open'); }
+  else if (kind === 'score') { $('#dScore').classList.add('open'); $('#bScore').classList.add('open'); renderScoreNums(); }
+  else { $('#dPlayer').classList.add('open'); $('#b' + kind.toUpperCase()).classList.add('open'); renderPlayerOpts(); }
+}
+function closeAll() {
+  currentKind = null;
+  $('#scrim').classList.remove('on');
+  document.querySelectorAll('.drawer').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.blank').forEach(b => b.classList.remove('open'));
+}
+
+document.querySelectorAll('.blank').forEach(b => b.addEventListener('click', () => open(b.dataset.kind)));
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeAll));
+$('#scrim').addEventListener('click', closeAll);
+
+// Winner picking
+document.querySelectorAll('[data-pick-w]').forEach(o => o.addEventListener('click', () => {
+  state.w = o.dataset.pickW;
+  const label = state.w === 'esp' ? 'Spain' : state.w === 'fra' ? 'France' : 'a draw';
+  const b = $('#bWinner');
+  b.className = 'blank filled team-' + (state.w === 'draw' ? 'esp' : state.w);
+  if (state.w === 'draw') b.style.background = 'oklch(60% 0.02 80)';
+  else b.style.background = '';
+  b.innerHTML = label + '<span class="pts">+5</span>';
+  closeAll(); recalc();
+}));
+
+// Score numbers
+function renderScoreNums() {
+  ['A','B'].forEach(side => {
+    const wrap = $('#sn' + side);
+    wrap.innerHTML = '';
+    const k = side === 'A' ? 'a' : 'b';
+    for (let i = 0; i <= 5; i++) {
+      const d = document.createElement('div');
+      d.className = 'snn' + (state.score[k] === i ? ' selected' : '');
+      d.textContent = i;
+      d.addEventListener('click', () => {
+        state.score[k] = i;
+        renderScoreNums(); updateScoreToken();
+      });
+      wrap.appendChild(d);
+    }
+  });
+}
+function updateScoreToken() {
+  $('#bScore').innerHTML = `${state.score.a}&nbsp;–&nbsp;${state.score.b}<span class="pts">+15</span>`;
+  recalc();
+}
+document.querySelectorAll('.pop-chip').forEach(c => c.addEventListener('click', () => {
+  const [a,b] = c.dataset.q.split('-').map(Number);
+  state.score.a = a; state.score.b = b; renderScoreNums(); updateScoreToken();
+}));
+
+// Player picking
+function renderPlayerOpts() {
+  $('#pDrawerTitle').textContent =
+    currentKind === 'p1' ? 'First name —' : currentKind === 'p2' ? 'Second name —' : 'A bold third pick —';
+  const wrap = $('#pOpts'); wrap.innerHTML = '';
+  players.forEach(p => {
+    const selectedSomewhere = state.picks.find((sp, idx) => sp && sp.n === p.n && idx !== slotIndex());
+    const isThisSlot = state.picks[slotIndex()] && state.picks[slotIndex()].n === p.n;
+    const o = document.createElement('div');
+    o.className = 'opt' + (isThisSlot ? ' psel' : '');
+    if (selectedSomewhere) o.style.opacity = '0.4';
+    o.innerHTML = `
+      <span class="key ${p.t.toLowerCase()}">${p.t}</span>
+      <span class="pt"><em>${p.n}</em></span>
+      <span class="sm">${p.m}${p.tag ? ` · <b>${p.tag}</b>` : ''}</span>
+    `;
+    o.addEventListener('click', () => {
+      if (selectedSomewhere) return;
+      state.picks[slotIndex()] = p;
+      updatePlayerToken(slotIndex());
+      closeAll(); recalc();
+    });
+    wrap.appendChild(o);
+  });
+}
+function slotIndex() { return currentKind === 'p1' ? 0 : currentKind === 'p2' ? 1 : 2; }
+function updatePlayerToken(idx) {
+  const p = state.picks[idx];
+  const b = $('#bP' + (idx+1));
+  if (!p) { b.className = 'blank'; b.textContent = idx === 2 ? 'one bold pick' : 'a name'; return; }
+  b.className = 'blank filled team-' + p.t.toLowerCase();
+  b.innerHTML = p.n + '<span class="pts">+10</span>';
+}
+
+function recalc() {
+  const picksCount = state.picks.filter(Boolean).length;
+  let pts = 5 + (picksCount * 10);
+  if (state.w === 'esp' && state.score.a > state.score.b) pts += 15;
+  if (state.w === 'fra' && state.score.b > state.score.a) pts += 15;
+  if (state.w === 'draw' && state.score.a === state.score.b) pts += 15;
+  $('#tallyN').textContent = pts;
+  $('#lockBtn').disabled = picksCount !== 3;
+  $('#tallyState').textContent = picksCount < 3 ? `add ${3 - picksCount} name${picksCount === 2 ? '' : 's'}` : 'ready to lock';
+}
+
+recalc();
+</script>
+</body>
+</html>

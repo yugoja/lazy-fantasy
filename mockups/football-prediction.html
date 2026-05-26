@@ -1,0 +1,1221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Lazy Fantasy · BRA vs ARG · Lock your picks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #0a0f1c;
+  --bg-elev: #0f1626;
+  --stub: #161f30;
+  --stub-2: #1b2538;
+  --line: rgba(255,255,255,0.07);
+  --line-strong: rgba(255,255,255,0.16);
+  --text: #f4f6fb;
+  --text-dim: #8b97b5;
+  --text-mute: #5d6886;
+  --green: #26d666;
+  --green-deep: #18a44d;
+  --green-soft: rgba(38,214,102,0.12);
+  --gold: #f39c3a;
+  --bra: #f9d61c;
+  --bra-deep: #0c8c3b;
+  --arg: #75aadb;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #050811;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+}
+
+/* Mock device frame */
+.app {
+  width: 100%;
+  max-width: 430px;
+  height: 100svh;
+  max-height: 920px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(255,255,255,0.04);
+  border-radius: 28px;
+}
+@media (max-width: 430px) {
+  body { background: var(--bg); }
+  .app { border-radius: 0; box-shadow: none; max-height: 100svh; }
+}
+
+/* ============ MATCH STUB (header) ============ */
+.match-stub {
+  position: relative;
+  padding: 18px 22px 22px;
+  background:
+    radial-gradient(ellipse 60% 80% at 50% -10%, rgba(38,214,102,0.16), transparent 60%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(243,156,58,0.05), transparent 70%),
+    linear-gradient(180deg, #0e1424, #0a0f1c);
+  flex-shrink: 0;
+  transition: padding 0.4s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.3s;
+}
+.app.compact .match-stub {
+  padding: 12px 22px 10px;
+  box-shadow: 0 12px 24px -16px rgba(0,0,0,0.6);
+}
+.match-stub::before, .match-stub::after {
+  content:'';
+  position: absolute;
+  bottom: -11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg);
+  z-index: 2;
+}
+.match-stub::before { left: -11px; }
+.match-stub::after { right: -11px; }
+
+.match-stub .perf {
+  position: absolute;
+  bottom: -1px;
+  left: 14px; right: 14px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 4px, transparent 4px 10px);
+}
+
+.kicker {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Space Grotesk';
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-bottom: 18px;
+  max-height: 30px;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.2,0.8,0.2,1), opacity 0.2s, margin-bottom 0.35s;
+}
+.app.compact .kicker {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+}
+.kicker .live-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  margin-right: 8px;
+  animation: pulse 1.6s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(243,156,58,0.6);
+}
+@keyframes pulse { 0%,100% { opacity: .35; transform: scale(.85);} 50% { opacity: 1; transform: scale(1);} }
+
+.fixture {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  transition: gap 0.35s cubic-bezier(0.2,0.8,0.2,1);
+}
+.app.compact .fixture {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+}
+.team {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  transition: gap 0.35s cubic-bezier(0.2,0.8,0.2,1);
+}
+.app.compact .team { flex-direction: row; gap: 8px; }
+.crest {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: 0.04em;
+  position: relative;
+  transition: width 0.35s cubic-bezier(0.2,0.8,0.2,1),
+              height 0.35s cubic-bezier(0.2,0.8,0.2,1),
+              font-size 0.35s cubic-bezier(0.2,0.8,0.2,1),
+              box-shadow 0.35s;
+}
+.app.compact .crest {
+  width: 30px; height: 30px;
+  font-size: 11px;
+}
+.app.compact .crest.bra {
+  box-shadow: 0 0 0 2px rgba(249,214,28,0.18), inset 0 -4px 0 var(--bra-deep);
+}
+.app.compact .crest.bra::after { display: none; }
+.app.compact .crest.arg {
+  box-shadow: 0 0 0 2px rgba(117,170,219,0.18);
+}
+.crest.bra {
+  background: var(--bra);
+  color: #07120a;
+  box-shadow: 0 0 0 4px rgba(249,214,28,0.13), inset 0 -10px 0 var(--bra-deep);
+}
+.crest.bra::after {
+  content:''; position:absolute; inset: 6px; border-radius:50%;
+  border: 2px dashed rgba(7,18,10,0.2);
+}
+.crest.arg {
+  background: linear-gradient(180deg, var(--arg) 0%, white 50%, var(--arg) 100%);
+  color: #07120a;
+  box-shadow: 0 0 0 4px rgba(117,170,219,0.13);
+}
+.team-name {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 13.5px;
+  letter-spacing: 0.06em;
+  transition: font-size 0.35s, opacity 0.2s, max-width 0.35s;
+}
+.app.compact .team-name { font-size: 12px; letter-spacing: 0.08em; }
+.versus {
+  font-family: 'Space Grotesk';
+  font-weight: 500;
+  font-size: 28px;
+  color: var(--text-mute);
+  letter-spacing: -0.04em;
+  font-style: italic;
+  transition: font-size 0.35s cubic-bezier(0.2,0.8,0.2,1);
+}
+.app.compact .versus { font-size: 14px; }
+
+.countdown {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  font-family: 'Space Grotesk';
+  max-height: 40px;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.2,0.8,0.2,1), opacity 0.2s, margin-top 0.35s;
+}
+.app.compact .countdown {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
+
+/* Inline countdown chip — only shown in compact state */
+.compact-countdown {
+  position: absolute;
+  top: 14px; right: 18px;
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Space Grotesk';
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(243,156,58,0.12);
+  color: var(--gold);
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.25s 0.05s, transform 0.35s cubic-bezier(0.2,0.8,0.2,1);
+}
+.compact-countdown::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(243,156,58,0.7);
+}
+.app.compact .compact-countdown {
+  opacity: 1;
+  transform: translateY(0);
+}
+.countdown-time {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: linear-gradient(180deg, #fff 0%, #c8d3e8 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.countdown-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ============ STEPS ============ */
+.steps-wrap {
+  flex-shrink: 0;
+  padding: 22px 22px 0;
+}
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.step-pill {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  position: relative;
+  overflow: hidden;
+}
+.step-pill::after {
+  content:''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: var(--green);
+  transition: width 0.5s cubic-bezier(0.2,0.8,0.2,1);
+}
+.step-pill.active::after, .step-pill.done::after { width: 100%; }
+.step-pill.active::after { background: var(--green); }
+
+.steps-wrap {
+  transition: padding 0.35s cubic-bezier(0.2,0.8,0.2,1);
+}
+.app.compact .steps-wrap { padding-top: 14px; padding-bottom: 4px; }
+
+.step-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 16px;
+  font-family: 'Space Grotesk';
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-mute);
+  transition: margin-top 0.35s cubic-bezier(0.2,0.8,0.2,1);
+}
+.app.compact .step-meta { margin-top: 12px; }
+.step-meta .pts {
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.step-title {
+  font-family: 'Space Grotesk';
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-top: 6px;
+  max-height: 40px;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.2,0.8,0.2,1), opacity 0.2s, margin-top 0.35s;
+}
+.step-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  line-height: 1.4;
+  max-height: 40px;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.2,0.8,0.2,1), opacity 0.2s, margin-top 0.35s;
+}
+.app.compact .step-title,
+.app.compact .step-sub {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
+
+/* ============ PANELS (scroll body) ============ */
+.panels {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px 22px 110px;
+  scroll-behavior: smooth;
+}
+.panels::-webkit-scrollbar { width: 0; }
+.panel { display: none; }
+.panel.active {
+  display: block;
+  animation: slideIn 0.45s cubic-bezier(0.2,0.8,0.2,1);
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== RESULT TILES ===== */
+.result-grid { display: grid; gap: 10px; }
+.result-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--stub);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+  overflow: hidden;
+}
+.result-tile::before {
+  content:'';
+  position: absolute;
+  left: -10%; right: -10%; top: 0; bottom: 0;
+  background: var(--accent, transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 0;
+}
+.result-tile.selected::before { opacity: 0.08; }
+.result-tile > * { position: relative; z-index: 1; }
+.result-tile:hover { transform: translateY(-1px); border-color: var(--line-strong); }
+.result-tile.selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(38,214,102,0.12);
+}
+.result-tile .badge {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px;
+  letter-spacing: 0.06em;
+}
+.result-tile .label {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.result-tile .sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.result-tile .odds {
+  font-family: 'Space Grotesk'; font-size: 14px; font-weight: 700;
+  color: var(--text-dim); font-variant-numeric: tabular-nums;
+  padding: 5px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 7px;
+  letter-spacing: 0.02em;
+}
+.result-tile.selected .odds { color: var(--green); background: var(--green-soft); }
+
+/* ===== SCORERS PANEL ===== */
+.scorer-tray {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px;
+  background: var(--stub);
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 16px;
+}
+.tray-slot {
+  aspect-ratio: 1 / 1.2;
+  background: rgba(0,0,0,0.2);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: 'Space Grotesk';
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-mute);
+  text-align: center;
+  padding: 8px;
+  gap: 6px;
+}
+.tray-slot .order {
+  position: absolute; top: 6px; left: 6px;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 10px;
+  background: rgba(0,0,0,0.4); color: var(--text-mute);
+  width: 18px; height: 18px; border-radius: 4px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line);
+}
+.tray-slot.filled {
+  background: var(--stub-2);
+  border: 1.5px solid var(--green);
+  border-style: solid;
+  box-shadow: 0 0 0 2px rgba(38,214,102,0.1);
+  animation: snap 0.3s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes snap { 0% { transform: scale(0.85); } 100% { transform: scale(1); } }
+.tray-slot.filled .order { background: var(--green); color: #07120a; border-color: var(--green); }
+.tray-slot .pl-img {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.tray-slot .pl-name {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px;
+  color: var(--text);
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+.scorer-list { margin-top: 18px; display: grid; gap: 6px; }
+.scorer-list h4 {
+  font-family: 'Space Grotesk'; font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.2em;
+  color: var(--text-mute);
+  margin: 8px 0 4px;
+  display: flex; align-items: center; gap: 10px;
+}
+.scorer-list h4::after {
+  content:''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--line-strong), transparent);
+}
+
+.player-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: var(--stub);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+}
+.player-row:hover { border-color: var(--line-strong); transform: translateX(2px); }
+.player-row.selected {
+  border-color: var(--green);
+  background: linear-gradient(90deg, var(--green-soft) 0%, transparent 70%), var(--stub);
+}
+.player-row .avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+.player-row .info { flex: 1; min-width: 0; }
+.player-row .name {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 14px;
+  letter-spacing: -0.005em;
+}
+.player-row .meta {
+  font-size: 11.5px; color: var(--text-dim);
+  display: flex; align-items: center; gap: 6px;
+}
+.player-row .meta .dot { color: var(--text-mute); }
+.player-row .form-tag {
+  font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  padding: 3px 7px; border-radius: 4px;
+  background: rgba(243,156,58,0.12); color: var(--gold);
+  flex-shrink: 0;
+}
+.player-row .form-tag.goat {
+  background: rgba(117,170,219,0.15); color: var(--arg);
+}
+.player-row .pick-box {
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  border: 1.5px solid var(--line-strong);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  transition: 0.15s;
+  color: transparent;
+}
+.player-row.selected .pick-box {
+  background: var(--green); border-color: var(--green); color: #07120a;
+}
+.player-row.disabled { opacity: 0.45; cursor: not-allowed; }
+.player-row.disabled:hover { transform: none; border-color: var(--line); }
+
+/* ===== SCORELINE PANEL ===== */
+.scoreboard {
+  margin-top: 4px;
+  padding: 32px 18px 28px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(38,214,102,0.07), transparent 70%),
+    var(--stub);
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.scoreboard::before {
+  content: 'FT · 90:00';
+  position: absolute; top: 14px; left: 16px;
+  font-family: 'Space Grotesk'; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.22em; color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+.scoreboard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(0deg, transparent 49.6%, rgba(255,255,255,0.03) 49.6%, rgba(255,255,255,0.03) 50.4%, transparent 50.4%);
+  pointer-events: none;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+.team-stack {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.score-team-label {
+  font-family: 'Space Grotesk'; font-size: 12.5px;
+  font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.score-team-label.bra { background: rgba(249,214,28,0.13); color: var(--bra); }
+.score-team-label.arg { background: rgba(117,170,219,0.15); color: var(--arg); }
+
+.score-digit {
+  font-family: 'Space Grotesk'; font-weight: 700;
+  font-size: 96px; line-height: 0.85;
+  letter-spacing: -0.07em;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  user-select: none;
+  background: linear-gradient(180deg, #fff 30%, #7c8aa8 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: transform 0.12s;
+  margin-top: -4px;
+}
+.score-digit.bump { animation: bump 0.3s ease-out; }
+@keyframes bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.stepper-row { display: flex; gap: 8px; }
+.stepper-btn {
+  width: 36px; height: 32px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 16px;
+  cursor: pointer;
+  transition: 0.12s;
+}
+.stepper-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.stepper-btn:active { transform: scale(0.93); }
+
+.score-dash {
+  font-family: 'Space Grotesk'; font-weight: 500;
+  font-size: 56px;
+  color: rgba(255,255,255,0.18);
+  letter-spacing: -0.04em;
+  align-self: start;
+  margin-top: 22px;
+}
+
+.quick-picks {
+  margin-top: 22px;
+}
+.quick-picks-label {
+  font-family: 'Space Grotesk'; font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.2em;
+  color: var(--text-mute);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.quick-picks-label::after {
+  content:''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--line-strong), transparent);
+}
+.quick-picks-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.quick-pick {
+  padding: 9px 4px;
+  background: var(--stub);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-family: 'Space Grotesk'; font-weight: 700;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: 0.15s;
+  text-align: center;
+  position: relative;
+}
+.quick-pick:hover { color: var(--text); border-color: var(--line-strong); transform: translateY(-1px); }
+.quick-pick.hot {
+  color: var(--gold);
+  border-color: rgba(243,156,58,0.3);
+  background: linear-gradient(180deg, rgba(243,156,58,0.08), transparent), var(--stub);
+}
+.quick-pick.hot::after {
+  content: '🔥';
+  position: absolute; top: -7px; right: -4px;
+  font-size: 10px;
+}
+.quick-pick.matched {
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+
+/* ===== CONFIRM ===== */
+.confirm-card { text-align: center; padding: 28px 4px 20px; }
+.check-big {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--green);
+  margin: 0 auto 22px;
+  display: grid; place-items: center;
+  color: #07120a;
+  animation: pop 0.55s cubic-bezier(0.2, 1.55, 0.4, 1);
+  box-shadow: 0 0 0 8px rgba(38,214,102,0.15), 0 0 40px rgba(38,214,102,0.4);
+}
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+.confirm-title {
+  font-family: 'Space Grotesk'; font-size: 30px; font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.confirm-sub {
+  color: var(--text-dim); font-size: 13.5px; margin-top: 6px;
+  line-height: 1.45;
+}
+.confirm-sub b { color: var(--green); font-weight: 700; }
+.summary { margin-top: 28px; display: grid; gap: 8px; text-align: left; }
+.summary-row {
+  padding: 14px 16px;
+  background: var(--stub);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.summary-label {
+  font-family: 'Space Grotesk'; font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--text-mute);
+}
+.summary-value {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 14.5px;
+  letter-spacing: -0.005em;
+  text-align: right;
+}
+
+/* ============ ACTION BAR ============ */
+.action-bar {
+  flex-shrink: 0;
+  padding: 14px 22px 24px;
+  display: flex; gap: 10px; align-items: center;
+  background: linear-gradient(180deg, transparent, var(--bg) 35%);
+  margin-top: -50px;
+  position: relative;
+  z-index: 5;
+}
+.btn-back {
+  width: 48px; height: 50px;
+  background: var(--stub);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  border-radius: 12px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.btn-back:hover { color: var(--text); border-color: var(--line-strong); }
+.btn-back:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-next {
+  flex: 1;
+  height: 50px;
+  background: var(--green);
+  color: #07120a;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 14.5px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.18s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 6px 20px rgba(38,214,102,0.25);
+}
+.btn-next:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(38,214,102,0.35); }
+.btn-next:active { transform: translateY(0); }
+.btn-next:disabled {
+  background: var(--stub); color: var(--text-mute);
+  border: 1px solid var(--line);
+  cursor: not-allowed;
+  box-shadow: none; transform: none;
+}
+.btn-next .arrow { transition: transform 0.2s; display: inline-block; }
+.btn-next:hover:not(:disabled) .arrow { transform: translateX(4px); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===================== MATCH STUB ===================== -->
+  <div class="match-stub">
+    <div class="kicker">
+      <span><span class="live-dot"></span>WORLD CUP · KNOCKOUTS</span>
+      <span>QUARTERFINAL</span>
+    </div>
+    <div class="fixture">
+      <div class="team">
+        <div class="crest bra">BRA</div>
+        <div class="team-name">BRAZIL</div>
+      </div>
+      <div class="versus">vs</div>
+      <div class="team">
+        <div class="crest arg">ARG</div>
+        <div class="team-name">ARGENTINA</div>
+      </div>
+    </div>
+    <div class="countdown">
+      <span class="countdown-time" id="cd">02:14:36</span>
+      <span class="countdown-label">until kickoff</span>
+    </div>
+    <div class="compact-countdown" aria-hidden="true">
+      <span id="cdCompact">02:14:36</span>
+    </div>
+    <div class="perf"></div>
+  </div>
+
+  <!-- ===================== STEPS HEADER ===================== -->
+  <div class="steps-wrap">
+    <div class="steps">
+      <div class="step-pill active" data-step="0"></div>
+      <div class="step-pill" data-step="1"></div>
+      <div class="step-pill" data-step="2"></div>
+    </div>
+    <div class="step-meta">
+      <span id="stepNum">PICK 01 / 03</span>
+      <span class="pts" id="stepPts">UP TO +25 PTS</span>
+    </div>
+    <div class="step-title" id="stepTitle">Who wins it?</div>
+    <div class="step-sub" id="stepSub">Pick the result. Going for the draw is bold — bold pays.</div>
+  </div>
+
+  <!-- ===================== PANELS ===================== -->
+  <div class="panels" id="panels">
+
+    <!-- ===== STEP 0: RESULT ===== -->
+    <div class="panel active" data-panel="0">
+      <div class="result-grid">
+
+        <div class="result-tile" data-result="bra" style="--accent: var(--bra);">
+          <div class="badge" style="background: var(--bra); color:#07120a;">BRA</div>
+          <div>
+            <div class="label">Brazil to win</div>
+            <div class="sub">41% of your league picked this</div>
+          </div>
+          <div class="odds">+25</div>
+        </div>
+
+        <div class="result-tile" data-result="draw" style="--accent: #ffffff;">
+          <div class="badge" style="background: rgba(255,255,255,0.08); color: var(--text); border: 1.5px dashed var(--line-strong);">X</div>
+          <div>
+            <div class="label">Draw <span style="color: var(--gold); font-size: 11px; letter-spacing: 0.1em; margin-left:6px;">CONTRARIAN</span></div>
+            <div class="sub">Only 12% picked it · double points</div>
+          </div>
+          <div class="odds">+50</div>
+        </div>
+
+        <div class="result-tile" data-result="arg" style="--accent: var(--arg);">
+          <div class="badge" style="background: linear-gradient(180deg, var(--arg), white, var(--arg)); color:#07120a;">ARG</div>
+          <div>
+            <div class="label">Argentina to win</div>
+            <div class="sub">47% of your league picked this</div>
+          </div>
+          <div class="odds">+25</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== STEP 1: SCORERS ===== -->
+    <div class="panel" data-panel="1">
+      <div class="scorer-tray" id="tray"></div>
+      <div class="scorer-list" id="scorerList"></div>
+    </div>
+
+    <!-- ===== STEP 2: SCORELINE ===== -->
+    <div class="panel" data-panel="2">
+      <div class="scoreboard">
+        <div class="score-row">
+          <div class="team-stack">
+            <div class="score-team-label bra">BRA</div>
+            <div class="score-digit" id="scoreA">2</div>
+            <div class="stepper-row">
+              <button class="stepper-btn" data-side="a" data-delta="-1" aria-label="Decrease Brazil score">−</button>
+              <button class="stepper-btn" data-side="a" data-delta="1" aria-label="Increase Brazil score">+</button>
+            </div>
+          </div>
+          <div class="score-dash">—</div>
+          <div class="team-stack">
+            <div class="score-team-label arg">ARG</div>
+            <div class="score-digit" id="scoreB">1</div>
+            <div class="stepper-row">
+              <button class="stepper-btn" data-side="b" data-delta="-1" aria-label="Decrease Argentina score">−</button>
+              <button class="stepper-btn" data-side="b" data-delta="1" aria-label="Increase Argentina score">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-picks">
+        <div class="quick-picks-label">Hot in your league</div>
+        <div class="quick-picks-row">
+          <button class="quick-pick" data-qp="2-1">2-1</button>
+          <button class="quick-pick hot" data-qp="1-1">1-1</button>
+          <button class="quick-pick" data-qp="2-2">2-2</button>
+          <button class="quick-pick" data-qp="1-2">1-2</button>
+          <button class="quick-pick" data-qp="3-1">3-1</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== STEP 3: CONFIRM ===== -->
+    <div class="panel" data-panel="3">
+      <div class="confirm-card">
+        <div class="check-big">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="confirm-title">Picks locked.</div>
+        <div class="confirm-sub">Up to <b>100 pts</b> on the line.<br/>Now go talk shit in the group chat.</div>
+        <div class="summary">
+          <div class="summary-row"><span class="summary-label">Result</span><span class="summary-value" id="sumResult">—</span></div>
+          <div class="summary-row"><span class="summary-label">Scorers</span><span class="summary-value" id="sumScorers">—</span></div>
+          <div class="summary-row"><span class="summary-label">Final score</span><span class="summary-value" id="sumScore">—</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== ACTION BAR ===================== -->
+  <div class="action-bar">
+    <button class="btn-back" id="btnBack" aria-label="Back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="btn-next" id="btnNext" disabled>
+      <span id="btnNextLabel">Pick a result</span>
+      <span class="arrow">→</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+const players = {
+  BRA: [
+    { name: 'Vinicius Jr.', meta: 'LW · 12 G in 14 caps', tag: 'ON FIRE' },
+    { name: 'Rodrygo',      meta: 'RW · 6 G in 18 caps', tag: '' },
+    { name: 'Raphinha',     meta: 'RW · 9 G in 22 caps', tag: '' },
+    { name: 'Endrick',      meta: 'ST · 5 G in 9 caps',  tag: '' },
+    { name: 'Casemiro',     meta: 'CDM · 2 G in 76 caps',tag: '' },
+  ],
+  ARG: [
+    { name: 'L. Messi',         meta: 'CF · 11 G in 13 caps', tag: 'GOAT' },
+    { name: 'L. Martínez',      meta: 'ST · 14 G in 19 caps', tag: 'ON FIRE' },
+    { name: 'J. Álvarez',       meta: 'ST · 8 G in 28 caps',  tag: '' },
+    { name: 'Á. Di María',      meta: 'RW · 4 G in 12 caps',  tag: '' },
+    { name: 'A. Mac Allister',  meta: 'CM · 3 G in 21 caps',  tag: '' },
+  ]
+};
+
+const state = {
+  step: 0,
+  result: null,
+  scorers: [],
+  score: { a: 2, b: 1 }
+};
+
+const stepInfo = [
+  { num: 'PICK 01 / 03', pts: 'UP TO +25 PTS', title: 'Who wins it?',         sub: 'Pick the result. Going for the draw is bold — bold pays.' },
+  { num: 'PICK 02 / 03', pts: 'UP TO +30 PTS', title: 'Who finds the net?',    sub: 'Pick three scorers. Order doesn’t matter — the goals do.' },
+  { num: 'PICK 03 / 03', pts: 'UP TO +45 PTS', title: 'Call the score.',       sub: 'Exact final score. Big points if you nail it on the nose.' },
+  { num: 'LOCKED IN',    pts: 'UP TO 100 PTS', title: 'You’re in.',       sub: 'Picks submitted to your league. Good luck.' },
+];
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+/* ----- RESULT ----- */
+$$('.result-tile').forEach(t => {
+  t.addEventListener('click', () => {
+    $$('.result-tile').forEach(x => x.classList.remove('selected'));
+    t.classList.add('selected');
+    state.result = t.dataset.result;
+    updateNextButton();
+  });
+});
+
+/* ----- SCORERS ----- */
+function renderScorerList() {
+  const list = $('#scorerList');
+  list.innerHTML = '';
+  ['BRA', 'ARG'].forEach(team => {
+    const h = document.createElement('h4');
+    h.textContent = team === 'BRA' ? 'Brazil · forwards' : 'Argentina · forwards';
+    list.appendChild(h);
+
+    players[team].forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'player-row';
+      const sel = state.scorers.find(s => s.team === team && s.name === p.name);
+      const fullSquad = state.scorers.length >= 3 && !sel;
+      if (sel) row.classList.add('selected');
+      if (fullSquad) row.classList.add('disabled');
+      const initials = p.name.replace(/\./g,'').split(' ').filter(Boolean).map(w => w[0]).join('').slice(0,2);
+      const teamColor = team === 'BRA' ? 'var(--bra)' : 'var(--arg)';
+
+      const tagEl = p.tag ? `<div class="form-tag${p.tag === 'GOAT' ? ' goat' : ''}">${p.tag}</div>` : '';
+      const checkSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+      row.innerHTML = `
+        <div class="avatar" style="background:${teamColor}; color:#07120a;">${initials}</div>
+        <div class="info">
+          <div class="name">${p.name}</div>
+          <div class="meta">${p.meta}</div>
+        </div>
+        ${tagEl}
+        <div class="pick-box">${checkSvg}</div>
+      `;
+      row.addEventListener('click', () => {
+        if (fullSquad) return;
+        toggleScorer(team, p.name);
+      });
+      list.appendChild(row);
+    });
+  });
+}
+
+function renderTray() {
+  const tray = $('#tray');
+  tray.innerHTML = '';
+  const ord = ['1st', '2nd', '3rd'];
+  for (let i = 0; i < 3; i++) {
+    const slot = document.createElement('div');
+    const filled = state.scorers[i];
+    slot.className = 'tray-slot' + (filled ? ' filled' : '');
+    if (filled) {
+      const teamColor = filled.team === 'BRA' ? 'var(--bra)' : 'var(--arg)';
+      const initials = filled.name.replace(/\./g,'').split(' ').filter(Boolean).map(w => w[0]).join('').slice(0,2);
+      const lastName = filled.name.split(' ').slice(-1)[0];
+      slot.innerHTML = `
+        <span class="order">${i+1}</span>
+        <div class="pl-img" style="background:${teamColor};color:#07120a;">${initials}</div>
+        <div class="pl-name">${lastName}</div>
+      `;
+    } else {
+      slot.innerHTML = `
+        <span class="order">${i+1}</span>
+        <span>${i === 0 ? 'Tap a player<br/>to add' : ord[i] + ' scorer'}</span>
+      `;
+    }
+    tray.appendChild(slot);
+  }
+}
+
+function toggleScorer(team, name) {
+  const idx = state.scorers.findIndex(s => s.team === team && s.name === name);
+  if (idx >= 0) {
+    state.scorers.splice(idx, 1);
+  } else {
+    if (state.scorers.length >= 3) return;
+    state.scorers.push({ team, name });
+  }
+  renderScorerList();
+  renderTray();
+  updateNextButton();
+}
+
+/* ----- SCORELINE ----- */
+function bumpDigit(side) {
+  const el = side === 'a' ? $('#scoreA') : $('#scoreB');
+  el.classList.remove('bump');
+  void el.offsetWidth; // restart animation
+  el.classList.add('bump');
+}
+
+$$('.stepper-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    const side = b.dataset.side;
+    const delta = parseInt(b.dataset.delta, 10);
+    const next = Math.max(0, Math.min(9, state.score[side] + delta));
+    if (next === state.score[side]) return;
+    state.score[side] = next;
+    (side === 'a' ? $('#scoreA') : $('#scoreB')).textContent = next;
+    bumpDigit(side);
+    refreshQuickPickHighlight();
+  });
+});
+
+$$('.score-digit').forEach(d => {
+  d.addEventListener('click', () => {
+    const side = d.id === 'scoreA' ? 'a' : 'b';
+    state.score[side] = (state.score[side] + 1) % 10;
+    d.textContent = state.score[side];
+    bumpDigit(side);
+    refreshQuickPickHighlight();
+  });
+});
+
+$$('.quick-pick').forEach(qp => {
+  qp.addEventListener('click', () => {
+    const [a, b] = qp.dataset.qp.split('-').map(Number);
+    state.score.a = a; state.score.b = b;
+    $('#scoreA').textContent = a;
+    $('#scoreB').textContent = b;
+    bumpDigit('a'); bumpDigit('b');
+    refreshQuickPickHighlight();
+  });
+});
+
+function refreshQuickPickHighlight() {
+  const key = `${state.score.a}-${state.score.b}`;
+  $$('.quick-pick').forEach(qp => {
+    qp.classList.toggle('matched', qp.dataset.qp === key);
+  });
+}
+
+/* ----- STEP NAV ----- */
+function setStep(n) {
+  state.step = Math.max(0, Math.min(3, n));
+  $$('.panel').forEach((p, i) => p.classList.toggle('active', i === state.step));
+  $$('.step-pill').forEach((p, i) => {
+    p.classList.remove('active', 'done');
+    if (i < state.step) p.classList.add('done');
+    else if (i === state.step && state.step < 3) p.classList.add('active');
+    else if (state.step === 3) p.classList.add('done');
+  });
+  const info = stepInfo[state.step];
+  $('#stepNum').textContent = info.num;
+  $('#stepPts').textContent = info.pts;
+  $('#stepTitle').textContent = info.title;
+  $('#stepSub').textContent = info.sub;
+  $('#panels').scrollTop = 0;
+  if (typeof setCompact === 'function') setCompact(false);
+
+  if (state.step === 3) renderSummary();
+  updateNextButton();
+}
+
+function renderSummary() {
+  const resultMap = {
+    bra: 'Brazil to win',
+    draw: 'Draw',
+    arg: 'Argentina to win'
+  };
+  $('#sumResult').textContent = resultMap[state.result] || '—';
+  $('#sumScorers').textContent = state.scorers.length
+    ? state.scorers.map(s => s.name.split(' ').slice(-1)[0]).join('  ·  ')
+    : '—';
+  $('#sumScore').textContent = `${state.score.a} — ${state.score.b}`;
+}
+
+function updateNextButton() {
+  const btn = $('#btnNext');
+  const lbl = $('#btnNextLabel');
+  const back = $('#btnBack');
+  back.disabled = state.step === 0 || state.step === 3;
+
+  if (state.step === 0) {
+    btn.disabled = !state.result;
+    lbl.textContent = state.result ? 'Next: pick scorers' : 'Pick a result';
+  } else if (state.step === 1) {
+    btn.disabled = state.scorers.length !== 3;
+    lbl.textContent = state.scorers.length === 3
+      ? 'Next: call the score'
+      : `Pick ${3 - state.scorers.length} more scorer${state.scorers.length === 2 ? '' : 's'}`;
+  } else if (state.step === 2) {
+    btn.disabled = false;
+    lbl.textContent = 'Lock in picks';
+  } else {
+    btn.disabled = false;
+    lbl.textContent = 'Share with the squad';
+  }
+}
+
+$('#btnNext').addEventListener('click', () => {
+  if (state.step === 3) {
+    // would normally trigger a share sheet; just bounce for the mockup
+    const btn = $('#btnNext');
+    btn.style.transform = 'scale(0.96)';
+    setTimeout(() => btn.style.transform = '', 150);
+    return;
+  }
+  setStep(state.step + 1);
+});
+$('#btnBack').addEventListener('click', () => setStep(state.step - 1));
+
+/* ----- COUNTDOWN ----- */
+let cd = 2*3600 + 14*60 + 36;
+function renderCountdown() {
+  const h = Math.floor(cd / 3600), m = Math.floor((cd % 3600) / 60), s = cd % 60;
+  const formatted = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  $('#cd').textContent = formatted;
+  $('#cdCompact').textContent = formatted;
+}
+renderCountdown();
+setInterval(() => {
+  cd = Math.max(0, cd - 1);
+  renderCountdown();
+}, 1000);
+
+/* ----- COMPACT HEADER ON SCROLL ----- */
+const appEl = document.querySelector('.app');
+const panelsEl = $('#panels');
+let isCompact = false;
+function setCompact(next) {
+  if (next === isCompact) return;
+  isCompact = next;
+  appEl.classList.toggle('compact', next);
+}
+panelsEl.addEventListener('scroll', () => {
+  const st = panelsEl.scrollTop;
+  if (!isCompact && st > 28) setCompact(true);
+  else if (isCompact && st < 6) setCompact(false);
+}, { passive: true });
+
+/* ----- INIT ----- */
+renderScorerList();
+renderTray();
+refreshQuickPickHighlight();
+setStep(0);
+</script>
+
+</body>
+</html>

@@ -164,4 +164,6 @@ async def get_players_for_match(
         team_2_form=[TeamFormEntryResponse(**entry) for entry in team_2_form],
         lineup_announced=lineup_announced,
         start_time=match.start_time,
+        sport=match.tournament.sport if match.tournament else "cricket",
+        stage=match.stage,
     )

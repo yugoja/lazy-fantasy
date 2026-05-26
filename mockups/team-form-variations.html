@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Team Form Indicator · Four Variations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --paper: oklch(97% 0.012 85);
+  --ink: oklch(22% 0.03 260);
+  --ink-mute: oklch(48% 0.025 260);
+  --rule: oklch(86% 0.02 85);
+
+  --navy: oklch(15% 0.025 260);
+  --navy-2: oklch(19% 0.035 260);
+  --stub: oklch(22% 0.04 260);
+  --line: oklch(30% 0.04 260);
+  --line-strong: oklch(38% 0.04 260);
+  --text-l: oklch(95% 0.01 260);
+  --text-dim-l: oklch(70% 0.03 260);
+  --text-mute-l: oklch(55% 0.03 260);
+
+  --green: oklch(70% 0.18 145);
+  --green-deep: oklch(50% 0.16 145);
+  --green-soft: oklch(70% 0.18 145 / 0.12);
+  --gold: oklch(75% 0.16 60);
+  --loss: oklch(58% 0.17 25);
+  --loss-deep: oklch(42% 0.14 25);
+  --nr: oklch(55% 0.02 260);
+
+  --mi: oklch(40% 0.16 250);
+  --rcb: oklch(48% 0.21 25);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Inter', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+body { background: var(--paper); }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: transparent; }
+
+.wrap { max-width: 1160px; margin: 0 auto; padding: clamp(36px, 5vw, 64px) clamp(20px, 4vw, 48px) 140px; }
+
+/* === HEAD === */
+.page-head { margin-bottom: 48px; max-width: 720px; }
+.page-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 14px;
+}
+.page-eyebrow::before { content: '●'; margin-right: 10px; color: var(--green-deep); }
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-size: clamp(36px, 5.4vw, 52px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+}
+.page-title em { font-style: italic; font-weight: 400; }
+.page-sub {
+  font-size: 16px; color: var(--ink-mute);
+  margin-top: 18px; line-height: 1.55;
+  max-width: 580px;
+}
+
+/* === GRID === */
+.variations {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin-top: 56px;
+}
+@media (max-width: 880px) {
+  .variations { grid-template-columns: 1fr; }
+}
+.variation { display: flex; flex-direction: column; gap: 14px; }
+.var-meta {
+  display: flex; align-items: baseline; gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--rule);
+}
+.var-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.18em;
+  color: var(--ink-mute);
+}
+.var-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.var-note {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  margin-left: auto;
+}
+.var-stage {
+  background: var(--navy);
+  border-radius: 20px;
+  padding: 28px 22px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ============================================================ */
+/* SHARED — prediction picker scaffold                          */
+/* ============================================================ */
+.picker {
+  width: 100%; max-width: 360px;
+  margin: 0 auto;
+  font-family: 'Inter';
+}
+.picker-label {
+  font-family: 'Space Grotesk';
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-mute-l);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.picker-label::after {
+  content:''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, oklch(95% 0.01 260 / 0.16), transparent);
+}
+.tile {
+  background: var(--stub);
+  border: 1.5px solid oklch(95% 0.01 260 / 0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  color: var(--text-l);
+  transition: border-color 0.18s, transform 0.18s;
+  cursor: pointer;
+}
+.tile + .tile { margin-top: 8px; }
+.tile:hover { border-color: oklch(95% 0.01 260 / 0.18); transform: translateY(-1px); }
+.tile.selected {
+  border-color: var(--green);
+  background: linear-gradient(180deg, var(--green-soft), oklch(70% 0.18 145 / 0.02)), var(--stub);
+  box-shadow: 0 0 0 2px oklch(70% 0.18 145 / 0.13);
+}
+.crest {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.crest.mi { background: var(--mi); color: var(--text-l); }
+.crest.rcb { background: var(--rcb); color: var(--text-l); }
+.tile-body { min-width: 0; }
+.tile-name {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.005em;
+}
+.tile-sub {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--text-mute-l);
+  letter-spacing: 0.01em;
+}
+.odds {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: oklch(95% 0.01 260 / 0.05);
+  color: var(--text-mute-l);
+}
+.tile.selected .odds { background: oklch(70% 0.18 145 / 0.16); color: var(--green); }
+
+/* ============================================================ */
+/* V1 · Classic W/L Pills (matches the reference)                */
+/* ============================================================ */
+.v1-form {
+  margin-top: 6px;
+  display: flex; align-items: center; gap: 4px;
+}
+.v1-pill {
+  display: inline-grid; place-items: center;
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.v1-pill.W { background: var(--green); color: oklch(15% 0.04 145); }
+.v1-pill.L { background: var(--loss); color: oklch(98% 0.01 25); }
+.v1-pill.NR { background: var(--nr); color: oklch(98% 0.01 260); }
+.v1-pill.latest {
+  box-shadow: 0 2px 0 0 oklch(75% 0.16 60);
+}
+.v1-label {
+  font-family: 'Space Grotesk';
+  font-weight: 600;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-mute-l);
+  margin-right: 6px;
+}
+
+/* ============================================================ */
+/* V2 · Momentum Trail (sized, oldest→newest)                    */
+/* ============================================================ */
+.v2-form {
+  margin-top: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.v2-dot {
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+/* Sizes scale up with recency: 6,8,10,12,14 */
+.v2-dot[data-i="0"] { width: 6px; height: 6px; opacity: 0.45; }
+.v2-dot[data-i="1"] { width: 8px; height: 8px; opacity: 0.6; }
+.v2-dot[data-i="2"] { width: 10px; height: 10px; opacity: 0.75; }
+.v2-dot[data-i="3"] { width: 12px; height: 12px; opacity: 0.9; }
+.v2-dot[data-i="4"] { width: 14px; height: 14px; opacity: 1; }
+.v2-dot.W { background: var(--green); }
+.v2-dot.L { background: var(--loss); }
+.v2-dot.NR { background: var(--nr); }
+.v2-trend {
+  margin-left: auto;
+  font-family: 'Space Grotesk';
+  font-weight: 600;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.v2-trend.up { color: var(--green); }
+.v2-trend.down { color: var(--loss); }
+.v2-trend.flat { color: var(--text-mute-l); }
+.v2-trend::before { margin-right: 4px; }
+.v2-trend.up::before { content: '↗'; }
+.v2-trend.down::before { content: '↘'; }
+.v2-trend.flat::before { content: '→'; }
+
+/* ============================================================ */
+/* V3 · Heat Bars (vertical, varying weight)                     */
+/* ============================================================ */
+.v3-form {
+  margin-top: 6px;
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 18px;
+}
+.v3-bar {
+  width: 5px;
+  border-radius: 1.5px;
+  position: relative;
+}
+.v3-bar.W { height: 100%; background: var(--green); }
+.v3-bar.L { height: 45%; background: var(--loss); }
+.v3-bar.NR { height: 30%; background: var(--nr); }
+.v3-bar.latest {
+  outline: 1.5px solid oklch(75% 0.16 60);
+  outline-offset: 1px;
+}
+.v3-baseline {
+  position: relative;
+  height: 1px;
+  background: oklch(95% 0.01 260 / 0.1);
+  margin-top: 2px;
+}
+.v3-label {
+  font-family: 'Space Grotesk';
+  font-weight: 600;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-mute-l);
+  margin-left: 8px;
+  align-self: center;
+  height: 100%;
+  display: flex; align-items: center;
+}
+
+/* ============================================================ */
+/* V4 · Streak Headline (interpreted)                            */
+/* ============================================================ */
+.v4-form {
+  margin-top: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.v4-streak {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 4px;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.v4-streak.hot {
+  color: oklch(15% 0.04 145);
+  background: var(--green);
+}
+.v4-streak.hot::before { content: '🔥'; font-size: 11px; }
+.v4-streak.cold {
+  color: oklch(98% 0.01 25);
+  background: var(--loss);
+}
+.v4-streak.cold::before { content: '❄'; font-size: 11px; }
+.v4-streak.mixed {
+  color: var(--text-l);
+  background: oklch(95% 0.01 260 / 0.08);
+  border: 1px solid oklch(95% 0.01 260 / 0.15);
+}
+.v4-tail {
+  display: flex; gap: 2px;
+}
+.v4-tail-pip {
+  width: 4px; height: 12px;
+  border-radius: 1.5px;
+}
+.v4-tail-pip.W { background: var(--green); }
+.v4-tail-pip.L { background: var(--loss); }
+.v4-tail-pip.NR { background: var(--nr); }
+.v4-tail-pip:last-child {
+  position: relative;
+}
+.v4-tail-pip:last-child::after {
+  content: '';
+  position: absolute;
+  bottom: -3px; left: 0; right: 0;
+  height: 1.5px;
+  background: oklch(75% 0.16 60);
+  border-radius: 1px;
+}
+
+/* === FOOT === */
+.foot {
+  margin-top: 80px;
+  padding-top: 26px;
+  border-top: 1px solid var(--rule);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="page-eyebrow">Pick winner step · v2</div>
+    <h1 class="page-title">Show me <em>form,</em> not just a name.</h1>
+    <p class="page-sub">
+      Last-5 results sit under each team in the winner-pick step. Four ways to show the same data — same widths, same hierarchy. Pick one.
+    </p>
+  </header>
+
+  <div class="variations">
+
+    <!-- ============ V1 · CLASSIC PILLS ============ -->
+    <div class="variation">
+      <div class="var-meta">
+        <span class="var-num">01</span>
+        <span class="var-name">Classic pills</span>
+        <span class="var-note">closest to your reference</span>
+      </div>
+      <div class="var-stage">
+        <div class="picker">
+          <div class="picker-label">Pick the winner</div>
+          <button class="tile selected">
+            <div class="crest mi">MI</div>
+            <div class="tile-body">
+              <div class="tile-name">Mumbai Indians</div>
+              <div class="tile-sub">58% of your league</div>
+              <div class="v1-form" aria-label="Last 5: W W L L W">
+                <span class="v1-label">L5</span>
+                <span class="v1-pill W">W</span>
+                <span class="v1-pill W">W</span>
+                <span class="v1-pill L">L</span>
+                <span class="v1-pill L">L</span>
+                <span class="v1-pill W latest">W</span>
+              </div>
+            </div>
+            <span class="odds">+25</span>
+          </button>
+          <button class="tile">
+            <div class="crest rcb">RCB</div>
+            <div class="tile-body">
+              <div class="tile-name">Royal Challengers</div>
+              <div class="tile-sub">42% of your league</div>
+              <div class="v1-form" aria-label="Last 5: W W W L W">
+                <span class="v1-label">L5</span>
+                <span class="v1-pill W">W</span>
+                <span class="v1-pill W">W</span>
+                <span class="v1-pill W">W</span>
+                <span class="v1-pill L">L</span>
+                <span class="v1-pill W latest">W</span>
+              </div>
+            </div>
+            <span class="odds">+25</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ V2 · MOMENTUM TRAIL ============ -->
+    <div class="variation">
+      <div class="var-meta">
+        <span class="var-num">02</span>
+        <span class="var-name">Momentum trail</span>
+        <span class="var-note">size = recency, no letters</span>
+      </div>
+      <div class="var-stage">
+        <div class="picker">
+          <div class="picker-label">Pick the winner</div>
+          <button class="tile">
+            <div class="crest mi">MI</div>
+            <div class="tile-body">
+              <div class="tile-name">Mumbai Indians</div>
+              <div class="tile-sub">58% of your league</div>
+              <div class="v2-form" aria-label="Form last 5: W W L L W, trending up">
+                <span class="v2-dot W" data-i="0"></span>
+                <span class="v2-dot W" data-i="1"></span>
+                <span class="v2-dot L" data-i="2"></span>
+                <span class="v2-dot L" data-i="3"></span>
+                <span class="v2-dot W" data-i="4"></span>
+                <span class="v2-trend up">won last</span>
+              </div>
+            </div>
+            <span class="odds">+25</span>
+          </button>
+          <button class="tile selected">
+            <div class="crest rcb">RCB</div>
+            <div class="tile-body">
+              <div class="tile-name">Royal Challengers</div>
+              <div class="tile-sub">42% of your league</div>
+              <div class="v2-form" aria-label="Form last 5: W W W L W, strong">
+                <span class="v2-dot W" data-i="0"></span>
+                <span class="v2-dot W" data-i="1"></span>
+                <span class="v2-dot W" data-i="2"></span>
+                <span class="v2-dot L" data-i="3"></span>
+                <span class="v2-dot W" data-i="4"></span>
+                <span class="v2-trend up">4 of 5</span>
+              </div>
+            </div>
+            <span class="odds">+25</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ V3 · HEAT BARS ============ -->
+    <div class="variation">
+      <div class="var-meta">
+        <span class="var-num">03</span>
+        <span class="var-name">Heat bars</span>
+        <span class="var-note">tall = W, short = L</span>
+      </div>
+      <div class="var-stage">
+        <div class="picker">
+          <div class="picker-label">Pick the winner</div>
+          <button class="tile selected">
+            <div class="crest mi">MI</div>
+            <div class="tile-body">
+              <div class="tile-name">Mumbai Indians</div>
+              <div class="tile-sub">58% of your league</div>
+              <div class="v3-form" aria-label="Last 5: W W L L W">
+                <div class="v3-bar W"></div>
+                <div class="v3-bar W"></div>
+                <div class="v3-bar L"></div>
+                <div class="v3-bar L"></div>
+                <div class="v3-bar W latest"></div>
+                <span class="v3-label">3 of 5</span>
+              </div>
+            </div>
+            <span class="odds">+25</span>
+          </button>
+          <button class="tile">
+            <div class="crest rcb">RCB</div>
+            <div class="tile-body">
+              <div class="tile-name">Royal Challengers</div>
+              <div class="tile-sub">42% of your league</div>
+              <div class="v3-form" aria-label="Last 5: W W W L W">
+                <div class="v3-bar W"></div>
+                <div class="v3-bar W"></div>
+                <div class="v3-bar W"></div>
+                <div class="v3-bar L"></div>
+                <div class="v3-bar W latest"></div>
+                <span class="v3-label">4 of 5</span>
+              </div>
+            </div>
+            <span class="odds">+25</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ V4 · STREAK HEADLINE ============ -->
+    <div class="variation">
+      <div class="var-meta">
+        <span class="var-num">04</span>
+        <span class="var-name">Streak headline</span>
+        <span class="var-note">interpreted, opinionated</span>
+      </div>
+      <div class="var-stage">
+        <div class="picker">
+          <div class="picker-label">Pick the winner</div>
+          <button class="tile">
+            <div class="crest mi">MI</div>
+            <div class="tile-body">
+              <div class="tile-name">Mumbai Indians</div>
+              <div class="tile-sub">58% of your league</div>
+              <div class="v4-form">
+                <span class="v4-streak mixed">Mixed · 3W 2L</span>
+                <div class="v4-tail" aria-label="Last 5: W W L L W">
+                  <span class="v4-tail-pip W"></span>
+                  <span class="v4-tail-pip W"></span>
+                  <span class="v4-tail-pip L"></span>
+                  <span class="v4-tail-pip L"></span>
+                  <span class="v4-tail-pip W"></span>
+                </div>
+              </div>
+            </div>
+            <span class="odds">+25</span>
+          </button>
+          <button class="tile selected">
+            <div class="crest rcb">RCB</div>
+            <div class="tile-body">
+              <div class="tile-name">Royal Challengers</div>
+              <div class="tile-sub">42% of your league</div>
+              <div class="v4-form">
+                <span class="v4-streak hot">On a heater · 4W</span>
+                <div class="v4-tail" aria-label="Last 5: W W W L W">
+                  <span class="v4-tail-pip W"></span>
+                  <span class="v4-tail-pip W"></span>
+                  <span class="v4-tail-pip W"></span>
+                  <span class="v4-tail-pip L"></span>
+                  <span class="v4-tail-pip W"></span>
+                </div>
+              </div>
+            </div>
+            <span class="odds">+25</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <span>Lazy Fantasy · Pick winner · form indicator</span>
+    <span>Same data, four ways</span>
+  </div>
+
+</div>
+
+</body>
+</html>

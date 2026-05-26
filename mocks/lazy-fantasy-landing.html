@@ -1,0 +1,1522 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Lazy Fantasy is the easiest prediction league for friends. Create a private league, make quick picks, and win bragging rights."
+    />
+    <title>Lazy Fantasy - Prediction Leagues for Friends</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #070908;
+        --bg-soft: #0b0f0d;
+        --surface: #0d120f;
+        --surface-2: #111811;
+        --surface-3: #151d17;
+        --line: rgba(215, 255, 215, 0.11);
+        --line-strong: rgba(185, 255, 55, 0.24);
+        --text: #eef6ee;
+        --muted: #98a39a;
+        --muted-2: #6f7a72;
+        --green: #b8ff2d;
+        --green-2: #63e83f;
+        --green-dim: rgba(184, 255, 45, 0.13);
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+        --radius: 8px;
+        --max: 1110px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      html,
+      body {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 54% -12%, rgba(184, 255, 45, 0.15), transparent 28rem),
+          radial-gradient(circle at 94% 4%, rgba(118, 255, 84, 0.08), transparent 20rem),
+          linear-gradient(180deg, #0a0d0b 0%, var(--bg) 38%, #050706 100%);
+        color: var(--text);
+        font-family: Geist, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: 0;
+        line-height: 1.5;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        content: "";
+        background:
+          linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        background-size: 42px 42px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 62%);
+      }
+
+      body::after {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        content: "";
+        background:
+          linear-gradient(90deg, rgba(184, 255, 45, 0.04), transparent 18%, transparent 82%, rgba(184, 255, 45, 0.035)),
+          radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.06), transparent 22rem);
+        opacity: 0.7;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      svg {
+        max-width: 100%;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-bottom: 1px solid rgba(215, 255, 215, 0.08);
+        background: rgba(7, 9, 8, 0.82);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        max-width: var(--max);
+        margin: 0 auto;
+        padding: 12px 14px;
+        gap: 10px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        min-width: 0;
+        gap: 9px;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--line-strong);
+        border-radius: 7px;
+        background:
+          linear-gradient(180deg, rgba(184, 255, 45, 0.14), rgba(184, 255, 45, 0.02)),
+          #0d130f;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11), 0 0 22px rgba(184, 255, 45, 0.12);
+        color: var(--green);
+        font-size: 12px;
+      }
+
+      .wordmark {
+        white-space: nowrap;
+      }
+
+      .status-pill {
+        display: none;
+        align-items: center;
+        gap: 7px;
+        margin-left: 4px;
+        padding: 5px 8px;
+        border: 1px solid rgba(184, 255, 45, 0.18);
+        border-radius: 999px;
+        color: #cbffd0;
+        background: rgba(184, 255, 45, 0.07);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 14px var(--green);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 15px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: transform 170ms ease, border-color 170ms ease, background 170ms ease, color 170ms ease, box-shadow 170ms ease;
+      }
+
+      .site-header .button {
+        flex: 0 0 auto;
+        min-height: 40px;
+        padding-right: 12px;
+        padding-left: 12px;
+        font-size: 13px;
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .button:active {
+        transform: translateY(0);
+      }
+
+      .button-primary {
+        color: #071008;
+        background: linear-gradient(180deg, #c7ff58, var(--green));
+        border-color: rgba(228, 255, 160, 0.72);
+        box-shadow: 0 12px 34px rgba(184, 255, 45, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      }
+
+      .button-secondary {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.035);
+        border-color: var(--line);
+      }
+
+      .page {
+        width: min(100%, var(--max));
+        margin: 0 auto;
+        padding: 0 18px 46px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 30px;
+        padding: 62px 0 44px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 7px 10px;
+        border: 1px solid rgba(184, 255, 45, 0.16);
+        border-radius: 999px;
+        color: #d5ffd5;
+        background: rgba(184, 255, 45, 0.055);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .hero-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 11ch;
+        font-size: clamp(44px, 12.5vw, 86px);
+        line-height: 0.95;
+        letter-spacing: -0.058em;
+      }
+
+      .hero-copy p {
+        max-width: 28rem;
+        color: #b9c4bb;
+        font-size: clamp(17px, 4.7vw, 21px);
+        line-height: 1.38;
+      }
+
+      .trust-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .trust-row span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .trust-row span:not(:last-child)::after {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: rgba(184, 255, 45, 0.65);
+        content: "";
+      }
+
+      .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+        max-width: 355px;
+        gap: 10px;
+        padding-top: 3px;
+      }
+
+      .hero-visual {
+        position: relative;
+        min-height: 430px;
+        isolation: isolate;
+      }
+
+      .stadium-light {
+        position: absolute;
+        inset: -40px -20px auto;
+        height: 220px;
+        z-index: -2;
+        background:
+          radial-gradient(ellipse at 26% 16%, rgba(184, 255, 45, 0.23), transparent 19%),
+          radial-gradient(ellipse at 76% 8%, rgba(213, 255, 181, 0.12), transparent 21%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent);
+        opacity: 0.72;
+        filter: blur(2px);
+        clip-path: polygon(0 0, 100% 0, 86% 100%, 14% 100%);
+      }
+
+      .phone-stage {
+        position: relative;
+        width: min(100%, 380px);
+        max-width: calc(100vw - 36px);
+        margin: 0 auto;
+        padding: 13px;
+        border: 1px solid rgba(215, 255, 215, 0.1);
+        border-radius: 28px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015)),
+          #090c0a;
+        box-shadow: var(--shadow), 0 0 70px rgba(184, 255, 45, 0.09);
+      }
+
+      .phone-screen {
+        overflow: hidden;
+        min-height: 400px;
+        border: 1px solid rgba(215, 255, 215, 0.1);
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 80% 0%, rgba(184, 255, 45, 0.13), transparent 13rem),
+          linear-gradient(180deg, #101710 0%, #090d0a 100%);
+      }
+
+      .screen-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 17px 16px 12px;
+      }
+
+      .mini-label {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .chip-live {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+        border: 1px solid rgba(184, 255, 45, 0.2);
+        border-radius: 999px;
+        color: var(--green);
+        background: rgba(184, 255, 45, 0.06);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .scoreboard {
+        margin: 0 12px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(184, 255, 45, 0.08), rgba(184, 255, 45, 0) 36%),
+          rgba(255, 255, 255, 0.026);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      .match-line {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .team {
+        display: grid;
+        gap: 7px;
+        font-weight: 800;
+      }
+
+      .team:last-child {
+        text-align: right;
+      }
+
+      .crest {
+        display: inline-grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        background: #151d17;
+        color: #dbe7dd;
+        font-size: 12px;
+      }
+
+      .team:last-child .crest {
+        justify-self: end;
+      }
+
+      .versus {
+        color: var(--muted-2);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .banter-card {
+        margin: 13px 12px 0;
+        padding: 14px;
+        border: 1px solid rgba(184, 255, 45, 0.16);
+        border-radius: 8px;
+        background: rgba(184, 255, 45, 0.045);
+      }
+
+      .banter-card strong {
+        display: block;
+        color: var(--text);
+        font-size: 17px;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      .banter-card span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .mini-board {
+        display: grid;
+        gap: 7px;
+        margin: 13px 12px 0;
+      }
+
+      .mini-row {
+        display: grid;
+        grid-template-columns: 22px 1fr auto;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 10px;
+        border: 1px solid rgba(215, 255, 215, 0.08);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.026);
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .rank {
+        color: var(--muted-2);
+        font-size: 11px;
+      }
+
+      .score {
+        color: var(--green);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .friends {
+        display: flex;
+        align-items: end;
+        gap: 8px;
+        padding: 18px 18px 0;
+      }
+
+      .person {
+        position: relative;
+        width: 42px;
+        height: 50px;
+      }
+
+      .person::before,
+      .person::after {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        content: "";
+      }
+
+      .person::before {
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #dce8dc;
+      }
+
+      .person::after {
+        bottom: 0;
+        width: 36px;
+        height: 27px;
+        border-radius: 999px 999px 8px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #1d281f;
+      }
+
+      .person:nth-child(2)::after {
+        background: rgba(184, 255, 45, 0.22);
+      }
+
+      .person:nth-child(3)::after {
+        background: #253226;
+      }
+
+      .celebrate-lines {
+        position: absolute;
+        right: 20px;
+        bottom: 56px;
+        width: 90px;
+        height: 70px;
+        color: rgba(184, 255, 45, 0.5);
+      }
+
+      section {
+        padding: 42px 0;
+      }
+
+      .section-head {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .section-head h2,
+      .final h2 {
+        font-size: clamp(30px, 8vw, 56px);
+        line-height: 1;
+        letter-spacing: -0.048em;
+      }
+
+      .section-head p,
+      .final p {
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .card-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .benefit-grid,
+      .love-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .surface {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.018)),
+          var(--surface);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      }
+
+      .surface::before {
+        position: absolute;
+        top: -1px;
+        right: 18px;
+        left: 18px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(184, 255, 45, 0.62), transparent);
+        opacity: 0.55;
+        content: "";
+      }
+
+      .tile {
+        min-height: 104px;
+        padding: 14px;
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      }
+
+      .tile:hover {
+        transform: translateY(-2px);
+        border-color: rgba(184, 255, 45, 0.24);
+        background:
+          linear-gradient(180deg, rgba(184, 255, 45, 0.06), rgba(255, 255, 255, 0.018)),
+          var(--surface);
+      }
+
+      .tile-icon {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        margin-bottom: 14px;
+        border: 1px solid rgba(184, 255, 45, 0.2);
+        border-radius: 7px;
+        color: var(--green);
+        background: rgba(184, 255, 45, 0.055);
+      }
+
+      .tile h3 {
+        font-size: 15px;
+        line-height: 1.2;
+        letter-spacing: -0.018em;
+      }
+
+      .tile p {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .product-card {
+        overflow: hidden;
+        padding: 16px;
+      }
+
+      .product-card + .product-card {
+        margin-top: 12px;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .card-kicker {
+        color: var(--muted-2);
+        font-size: 11px;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .card-title {
+        margin-top: 4px;
+        font-size: 21px;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+
+      .lock-chip,
+      .point-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+        min-height: 25px;
+        padding: 0 8px;
+        border: 1px solid rgba(215, 255, 215, 0.11);
+        border-radius: 999px;
+        color: #d9e6dc;
+        background: rgba(255, 255, 255, 0.035);
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .point-chip {
+        border-color: rgba(184, 255, 45, 0.19);
+        color: var(--green);
+        background: rgba(184, 255, 45, 0.06);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .pick-match {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 13px;
+        border: 1px solid rgba(215, 255, 215, 0.08);
+        border-radius: 8px;
+        background: #0a0f0c;
+      }
+
+      .pick-team {
+        display: grid;
+        gap: 8px;
+        font-weight: 850;
+        letter-spacing: -0.02em;
+      }
+
+      .pick-team:last-child {
+        justify-items: end;
+        text-align: right;
+      }
+
+      .team-badge {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        background: linear-gradient(180deg, #202a22, #121914);
+        color: #f0f7ef;
+        font-size: 12px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      .pick-list {
+        display: grid;
+        gap: 8px;
+        margin: 14px 0;
+      }
+
+      .pick-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid rgba(215, 255, 215, 0.08);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .pick-row span:first-child {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .pick-row strong {
+        display: block;
+        margin-top: 2px;
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.18;
+      }
+
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(215, 255, 215, 0.08);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .leaderboard {
+        padding: 16px;
+      }
+
+      .leaderboard-rows {
+        display: grid;
+        gap: 8px;
+      }
+
+      .leader-row {
+        display: grid;
+        grid-template-columns: 26px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid rgba(215, 255, 215, 0.08);
+        border-radius: 8px;
+        background:
+          linear-gradient(90deg, rgba(184, 255, 45, 0.045), transparent 42%),
+          rgba(255, 255, 255, 0.025);
+      }
+
+      .leader-row:first-child {
+        border-color: rgba(184, 255, 45, 0.22);
+        background:
+          linear-gradient(90deg, rgba(184, 255, 45, 0.095), transparent 46%),
+          rgba(255, 255, 255, 0.028);
+      }
+
+      .rank-dot {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border: 1px solid rgba(215, 255, 215, 0.09);
+        border-radius: 50%;
+        color: var(--muted);
+        background: #0a0f0c;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .leader-row:first-child .rank-dot {
+        color: #071008;
+        background: var(--green);
+        border-color: var(--green);
+      }
+
+      .handle {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 850;
+      }
+
+      .handle::before {
+        width: 7px;
+        height: 7px;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: var(--green-2);
+        box-shadow: 0 0 12px rgba(99, 232, 63, 0.42);
+        content: "";
+      }
+
+      .points {
+        color: var(--green);
+        font-size: 13px;
+        font-weight: 900;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .steps {
+        display: grid;
+        gap: 10px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 13px;
+      }
+
+      .step-number {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border: 1px solid rgba(184, 255, 45, 0.2);
+        border-radius: 8px;
+        color: var(--green);
+        background: rgba(184, 255, 45, 0.06);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .step h3 {
+        font-size: 16px;
+        line-height: 1.2;
+      }
+
+      .step p {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .sports-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .sport-card {
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .sport-icon {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border: 1px solid rgba(215, 255, 215, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--green);
+      }
+
+      .sport-card h3 {
+        font-size: 16px;
+        line-height: 1.18;
+      }
+
+      .sport-card p {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .final {
+        margin-top: 28px;
+        padding: 26px 18px;
+        text-align: left;
+        overflow: hidden;
+      }
+
+      .final::after {
+        position: absolute;
+        right: -60px;
+        bottom: -84px;
+        width: 180px;
+        height: 180px;
+        border: 1px solid rgba(184, 255, 45, 0.16);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(184, 255, 45, 0.12), transparent 63%);
+        content: "";
+      }
+
+      .final p {
+        margin: 10px 0 18px;
+        max-width: 30rem;
+      }
+
+      .footer-line {
+        margin-top: 16px;
+        color: var(--muted-2);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.001ms !important;
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+        }
+
+        .reveal {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      @media (min-width: 520px) {
+        .status-pill {
+          display: inline-flex;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .nav {
+          padding-right: 12px;
+          padding-left: 12px;
+        }
+
+        .brand {
+          gap: 8px;
+          font-size: 14px;
+        }
+
+        .brand-mark {
+          width: 26px;
+          height: 26px;
+          font-size: 11px;
+        }
+
+        .site-header .button {
+          min-height: 38px;
+          max-width: 116px;
+          padding-right: 10px;
+          padding-left: 10px;
+          font-size: 12px;
+        }
+
+        .page {
+          padding-right: 14px;
+          padding-left: 14px;
+        }
+
+        .hero {
+          gap: 28px;
+          padding-top: 58px;
+        }
+
+        h1 {
+          font-size: clamp(42px, 11.6vw, 46px);
+        }
+
+        .hero-actions {
+          max-width: 100%;
+          gap: 8px;
+        }
+
+        .hero-actions .button {
+          padding-right: 10px;
+          padding-left: 10px;
+          font-size: 13px;
+        }
+
+        .phone-stage {
+          width: 100%;
+          max-width: 100%;
+          padding: 12px;
+          border-radius: 24px;
+        }
+
+        .phone-screen {
+          min-height: 386px;
+        }
+
+        .screen-top {
+          padding-right: 14px;
+          padding-left: 14px;
+        }
+
+        .scoreboard,
+        .banter-card,
+        .mini-board {
+          margin-right: 10px;
+          margin-left: 10px;
+        }
+
+        .team,
+        .mini-row {
+          font-size: 12px;
+        }
+
+        .banter-card strong {
+          font-size: 16px;
+        }
+
+        .celebrate-lines {
+          right: 10px;
+        }
+
+        .tile {
+          padding: 13px;
+        }
+      }
+
+      @media (min-width: 720px) {
+        .nav,
+        .page {
+          padding-right: 28px;
+          padding-left: 28px;
+        }
+
+        .brand {
+          font-size: 16px;
+        }
+
+        .site-header .button {
+          min-height: 42px;
+          padding-right: 15px;
+          padding-left: 15px;
+          font-size: 14px;
+        }
+
+        .hero {
+          grid-template-columns: minmax(0, 0.9fr) minmax(360px, 0.74fr);
+          align-items: center;
+          gap: 42px;
+          padding: clamp(76px, 10vh, 126px) 0 clamp(64px, 8vh, 92px);
+        }
+
+        .hero-actions {
+          width: auto;
+          min-width: 330px;
+        }
+
+        .hero-visual {
+          min-height: 500px;
+        }
+
+        .phone-stage {
+          margin-right: 0;
+        }
+
+        section {
+          padding: 58px 0;
+        }
+
+        .benefit-grid,
+        .love-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .product-card {
+          padding: 20px;
+        }
+
+        .proof-layout {
+          display: grid;
+          grid-template-columns: 0.92fr 1.08fr;
+          align-items: start;
+          gap: 12px;
+        }
+
+        .steps {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .step {
+          grid-template-columns: 1fr;
+          align-items: start;
+          min-height: 142px;
+          padding: 16px;
+        }
+
+        .sports-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .final {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 24px;
+          padding: 34px;
+        }
+
+        .final p {
+          margin-bottom: 0;
+        }
+      }
+
+      @media (min-width: 1040px) {
+        .page {
+          padding-bottom: 66px;
+        }
+
+        h1 {
+          max-width: 10.7ch;
+        }
+
+        .hero-copy p {
+          max-width: 32rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary">
+        <a class="brand" href="#top" aria-label="Lazy Fantasy home">
+          <span class="brand-mark" aria-hidden="true">LF</span>
+          <span class="wordmark">Lazy Fantasy</span>
+          <span class="status-pill"><span class="live-dot" aria-hidden="true"></span>IPL live</span>
+        </a>
+        <a class="button button-primary" href="#create">Create League</a>
+      </nav>
+    </header>
+
+    <main id="top" class="page">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy reveal">
+          <span class="eyebrow"><span class="live-dot" aria-hidden="true"></span>IPL 2026 live now</span>
+          <h1 id="hero-title">The easiest prediction league for friends</h1>
+          <p>Create a private league. Make quick picks. Win bragging rights.</p>
+          <div class="trust-row" aria-label="Product highlights">
+            <span>Free to play</span>
+            <span>2-min setup</span>
+            <span>Made for groups</span>
+          </div>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#create">Create League</a>
+            <a class="button button-secondary" href="#demo">See Demo</a>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal" aria-label="Lazy Fantasy app preview">
+          <div class="stadium-light" aria-hidden="true"></div>
+          <div class="phone-stage">
+            <div class="phone-screen">
+              <div class="screen-top">
+                <span class="mini-label">Office League</span>
+                <span class="chip-live"><span class="live-dot" aria-hidden="true"></span>Live</span>
+              </div>
+              <div class="scoreboard">
+                <div class="match-line">
+                  <div class="team">
+                    <span class="crest">MI</span>
+                    <span>Mumbai</span>
+                  </div>
+                  <span class="versus">VS</span>
+                  <div class="team">
+                    <span class="crest">CSK</span>
+                    <span>Chennai</span>
+                  </div>
+                </div>
+              </div>
+              <div class="banter-card">
+                <strong>Blind Optimist jumped to #1</strong>
+                <span>50 points from Player of the Match. Chaos in the group chat.</span>
+              </div>
+              <div class="mini-board">
+                <div class="mini-row">
+                  <span class="rank">01</span>
+                  <span>Blind Optimist</span>
+                  <span class="score">780</span>
+                </div>
+                <div class="mini-row">
+                  <span class="rank">02</span>
+                  <span>Tactical Fraud</span>
+                  <span class="score">650</span>
+                </div>
+                <div class="mini-row">
+                  <span class="rank">03</span>
+                  <span>Loyal Fan</span>
+                  <span class="score">540</span>
+                </div>
+              </div>
+              <div class="friends" aria-hidden="true">
+                <span class="person"></span>
+                <span class="person"></span>
+                <span class="person"></span>
+              </div>
+              <svg class="celebrate-lines" viewBox="0 0 90 70" fill="none" aria-hidden="true">
+                <path d="M18 38 4 50" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M42 22 40 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M63 35 84 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M56 53 78 61" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <circle cx="24" cy="20" r="3" fill="currentColor" />
+                <circle cx="74" cy="43" r="2.5" fill="currentColor" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="reveal" aria-labelledby="benefits-title">
+        <div class="section-head">
+          <h2 id="benefits-title">Fantasy without homework</h2>
+        </div>
+        <div class="card-grid benefit-grid">
+          <article class="surface tile">
+            <div class="tile-icon" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M6 6 18 18M18 6 6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3>No drafts</h3>
+            <p>No one has to manage a squad for weeks.</p>
+          </article>
+          <article class="surface tile">
+            <div class="tile-icon" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16M7 12h10M10 17h4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <h3>No budgets</h3>
+            <p>Skip the spreadsheet. Pick the match.</p>
+          </article>
+          <article class="surface tile">
+            <div class="tile-icon" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M12 6v6l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3>No long setup</h3>
+            <p>Create the league while the toss is still on.</p>
+          </article>
+          <article class="surface tile">
+            <div class="tile-icon" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M8 11h8M8 15h5M5 20l3-3h9a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <h3>Just picks &amp; banter</h3>
+            <p>Quick calls, live points, louder group chats.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="demo" class="reveal" aria-labelledby="picks-title">
+        <div class="section-head">
+          <h2 id="picks-title">Pick in seconds</h2>
+          <p>Just 4 calls before kickoff.</p>
+        </div>
+        <article class="surface product-card">
+          <div class="card-header">
+            <div>
+              <div class="card-kicker">Example picks</div>
+              <h3 class="card-title">Mumbai vs Chennai</h3>
+            </div>
+            <span class="lock-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6V10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              18:30
+            </span>
+          </div>
+          <div class="pick-match">
+            <div class="pick-team">
+              <span class="team-badge">MI</span>
+              <span>Mumbai</span>
+            </div>
+            <span class="versus">VS</span>
+            <div class="pick-team">
+              <span class="team-badge">CSK</span>
+              <span>Chennai</span>
+            </div>
+          </div>
+          <div class="pick-list">
+            <div class="pick-row">
+              <div><span>Winner</span><strong>Mumbai</strong></div>
+              <span class="point-chip">+10</span>
+            </div>
+            <div class="pick-row">
+              <div><span>Top Batter</span><strong>Rohit Sharma</strong></div>
+              <span class="point-chip">+20</span>
+            </div>
+            <div class="pick-row">
+              <div><span>Top Bowler</span><strong>Jasprit Bumrah</strong></div>
+              <span class="point-chip">+20</span>
+            </div>
+            <div class="pick-row">
+              <div><span>Player of the Match</span><strong>Suryakumar Yadav</strong></div>
+              <span class="point-chip">+50</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span>Locks at match start</span>
+            <span class="point-chip">Up to 100 pts</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="reveal" aria-labelledby="groups-title">
+        <div class="section-head">
+          <h2 id="groups-title">Why groups love it</h2>
+        </div>
+        <div class="proof-layout">
+          <div class="card-grid love-grid">
+            <article class="surface tile">
+              <div class="tile-icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21a6 6 0 0 1 12 0M17 10a3 3 0 1 0 0-6M16 17a5 5 0 0 1 5 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3>Private leagues</h3>
+              <p>Keep the table between your crew.</p>
+            </article>
+            <article class="surface tile">
+              <div class="tile-icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="m13 2-9 12h7l-1 8 10-13h-7l0-7Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3>Fast picks</h3>
+              <p>Four calls. Done before the first ball.</p>
+            </article>
+            <article class="surface tile">
+              <div class="tile-icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+                </svg>
+              </div>
+              <h3>Live leaderboard</h3>
+              <p>Every result can flip the group.</p>
+            </article>
+            <article class="surface tile">
+              <div class="tile-icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 10h8M8 14h5M12 21a9 9 0 1 0-7.8-4.5L3 21l4.7-1.2A9 9 0 0 0 12 21Z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3>WhatsApp banter</h3>
+              <p>Share scores while the argument is hot.</p>
+            </article>
+          </div>
+          <article class="surface leaderboard">
+            <div class="card-header">
+              <div>
+                <div class="card-kicker">Live table</div>
+                <h3 class="card-title">Friends League</h3>
+              </div>
+              <span class="chip-live"><span class="live-dot" aria-hidden="true"></span>Updated</span>
+            </div>
+            <div class="leaderboard-rows">
+              <div class="leader-row">
+                <span class="rank-dot">1</span>
+                <span class="handle">Blind Optimist</span>
+                <span class="points">780</span>
+              </div>
+              <div class="leader-row">
+                <span class="rank-dot">2</span>
+                <span class="handle">Tactical Fraud</span>
+                <span class="points">650</span>
+              </div>
+              <div class="leader-row">
+                <span class="rank-dot">3</span>
+                <span class="handle">Loyal Fan</span>
+                <span class="points">540</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="reveal" aria-labelledby="works-title">
+        <div class="section-head">
+          <h2 id="works-title">How it works</h2>
+        </div>
+        <div class="steps">
+          <article class="surface step">
+            <span class="step-number">01</span>
+            <div>
+              <h3>Create league</h3>
+              <p>Invite your crew.</p>
+            </div>
+          </article>
+          <article class="surface step">
+            <span class="step-number">02</span>
+            <div>
+              <h3>Make picks</h3>
+              <p>Before kickoff.</p>
+            </div>
+          </article>
+          <article class="surface step">
+            <span class="step-number">03</span>
+            <div>
+              <h3>Watch table flip</h3>
+              <p>Points update live.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="reveal" aria-labelledby="sports-title">
+        <div class="section-head">
+          <h2 id="sports-title">Live now. More coming.</h2>
+        </div>
+        <div class="sports-grid">
+          <article class="surface sport-card">
+            <div class="sport-icon" aria-hidden="true">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+                <path d="m5 19 14-14M6 18l-2 2M18 6l2-2M8 16l-1.5-1.5M10.5 13.5 9 12M13 11l-1.5-1.5M15.5 8.5 14 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div>
+              <h3>Cricket</h3>
+              <p>IPL 2026</p>
+            </div>
+            <span class="chip-live"><span class="live-dot" aria-hidden="true"></span>Live now</span>
+          </article>
+          <article class="surface sport-card">
+            <div class="sport-icon" aria-hidden="true">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.2" />
+                <path d="m12 7 4 3-1.5 5h-5L8 10l4-3Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <div>
+              <h3>Football 2026</h3>
+              <p>World Cup</p>
+            </div>
+            <span class="lock-chip">Coming next</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="create" class="surface final reveal" aria-labelledby="final-title">
+        <div>
+          <h2 id="final-title">Start a league before the next match</h2>
+          <p>Create your group and start the banter in under 2 minutes.</p>
+          <div class="footer-line">Free to play. Always.</div>
+        </div>
+        <a class="button button-primary" href="#top">Create My League</a>
+      </section>
+    </main>
+
+    <script>
+      const revealItems = document.querySelectorAll(".reveal");
+
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+        );
+
+        revealItems.forEach((item) => observer.observe(item));
+      } else {
+        revealItems.forEach((item) => item.classList.add("is-visible"));
+      }
+    </script>
+  </body>
+</html>

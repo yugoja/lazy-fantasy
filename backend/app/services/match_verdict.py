@@ -19,7 +19,7 @@ from app.schemas.dugout import (
     VerdictWinner,
 )
 from app.services.league import _compute_standings
-from app.services.scoring import compute_hits
+from app.services.scoring_cricket import compute_hits
 
 
 def get_match_verdict(

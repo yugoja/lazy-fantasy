@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pick your poison · BRA × ARG · dark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Caveat:wght@500;700&display=swap">
+<style>
+:root {
+  /* dark riso — like screenprint on black newsprint, lit by red room light */
+  --paper: oklch(19% 0.025 265);          /* card surface (dark ink panel) */
+  --paper-2: oklch(24% 0.035 265);        /* raised surface */
+  --paper-3: oklch(28% 0.04 265);
+  --ink: oklch(94% 0.035 90);             /* warm off-white "ink" — used like text */
+  --ink-2: oklch(72% 0.04 80);            /* dim cream */
+  --ink-soft: oklch(55% 0.05 265);        /* muted blue-gray */
+  --riso-red: oklch(68% 0.22 28);
+  --riso-red-2: oklch(76% 0.20 32);
+  --riso-blue: oklch(70% 0.16 235);
+  --riso-blue-2: oklch(60% 0.18 240);
+  --riso-yellow: oklch(86% 0.18 95);
+  --riso-pink: oklch(78% 0.17 12);
+  --riso-mint: oklch(80% 0.13 165);
+  --bra: oklch(85% 0.18 95);              /* hot yellow — Brazil */
+  --arg: oklch(76% 0.13 235);             /* sky blue — Argentina */
+  --line: oklch(94% 0.035 90);            /* off-white outline */
+  --shadow: oklch(94% 0.035 90);          /* off-white drop "ink" */
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  background:
+    radial-gradient(ellipse at 20% 0%, oklch(26% 0.08 30 / 0.55), transparent 50%),
+    radial-gradient(ellipse at 100% 100%, oklch(22% 0.09 260 / 0.6), transparent 55%),
+    oklch(12% 0.03 265);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh;
+  display: grid; place-items: center;
+  padding: 24px;
+}
+
+.app {
+  width: 100%;
+  max-width: 430px;
+  height: 960px;
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 2.5px solid var(--line);
+  box-shadow: 7px 7px 0 var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+/* riso noise — light dots on dark to mimic ink-on-newsprint */
+.app::before {
+  content:''; position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.96  0 0 0 0 0.85  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.10;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 18px;
+}
+/* halftone corner — red dots glowing on dark */
+.app::after {
+  content:''; position: absolute;
+  right: -40px; top: -40px;
+  width: 220px; height: 220px;
+  background-image: radial-gradient(circle, var(--riso-red) 1.8px, transparent 2px);
+  background-size: 9px 9px;
+  opacity: 0.7;
+  filter: drop-shadow(0 0 6px oklch(68% 0.22 28 / 0.5));
+  pointer-events: none;
+  z-index: 1;
+  transform: rotate(-8deg);
+  mix-blend-mode: screen;
+}
+
+/* a second halftone — yellow, bottom-left, off-register */
+.app .corner-y {
+  position: absolute;
+  left: -50px; bottom: 120px;
+  width: 180px; height: 180px;
+  background-image: radial-gradient(circle, var(--riso-yellow) 1.4px, transparent 1.6px);
+  background-size: 11px 11px;
+  opacity: 0.35;
+  mix-blend-mode: screen;
+  transform: rotate(12deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ========== TOP TICKET BAND ========== */
+.band {
+  flex-shrink: 0;
+  padding: 14px 22px 12px;
+  border-bottom: 2px dashed var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+  position: relative;
+  z-index: 2;
+}
+.band-tag {
+  display: inline-block;
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  background: var(--riso-red);
+  color: var(--paper);
+  padding: 4px 10px 5px;
+  transform: rotate(-2.5deg);
+  border: 2px solid var(--line);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+.band-clock {
+  font-family: 'Caveat'; font-weight: 700;
+  font-size: 22px; line-height: 1;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  transform: rotate(1deg);
+}
+.band-clock small {
+  display: block;
+  font-family: 'Bricolage Grotesque';
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--riso-red-2);
+  text-align: right;
+  margin-top: -2px;
+}
+
+/* ========== HEAD ========== */
+.head {
+  flex-shrink: 0;
+  padding: 16px 22px 6px;
+  position: relative; z-index: 2;
+}
+.head h1 {
+  margin: 0;
+  font-weight: 800;
+  font-size: 46px;
+  line-height: 0.9;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-shadow:
+    2.5px 2.5px 0 var(--riso-red),
+    -1.5px 0 0 oklch(70% 0.16 235 / 0.55); /* misregister: red right, blue left */
+}
+.head h1 .a { display: inline-block; transform: rotate(-1.5deg); }
+.head h1 .b { display: inline-block; transform: rotate(0.5deg); margin-left: 4px; }
+
+.fixture-row {
+  margin: 16px 0 4px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px;
+  position: relative;
+}
+.sticker {
+  font-weight: 800;
+  font-size: 16px;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  border: 2.5px solid var(--line);
+  letter-spacing: 0.04em;
+  position: relative;
+  flex-shrink: 0;
+  color: oklch(20% 0.06 265);
+}
+.sticker::before {
+  content:''; position: absolute; inset: -7px;
+  border: 1.5px dashed var(--ink-soft);
+  border-radius: 50%;
+  opacity: 0.8;
+}
+.sticker.bra {
+  background: var(--bra);
+  transform: rotate(-5deg);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+.sticker.arg {
+  background: var(--arg);
+  transform: rotate(5deg);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+.cross {
+  font-weight: 800;
+  font-size: 30px;
+  color: var(--riso-red);
+  text-shadow: 1.5px 1.5px 0 var(--shadow);
+  transform: rotate(-3deg);
+}
+
+.meta {
+  text-align: center;
+  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+.meta .pen {
+  font-family: 'Caveat'; font-weight: 500;
+  font-size: 16px;
+  color: var(--riso-red-2);
+  transform: rotate(-1deg);
+  display: inline-block;
+}
+
+/* ========== SCROLL BODY ========== */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 22px 130px;
+  position: relative;
+  z-index: 2;
+}
+.body::-webkit-scrollbar { width: 0; }
+
+.section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 22px 0 12px;
+  gap: 10px;
+  position: relative;
+}
+.section-head .num {
+  font-family: 'Caveat'; font-weight: 700;
+  font-size: 30px; line-height: 1;
+  color: var(--riso-red);
+  transform: rotate(-3deg);
+  flex-shrink: 0;
+  text-shadow: 1px 1px 0 oklch(20% 0.04 265);
+}
+.section-head .ttl {
+  flex: 1;
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+  text-transform: lowercase;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin-left: 2px;
+  position: relative;
+}
+.section-head .ttl em {
+  font-style: normal;
+  background: var(--riso-yellow);
+  color: oklch(20% 0.06 265);
+  padding: 0 4px;
+  margin: 0 1px;
+  position: relative;
+  display: inline-block;
+}
+.section-head .ttl em::after {
+  content:'';
+  position: absolute;
+  bottom: 0; left: -1px; right: -1px;
+  height: 3px;
+  background: var(--riso-red);
+  transform: skew(-8deg);
+}
+.section-head .pts-stamp {
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  background: var(--ink);
+  color: oklch(20% 0.06 265);
+  padding: 4px 9px 5px;
+  transform: rotate(2deg);
+  border: 2px solid var(--line);
+  box-shadow: 2px 2px 0 var(--riso-red);
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+/* ========== WINNER OPTIONS ========== */
+.winner-grid {
+  display: grid;
+  gap: 10px;
+}
+.opt {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 16px;
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: lowercase;
+  letter-spacing: -0.005em;
+  border: 2px solid var(--line);
+  background: var(--paper-2);
+  color: var(--ink);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+}
+.opt:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--shadow); }
+.opt .lhs { display: flex; align-items: center; gap: 12px; }
+.opt .swatch {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--line);
+  flex-shrink: 0;
+  position: relative;
+}
+.opt .swatch.bra { background: var(--bra); transform: rotate(-6deg); }
+.opt .swatch.arg { background: var(--arg); transform: rotate(6deg); }
+.opt .swatch.draw {
+  background: var(--paper-3);
+  background-image: repeating-linear-gradient(45deg, transparent 0 3px, var(--ink) 3px 4px);
+}
+.opt .league-pct {
+  font-family: 'Caveat'; font-weight: 700;
+  font-size: 16px;
+  color: var(--ink-2);
+  transform: rotate(-2deg);
+  line-height: 1;
+}
+.opt .pts {
+  font-weight: 800;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.opt.pill { border-radius: 999px; }
+.opt.burst {
+  border-radius: 6px;
+  background: var(--riso-red);
+  color: var(--paper);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 14px;
+}
+.opt.burst .pts { color: var(--paper); }
+.opt.burst .league-pct { color: var(--riso-yellow); }
+.opt.burst .label::before { content:'★ '; color: var(--riso-yellow); }
+.opt.burst .label::after  { content:' ★'; color: var(--riso-yellow); }
+
+.opt.selected {
+  background: var(--ink);
+  color: oklch(20% 0.06 265);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--riso-red);
+}
+.opt.selected .pts { color: oklch(20% 0.06 265); }
+.opt.selected .league-pct { color: var(--riso-red-2); }
+.opt.selected.burst {
+  background: var(--riso-yellow);
+  color: oklch(20% 0.06 265);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+.opt.selected.burst .pts { color: oklch(20% 0.06 265); }
+.opt.selected.burst .league-pct { color: var(--riso-red); }
+.opt.selected.burst .label::before { content:'★ '; color: var(--riso-red); }
+.opt.selected.burst .label::after  { content:' ★'; color: var(--riso-red); }
+
+/* tick mark stamp */
+.opt.selected::after {
+  content: '✓';
+  position: absolute;
+  top: -10px; right: -10px;
+  width: 26px; height: 26px;
+  background: var(--riso-red);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 14px;
+  transform: rotate(8deg);
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+.opt.selected.burst::after {
+  background: oklch(20% 0.06 265); color: var(--riso-yellow);
+}
+
+/* ========== SCORE STAMPS ========== */
+.score-zone {
+  margin-top: 4px;
+  padding: 18px 14px 16px;
+  background: var(--paper-2);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 4px 4px 0 var(--shadow);
+  position: relative;
+}
+.score-zone::before {
+  content: 'FULL TIME';
+  position: absolute; top: -10px; left: 16px;
+  font-family: 'Caveat'; font-weight: 700;
+  font-size: 18px;
+  color: var(--riso-red-2);
+  background: var(--paper);
+  padding: 0 6px;
+  transform: rotate(-4deg);
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.score-team {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.score-team .lab {
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border: 2px solid var(--line);
+  background: var(--ink);
+  color: oklch(20% 0.06 265);
+  transform: rotate(-2deg);
+}
+.score-team:nth-child(3) .lab { transform: rotate(2deg); }
+
+.stamp-num {
+  font-weight: 800;
+  font-size: 80px;
+  line-height: 0.85;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+  color: oklch(20% 0.06 265);
+  background: var(--riso-yellow);
+  border: 2.5px solid var(--line);
+  border-radius: 12px;
+  width: 86px; height: 96px;
+  display: grid; place-items: center;
+  box-shadow: 4px 4px 0 var(--shadow);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: transform 0.18s;
+}
+.score-team:nth-child(1) .stamp-num { transform: rotate(-2deg); }
+.score-team:nth-child(3) .stamp-num { transform: rotate(2deg); }
+.score-team:nth-child(3) .stamp-num { background: var(--arg); }
+.stamp-num:hover { transform: rotate(0deg) translate(-1px,-1px); }
+.stamp-num.bump { animation: bump 0.3s ease-out; }
+@keyframes bump {
+  0% { transform: rotate(var(--rot, -2deg)) scale(1); }
+  50% { transform: rotate(0) scale(1.08); }
+  100% { transform: rotate(var(--rot, -2deg)) scale(1); }
+}
+
+.steppers {
+  display: flex; gap: 6px;
+}
+.step-btn {
+  width: 36px; height: 30px;
+  background: var(--paper-3);
+  border: 2px solid var(--line);
+  font-family: 'Bricolage Grotesque'; font-weight: 800;
+  font-size: 18px;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--shadow);
+  transition: 0.12s;
+}
+.step-btn:hover { background: var(--riso-yellow); color: oklch(20% 0.06 265); }
+.step-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow); }
+
+.score-x {
+  font-weight: 800;
+  font-size: 36px;
+  color: var(--riso-red);
+  text-shadow: 1.5px 1.5px 0 var(--shadow);
+  transform: rotate(-4deg);
+}
+
+.fav-strip {
+  margin-top: 14px;
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+}
+.fav-label {
+  font-family: 'Caveat'; font-weight: 700;
+  font-size: 18px;
+  color: var(--riso-red-2);
+  transform: rotate(-2deg);
+}
+.fav-chip {
+  font-weight: 800;
+  font-size: 13.5px;
+  padding: 5px 11px;
+  background: var(--paper-3);
+  border: 2px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  transition: 0.12s;
+  position: relative;
+  font-family: inherit;
+}
+.fav-chip:nth-child(odd) { transform: rotate(-1.5deg); }
+.fav-chip:nth-child(even) { transform: rotate(1.5deg); }
+.fav-chip:hover { background: var(--riso-yellow); color: oklch(20% 0.06 265); box-shadow: 2px 2px 0 var(--shadow); }
+.fav-chip.hot {
+  background: var(--riso-red); color: var(--ink);
+}
+.fav-chip.hot::after {
+  content: '♥';
+  position: absolute; top: -8px; right: -6px;
+  color: var(--riso-red); background: var(--paper);
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--line);
+  font-size: 9px; display: grid; place-items: center;
+  transform: rotate(8deg);
+}
+.fav-chip.matched {
+  background: var(--ink); color: var(--riso-red);
+  box-shadow: 2px 2px 0 var(--riso-red);
+}
+
+/* ========== PLAYER PICKS ========== */
+.team-toggle {
+  display: inline-flex; gap: 4px;
+  margin-bottom: 12px;
+  padding: 3px;
+  background: var(--ink);
+  border-radius: 999px;
+  border: 2px solid var(--line);
+}
+.tt {
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: oklch(20% 0.06 265);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.tt.active {
+  background: var(--riso-red);
+  color: var(--ink);
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.player {
+  position: relative;
+  padding: 12px 12px 12px 14px;
+  background: var(--paper-2);
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  gap: 4px;
+  transition: 0.15s;
+  color: var(--ink);
+}
+.player:nth-child(odd) { transform: rotate(-0.8deg); }
+.player:nth-child(even) { transform: rotate(0.8deg); }
+.player:hover { box-shadow: 3px 3px 0 var(--shadow); transform: rotate(0deg) translate(-1px, -1px); }
+
+.player .face {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 12px;
+  position: relative;
+  margin-bottom: 4px;
+  color: oklch(20% 0.06 265);
+}
+.player.bra .face { background: var(--bra); }
+.player.arg .face { background: var(--arg); }
+.player .face::before {
+  content:''; position: absolute; inset: -5px;
+  border: 1.2px dashed var(--ink-soft); border-radius: 50%;
+  opacity: 0.7;
+}
+.player .nm {
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+.player .mt {
+  font-weight: 500;
+  font-size: 10.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+.player .badge {
+  position: absolute;
+  top: -8px; right: 8px;
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  background: var(--riso-red);
+  color: var(--ink);
+  padding: 2px 6px;
+  border: 2px solid var(--line);
+  transform: rotate(6deg);
+}
+.player .badge.goat { background: var(--riso-blue-2); color: var(--ink); }
+
+.player.selected {
+  background: var(--ink);
+  color: oklch(20% 0.06 265);
+  transform: rotate(0) translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--riso-red);
+}
+.player.selected .mt { color: oklch(35% 0.04 265); }
+.player.selected::after {
+  content: '+10';
+  position: absolute;
+  bottom: -8px; right: -10px;
+  background: var(--riso-yellow);
+  color: oklch(20% 0.06 265);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  transform: rotate(-6deg);
+  box-shadow: 2px 2px 0 var(--shadow);
+  letter-spacing: 0.01em;
+}
+.player.disabled {
+  opacity: 0.30;
+  pointer-events: none;
+}
+
+/* counter sticker */
+.pick-counter {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Caveat'; font-weight: 700;
+  font-size: 20px;
+  color: var(--riso-red-2);
+  transform: rotate(-1deg);
+}
+.pick-counter b {
+  background: var(--ink);
+  color: var(--riso-red);
+  font-family: 'Bricolage Grotesque';
+  font-weight: 800;
+  font-size: 14px;
+  padding: 2px 8px;
+  border: 2px solid var(--line);
+  box-shadow: 1.5px 1.5px 0 var(--riso-red);
+  letter-spacing: 0;
+}
+
+/* ========== FOOTER LOCK ========== */
+.dock {
+  flex-shrink: 0;
+  padding: 14px 18px 18px;
+  background: var(--paper);
+  border-top: 2.5px dashed var(--line);
+  display: grid; grid-template-columns: auto 1fr; gap: 14px;
+  align-items: center;
+  position: relative;
+  z-index: 3;
+}
+.dock::before {
+  content:''; position: absolute;
+  left: -8px; top: -10px;
+  width: 16px; height: 16px;
+  background: oklch(12% 0.03 265);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+}
+.dock::after {
+  content:''; position: absolute;
+  right: -8px; top: -10px;
+  width: 16px; height: 16px;
+  background: oklch(12% 0.03 265);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+}
+.tally {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.tally .big {
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.tally .big em {
+  font-style: normal;
+  background: var(--riso-yellow);
+  color: oklch(20% 0.06 265);
+  padding: 0 4px;
+}
+.tally .sub {
+  font-family: 'Caveat'; font-weight: 700;
+  font-size: 16px; line-height: 1;
+  color: var(--riso-red-2);
+  transform: rotate(-1.5deg);
+  display: inline-block;
+}
+
+.lock-btn {
+  height: 56px;
+  padding: 0 22px;
+  background: var(--riso-red);
+  color: var(--ink);
+  border: 2.5px solid var(--line);
+  font-family: 'Bricolage Grotesque';
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--shadow);
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: 0.15s;
+  position: relative;
+}
+.lock-btn::before {
+  content: '★';
+  font-size: 12px;
+  color: var(--riso-yellow);
+}
+.lock-btn::after {
+  content: '★';
+  font-size: 12px;
+  color: var(--riso-yellow);
+}
+.lock-btn:disabled {
+  background: var(--paper-3);
+  color: var(--ink-soft);
+  box-shadow: 2px 2px 0 var(--ink-soft);
+  border-color: var(--ink-soft);
+  cursor: not-allowed;
+}
+.lock-btn:disabled::before, .lock-btn:disabled::after { color: var(--ink-soft); }
+.lock-btn:not(:disabled):hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+.lock-btn:not(:disabled):active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+
+/* squiggle decorations */
+.squig {
+  position: absolute;
+  font-family: 'Caveat'; font-weight: 700;
+  color: var(--riso-red);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* misc */
+.player-count-pill {
+  font-weight: 800;
+  font-size: 11px;
+  background: var(--riso-yellow);
+  border: 2px solid var(--line);
+  padding: 3px 9px 4px;
+  color: oklch(20% 0.06 265);
+  letter-spacing: 0.06em;
+  transform: rotate(2deg);
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <span class="corner-y"></span>
+
+  <div class="band">
+    <span class="band-tag">!! big match !!</span>
+    <div class="band-clock">
+      2h 14m
+      <small>'TIL KICKOFF</small>
+    </div>
+  </div>
+
+  <div class="head">
+    <h1>
+      <span class="a">pick your</span><br>
+      <span class="b">poison.</span>
+    </h1>
+
+    <div class="fixture-row">
+      <div class="sticker bra">BRA</div>
+      <span class="cross">×</span>
+      <div class="sticker arg">ARG</div>
+    </div>
+    <div class="meta">
+      Sat · 9 PM IST · Group F<br>
+      <span class="pen">— up to 50 pts on the line —</span>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- ========== WINNER ========== -->
+    <div class="section-head">
+      <span class="num">01.</span>
+      <span class="ttl">who <em>wins</em> it?</span>
+      <span class="pts-stamp">+5 PTS</span>
+    </div>
+
+    <div class="winner-grid">
+      <button class="opt pill" data-w="bra">
+        <span class="lhs">
+          <span class="swatch bra"></span>
+          <span class="label">brazil wins</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span class="league-pct">41% picked</span>
+          <span class="pts">+5</span>
+        </span>
+      </button>
+
+      <button class="opt burst" data-w="draw">
+        <span class="lhs">
+          <span class="swatch draw"></span>
+          <span class="label">D R A W</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span class="league-pct">12% · spicy</span>
+          <span class="pts">+5</span>
+        </span>
+      </button>
+
+      <button class="opt pill" data-w="arg">
+        <span class="lhs">
+          <span class="swatch arg"></span>
+          <span class="label">argentina wins</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:10px;">
+          <span class="league-pct">47% picked</span>
+          <span class="pts">+5</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- ========== SCORE ========== -->
+    <div class="section-head">
+      <span class="num">02.</span>
+      <span class="ttl">on the <em>nose</em>?</span>
+      <span class="pts-stamp" style="background:var(--riso-red); box-shadow:2px 2px 0 var(--shadow); color:var(--ink);">+15 BONUS</span>
+    </div>
+
+    <div class="score-zone">
+      <div class="score-row">
+        <div class="score-team">
+          <span class="lab">BRA</span>
+          <div class="stamp-num" id="sA" style="--rot:-2deg">2</div>
+          <div class="steppers">
+            <button class="step-btn" data-s="a" data-d="-1">−</button>
+            <button class="step-btn" data-s="a" data-d="1">+</button>
+          </div>
+        </div>
+        <div class="score-x">×</div>
+        <div class="score-team">
+          <span class="lab">ARG</span>
+          <div class="stamp-num" id="sB" style="--rot:2deg">1</div>
+          <div class="steppers">
+            <button class="step-btn" data-s="b" data-d="-1">−</button>
+            <button class="step-btn" data-s="b" data-d="1">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="fav-strip">
+        <span class="fav-label">group says</span>
+        <button class="fav-chip" data-q="2-1">2-1</button>
+        <button class="fav-chip hot" data-q="1-1">1-1</button>
+        <button class="fav-chip" data-q="2-2">2-2</button>
+        <button class="fav-chip" data-q="1-2">1-2</button>
+        <button class="fav-chip" data-q="3-1">3-1</button>
+      </div>
+    </div>
+
+    <!-- ========== PLAYERS ========== -->
+    <div class="section-head">
+      <span class="num">03.</span>
+      <span class="ttl">three names you <em>trust</em></span>
+      <span class="pts-stamp">+10 EA</span>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <div class="team-toggle">
+        <button class="tt active" data-tab="ALL">both sides</button>
+        <button class="tt" data-tab="BRA">brazil</button>
+        <button class="tt" data-tab="ARG">argentina</button>
+      </div>
+      <div class="pick-counter"><b id="picksN">0</b>/3</div>
+    </div>
+
+    <div class="players-grid" id="players"></div>
+
+    <div style="margin: 24px 0 6px; text-align: center;">
+      <span class="squig" style="position:relative; font-size:18px; transform:rotate(-2deg); display:inline-block;">
+        — goal or assist counts —
+      </span>
+    </div>
+
+  </div>
+
+  <div class="dock">
+    <div class="tally">
+      <div class="big"><em><span id="ptsN">5</span></em> pts</div>
+      <div class="sub" id="tallyState">pick 3 more names</div>
+    </div>
+    <button class="lock-btn" id="lockBtn" disabled>
+      lock it in →
+    </button>
+  </div>
+
+</div>
+
+<script>
+const players = [
+  {t:'BRA', n:'Vinicius Jr.', m:'LW · 12 G / 14',  tag:'ON FIRE'},
+  {t:'BRA', n:'Rodrygo',      m:'RW · 6 G / 18',   tag:''},
+  {t:'BRA', n:'Raphinha',     m:'RW · 9 G / 22',   tag:''},
+  {t:'BRA', n:'Endrick',      m:'ST · 5 G / 9',    tag:'WONDERKID'},
+  {t:'BRA', n:'Casemiro',     m:'CDM · 2 G / 76',  tag:''},
+  {t:'BRA', n:'Bruno G.',     m:'CM · 5 G / 31',   tag:''},
+  {t:'ARG', n:'L. Messi',     m:'CF · 11 G / 13',  tag:'GOAT'},
+  {t:'ARG', n:'L. Martínez',  m:'ST · 14 G / 19',  tag:'ON FIRE'},
+  {t:'ARG', n:'J. Álvarez',   m:'ST · 8 G / 28',   tag:''},
+  {t:'ARG', n:'Á. Di María',  m:'RW · 4 G / 12',   tag:''},
+  {t:'ARG', n:'A. Mac Allister', m:'CM · 3 G / 21', tag:''},
+];
+
+const state = { w: null, score: {a:2, b:1}, picks: [], tab: 'ALL' };
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function initials(name) {
+  return name.replace(/[\.]/g,'').split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+function renderPlayers() {
+  const wrap = $('#players'); wrap.innerHTML = '';
+  const list = state.tab === 'ALL' ? players : players.filter(p => p.t === state.tab);
+  list.forEach(p => {
+    const sel = state.picks.find(s => s.t === p.t && s.n === p.n);
+    const full = state.picks.length >= 3 && !sel;
+    const row = document.createElement('div');
+    row.className = 'player ' + p.t.toLowerCase() + (sel ? ' selected' : '') + (full ? ' disabled' : '');
+    row.innerHTML = `
+      <div class="face">${initials(p.n)}</div>
+      <div class="nm">${p.n}</div>
+      <div class="mt">${p.m}</div>
+      ${p.tag ? `<span class="badge${p.tag === 'GOAT' ? ' goat' : ''}">${p.tag}</span>` : ''}
+    `;
+    row.addEventListener('click', () => {
+      if (full) return;
+      const i = state.picks.findIndex(s => s.t === p.t && s.n === p.n);
+      if (i >= 0) state.picks.splice(i,1);
+      else state.picks.push({t: p.t, n: p.n});
+      renderPlayers(); recalc();
+    });
+    wrap.appendChild(row);
+  });
+  $('#picksN').textContent = state.picks.length;
+}
+
+$$('.opt').forEach(o => o.addEventListener('click', () => {
+  $$('.opt').forEach(x => x.classList.remove('selected'));
+  o.classList.add('selected');
+  state.w = o.dataset.w;
+  recalc();
+}));
+
+$$('.tt').forEach(t => t.addEventListener('click', () => {
+  $$('.tt').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  state.tab = t.dataset.tab;
+  renderPlayers();
+}));
+
+function bump(side) {
+  const el = side === 'a' ? $('#sA') : $('#sB');
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
+$$('.step-btn').forEach(b => b.addEventListener('click', () => {
+  const s = b.dataset.s, d = +b.dataset.d;
+  const n = Math.max(0, Math.min(9, state.score[s] + d));
+  if (n === state.score[s]) return;
+  state.score[s] = n;
+  $(s==='a'?'#sA':'#sB').textContent = n;
+  bump(s); matchChips(); recalc();
+}));
+$$('.stamp-num').forEach(d => d.addEventListener('click', () => {
+  const s = d.id === 'sA' ? 'a' : 'b';
+  state.score[s] = (state.score[s] + 1) % 10;
+  d.textContent = state.score[s];
+  bump(s); matchChips(); recalc();
+}));
+$$('.fav-chip').forEach(c => c.addEventListener('click', () => {
+  const [a,b] = c.dataset.q.split('-').map(Number);
+  state.score.a = a; state.score.b = b;
+  $('#sA').textContent = a; $('#sB').textContent = b;
+  bump('a'); bump('b'); matchChips(); recalc();
+}));
+function matchChips() {
+  const k = `${state.score.a}-${state.score.b}`;
+  $$('.fav-chip').forEach(c => c.classList.toggle('matched', c.dataset.q === k));
+}
+
+function recalc() {
+  let pts = (state.w ? 5 : 0) + state.picks.length * 10;
+  if (state.w === 'bra' && state.score.a > state.score.b) pts += 15;
+  if (state.w === 'arg' && state.score.b > state.score.a) pts += 15;
+  if (state.w === 'draw' && state.score.a === state.score.b) pts += 15;
+  $('#ptsN').textContent = pts;
+  const ready = state.w && state.picks.length === 3;
+  $('#lockBtn').disabled = !ready;
+  const states = [];
+  if (!state.w) states.push('pick a winner');
+  if (state.picks.length < 3) states.push(`${3 - state.picks.length} more name${state.picks.length === 2 ? '' : 's'}`);
+  $('#tallyState').textContent = states.length ? states.join(' · ') : 'all set — go talk shit';
+}
+
+renderPlayers(); matchChips(); recalc();
+</script>
+</body>
+</html>

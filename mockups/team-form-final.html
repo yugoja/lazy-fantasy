@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Team Form · final</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --paper: oklch(97% 0.012 85);
+  --ink: oklch(22% 0.03 260);
+  --ink-mute: oklch(48% 0.025 260);
+  --rule: oklch(86% 0.02 85);
+
+  --navy: oklch(15% 0.025 260);
+  --stub: oklch(22% 0.04 260);
+  --line: oklch(30% 0.04 260);
+  --text-l: oklch(95% 0.01 260);
+  --text-dim-l: oklch(70% 0.03 260);
+  --text-mute-l: oklch(55% 0.03 260);
+
+  --green: oklch(70% 0.18 145);
+  --green-deep: oklch(50% 0.16 145);
+  --green-ink: oklch(15% 0.06 145);
+  --green-soft: oklch(70% 0.18 145 / 0.12);
+  --gold: oklch(75% 0.16 60);
+  --loss: oklch(62% 0.18 25);
+  --loss-soft: oklch(62% 0.18 25 / 0.10);
+  --nr: oklch(55% 0.02 260);
+
+  --mi: oklch(40% 0.16 250);
+  --rcb: oklch(48% 0.21 25);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Inter', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+body { background: var(--paper); }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: transparent; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: clamp(36px, 5vw, 64px) clamp(20px, 4vw, 48px) 140px; }
+
+/* === HEAD === */
+.page-head { margin-bottom: 48px; max-width: 720px; }
+.page-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 14px;
+}
+.page-eyebrow::before { content: '●'; margin-right: 10px; color: var(--green-deep); }
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-size: clamp(34px, 5vw, 48px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+}
+.page-title em { font-style: italic; font-weight: 400; }
+.page-sub {
+  font-size: 16px; color: var(--ink-mute);
+  margin-top: 18px; line-height: 1.55;
+  max-width: 560px;
+}
+
+/* === LAYOUT === */
+.frame {
+  margin-top: 56px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 880px) {
+  .frame { grid-template-columns: 1fr; }
+}
+
+.stage {
+  background: var(--navy);
+  border-radius: 20px;
+  padding: 36px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.stage-tag {
+  position: absolute;
+  top: 14px; left: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-mute-l);
+}
+
+/* === Picker scaffold (matches the existing winner-pick step) === */
+.picker {
+  width: 100%; max-width: 360px;
+  margin: 16px auto 0;
+}
+.picker-label {
+  font-family: 'Space Grotesk';
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-mute-l);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.picker-label::after {
+  content:''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, oklch(95% 0.01 260 / 0.16), transparent);
+}
+.tile {
+  background: var(--stub);
+  border: 1.5px solid oklch(95% 0.01 260 / 0.07);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  color: var(--text-l);
+  transition: border-color 0.18s, transform 0.18s;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+.tile + .tile { margin-top: 8px; }
+.tile:hover { border-color: oklch(95% 0.01 260 / 0.18); transform: translateY(-1px); }
+.tile.selected {
+  border-color: var(--green);
+  background: linear-gradient(180deg, var(--green-soft), oklch(70% 0.18 145 / 0.02)), var(--stub);
+  box-shadow: 0 0 0 2px oklch(70% 0.18 145 / 0.13);
+}
+.crest {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.crest.mi { background: var(--mi); color: var(--text-l); }
+.crest.rcb { background: var(--rcb); color: var(--text-l); }
+.tile-body { min-width: 0; }
+.tile-name {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.005em;
+}
+.tile-sub {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--text-mute-l);
+  letter-spacing: 0.01em;
+}
+.odds {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: oklch(95% 0.01 260 / 0.05);
+  color: var(--text-mute-l);
+  align-self: start;
+}
+.tile.selected .odds { background: oklch(70% 0.18 145 / 0.16); color: var(--green); }
+
+/* ============================================================ */
+/* THE FORM STRIP — the signature piece                          */
+/* ============================================================ */
+.form {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.form-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 11.5px;
+  color: var(--text-mute-l);
+  letter-spacing: -0.005em;
+  line-height: 1;
+  /* keep label aligned with pill centers */
+  padding-bottom: 4px;
+}
+
+.form-row {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.form-mark {
+  width: 18px; height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  position: relative;
+  user-select: none;
+}
+.form-mark.W {
+  background: var(--green);
+  color: var(--green-ink);
+}
+.form-mark.L {
+  background: transparent;
+  border: 1.5px solid var(--loss);
+  color: var(--loss);
+  background: var(--loss-soft);
+}
+.form-mark.NR {
+  background: transparent;
+  border: 1.5px dashed oklch(55% 0.02 260 / 0.5);
+  color: var(--text-mute-l);
+  font-size: 9px;
+}
+
+/* Latest result — slight gap to the left, gold underline tick */
+.form-mark.latest {
+  margin-left: 3px;   /* +3 = 6px gap total before the last pill, vs 3px elsewhere */
+}
+.form-mark.latest::after {
+  content: '';
+  position: absolute;
+  left: 3px; right: 3px;
+  bottom: -4px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--gold);
+}
+
+/* Empty / missing match (team hasn't played 5 yet) */
+.form-mark.empty {
+  background: transparent;
+  border: 1.5px dotted oklch(95% 0.01 260 / 0.18);
+  color: oklch(95% 0.01 260 / 0.25);
+  font-weight: 500;
+}
+
+/* ============================================================ */
+/* RIGHT-RAIL · States gallery                                   */
+/* ============================================================ */
+.rail-head {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 18px;
+}
+.state-list { display: grid; gap: 18px; }
+.state {
+  padding: 18px 18px 20px;
+  background: var(--navy);
+  border-radius: 14px;
+}
+.state-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-l);
+}
+.state-desc {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--text-mute-l);
+  line-height: 1.5;
+}
+.state .form { margin-top: 14px; }
+
+/* === FOOT === */
+.foot {
+  margin-top: 80px;
+  padding-top: 26px;
+  border-top: 1px solid var(--rule);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="page-head">
+    <div class="page-eyebrow">Pick winner · form indicator · final</div>
+    <h1 class="page-title">Filled W. <em>Hollow L.</em> Gold under now.</h1>
+    <p class="page-sub">
+      Letter pills, but disciplined. Wins are filled (substance). Losses are hollow (a gap in the streak). A single gold underline marks the most recent. Lives where every other tile lives — no extra column, no chart.
+    </p>
+  </header>
+
+  <div class="frame">
+
+    <!-- ============ MAIN STAGE ============ -->
+    <div class="stage">
+      <span class="stage-tag">Winner pick · mobile</span>
+      <div class="picker">
+        <div class="picker-label">Pick the winner</div>
+
+        <button class="tile selected" type="button">
+          <div class="crest mi">MI</div>
+          <div class="tile-body">
+            <div class="tile-name">Mumbai Indians</div>
+            <div class="tile-sub">58% of your league</div>
+            <div class="form" aria-label="Form last 5: W W L L W">
+              <span class="form-label">form.</span>
+              <div class="form-row">
+                <span class="form-mark W">W</span>
+                <span class="form-mark W">W</span>
+                <span class="form-mark L">L</span>
+                <span class="form-mark L">L</span>
+                <span class="form-mark W latest">W</span>
+              </div>
+            </div>
+          </div>
+          <span class="odds">+25</span>
+        </button>
+
+        <button class="tile" type="button">
+          <div class="crest rcb">RCB</div>
+          <div class="tile-body">
+            <div class="tile-name">Royal Challengers</div>
+            <div class="tile-sub">42% of your league</div>
+            <div class="form" aria-label="Form last 5: W W W L W">
+              <span class="form-label">form.</span>
+              <div class="form-row">
+                <span class="form-mark W">W</span>
+                <span class="form-mark W">W</span>
+                <span class="form-mark W">W</span>
+                <span class="form-mark L">L</span>
+                <span class="form-mark W latest">W</span>
+              </div>
+            </div>
+          </div>
+          <span class="odds">+25</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ STATES RAIL ============ -->
+    <div>
+      <h3 class="rail-head">All the shapes</h3>
+      <div class="state-list">
+
+        <div class="state">
+          <div class="state-name">On a heater</div>
+          <div class="state-desc">5W. Maximum density of fill.</div>
+          <div class="form">
+            <span class="form-label">form.</span>
+            <div class="form-row">
+              <span class="form-mark W">W</span>
+              <span class="form-mark W">W</span>
+              <span class="form-mark W">W</span>
+              <span class="form-mark W">W</span>
+              <span class="form-mark W latest">W</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="state">
+          <div class="state-name">Cold spell</div>
+          <div class="state-desc">5L. Row reads as five empty notches.</div>
+          <div class="form">
+            <span class="form-label">form.</span>
+            <div class="form-row">
+              <span class="form-mark L">L</span>
+              <span class="form-mark L">L</span>
+              <span class="form-mark L">L</span>
+              <span class="form-mark L">L</span>
+              <span class="form-mark L latest">L</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="state">
+          <div class="state-name">Recovering</div>
+          <div class="state-desc">Three Ls, then back-to-back Ws. Gold marks the rebound.</div>
+          <div class="form">
+            <span class="form-label">form.</span>
+            <div class="form-row">
+              <span class="form-mark L">L</span>
+              <span class="form-mark L">L</span>
+              <span class="form-mark L">L</span>
+              <span class="form-mark W">W</span>
+              <span class="form-mark W latest">W</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="state">
+          <div class="state-name">With a no-result</div>
+          <div class="state-desc">NR pill is dashed neutral — neither side of the streak.</div>
+          <div class="form">
+            <span class="form-label">form.</span>
+            <div class="form-row">
+              <span class="form-mark W">W</span>
+              <span class="form-mark NR">NR</span>
+              <span class="form-mark W">W</span>
+              <span class="form-mark L">L</span>
+              <span class="form-mark W latest">W</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="state">
+          <div class="state-name">Season opener</div>
+          <div class="state-desc">Only two played. Empty slots use dotted ghost pills.</div>
+          <div class="form">
+            <span class="form-label">form.</span>
+            <div class="form-row">
+              <span class="form-mark empty">·</span>
+              <span class="form-mark empty">·</span>
+              <span class="form-mark empty">·</span>
+              <span class="form-mark W">W</span>
+              <span class="form-mark L latest">L</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    <span>Lazy Fantasy · form indicator · final</span>
+    <span>letters · italic · gold</span>
+  </div>
+
+</div>
+
+</body>
+</html>

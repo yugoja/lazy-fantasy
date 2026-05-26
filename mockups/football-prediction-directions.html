@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Football Prediction · Four Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:wght@500;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* ============================================================ */
+/* SHOWCASE CHROME                                                */
+/* ============================================================ */
+:root {
+  --paper: oklch(97% 0.012 85);
+  --paper-2: oklch(93% 0.02 85);
+  --ink: oklch(22% 0.03 260);
+  --ink-mute: oklch(48% 0.025 260);
+  --rule: oklch(86% 0.02 85);
+  --surface-dark: oklch(15% 0.025 260);
+  --surface-light: oklch(94% 0.012 85);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Inter', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+body { background: var(--paper); }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: transparent; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: clamp(40px, 6vw, 80px) clamp(20px, 4vw, 48px) 160px; }
+
+.page-head { margin-bottom: 96px; max-width: 760px; }
+.page-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 18px;
+}
+.page-eyebrow::before {
+  content: '○';
+  margin-right: 10px;
+  color: oklch(60% 0.18 30);
+}
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-size: clamp(40px, 6.4vw, 72px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+.page-title em {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+}
+.page-sub {
+  font-size: 17px;
+  color: var(--ink-mute);
+  margin-top: 22px;
+  line-height: 1.55;
+  max-width: 560px;
+}
+
+.direction {
+  margin-top: clamp(64px, 8vw, 112px);
+  padding-top: 36px;
+  border-top: 1px solid var(--rule);
+}
+.dir-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 28px;
+  align-items: baseline;
+  margin-bottom: 28px;
+  max-width: 760px;
+}
+.dir-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  letter-spacing: 0.16em;
+  padding-top: 14px;
+}
+.dir-name {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 96;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+}
+.dir-desc {
+  margin-top: 10px;
+  font-size: 14.5px;
+  color: var(--ink-mute);
+  line-height: 1.55;
+  max-width: 580px;
+}
+
+.surface-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 18px;
+}
+@media (max-width: 760px) {
+  .surface-grid { grid-template-columns: 1fr; }
+}
+
+.surface {
+  position: relative;
+  padding: 56px 24px 40px;
+  border-radius: 20px;
+  display: grid;
+  place-items: start center;
+  min-height: 620px;
+  overflow: hidden;
+}
+.surface.dark { background: var(--surface-dark); }
+.surface.light { background: var(--surface-light); }
+
+.surface-label {
+  position: absolute;
+  top: 18px; left: 22px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.surface.dark .surface-label { color: oklch(62% 0.04 260); }
+.surface.light .surface-label { color: oklch(48% 0.04 260); }
+
+.card { width: 100%; max-width: 380px; }
+
+/* ============================================================ */
+/* DIRECTION 1 · STADIUM TICKET (refined dark)                    */
+/* ============================================================ */
+.card.d1 {
+  background: #0f1626;
+  color: #f4f6fb;
+  border-radius: 20px;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 24px 60px -20px rgba(0,0,0,0.5);
+}
+.d1-stub {
+  position: relative;
+  padding: 18px 22px 22px;
+  background:
+    radial-gradient(ellipse 60% 80% at 50% -10%, rgba(38,214,102,0.16), transparent 60%),
+    linear-gradient(180deg, #131c2f, #0f1626);
+}
+.d1-stub::before, .d1-stub::after {
+  content:''; position: absolute; bottom: -10px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--surface-bg, #0f1626);
+  z-index: 2;
+}
+.surface.dark .d1-stub::before, .surface.dark .d1-stub::after { background: var(--surface-dark); }
+.surface.light .d1-stub::before, .surface.light .d1-stub::after { background: var(--surface-light); }
+.d1-stub::before { left: -10px; }
+.d1-stub::after { right: -10px; }
+.d1-stub .perf {
+  position: absolute; bottom: 0; left: 14px; right: 14px;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,0.18) 0 4px, transparent 4px 10px);
+}
+.d1-kicker {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: oklch(62% 0.04 260);
+  margin-bottom: 18px;
+}
+.d1-livedot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: #f39c3a;
+  margin-right: 8px; animation: d1pulse 1.6s infinite;
+  box-shadow: 0 0 8px rgba(243,156,58,0.6);
+}
+@keyframes d1pulse { 0%,100% {opacity:.4} 50% {opacity:1} }
+
+.d1-fixture {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; gap: 10px;
+}
+.d1-team { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.d1-crest {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 18px;
+}
+.d1-crest-bra {
+  background: #f9d61c; color: #07120a;
+  box-shadow: 0 0 0 3px rgba(249,214,28,0.13), inset 0 -8px 0 #0c8c3b;
+}
+.d1-crest-arg {
+  background: linear-gradient(180deg, #75aadb 0%, #fff 50%, #75aadb 100%);
+  color: #07120a;
+  box-shadow: 0 0 0 3px rgba(117,170,219,0.13);
+}
+.d1-name {
+  font-family: 'Space Grotesk'; font-size: 12.5px; font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.d1-vs {
+  font-family: 'Space Grotesk'; font-style: italic;
+  font-size: 26px; font-weight: 500;
+  color: oklch(58% 0.04 260); letter-spacing: -0.04em;
+}
+.d1-countdown {
+  margin-top: 14px; text-align: center;
+  font-family: 'Space Grotesk';
+}
+.d1-cd {
+  font-size: 24px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  background: linear-gradient(180deg, #fff, #c8d3e8);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.d1-cdlabel {
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: #f39c3a; margin-left: 8px;
+}
+
+.d1-pick { padding: 16px 16px 18px; }
+.d1-picklabel {
+  font-family: 'Space Grotesk'; font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: oklch(62% 0.04 260);
+  display: flex; align-items: center; gap: 10px;
+  margin: 6px 4px 12px;
+}
+.d1-picklabel::after {
+  content:''; flex:1; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.16), transparent);
+}
+.d1-options { display: grid; gap: 8px; }
+.d1-option {
+  position: relative;
+  display: grid; grid-template-columns: 40px 1fr auto;
+  align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: #161f30;
+  border: 1.5px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  text-align: left; color: inherit;
+  transition: 0.2s;
+}
+.d1-option:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-1px); }
+.d1-option.selected {
+  border-color: #26d666;
+  background: linear-gradient(180deg, rgba(38,214,102,0.1), rgba(38,214,102,0.02)), #161f30;
+  box-shadow: 0 0 0 2px rgba(38,214,102,0.13);
+}
+.d1-badge {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.d1-badge-bra { background: #f9d61c; color: #07120a; }
+.d1-badge-draw { background: rgba(255,255,255,0.06); color: #fff; border: 1.5px dashed rgba(255,255,255,0.2); }
+.d1-badge-arg { background: linear-gradient(180deg, #75aadb, #fff, #75aadb); color: #07120a; }
+.d1-optlabel {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 14px;
+}
+.d1-optlabel em {
+  font-style: normal; font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: #f39c3a; margin-left: 6px;
+}
+.d1-optsub {
+  font-family: 'Inter'; font-weight: 400; font-size: 11.5px;
+  color: oklch(62% 0.04 260); margin-top: 2px;
+  letter-spacing: 0;
+}
+.d1-odds {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 9px; border-radius: 6px;
+  background: rgba(255,255,255,0.05); color: oklch(62% 0.04 260);
+}
+.d1-option.selected .d1-odds { background: rgba(38,214,102,0.16); color: #26d666; }
+
+/* ============================================================ */
+/* DIRECTION 2 · EDITORIAL MAGAZINE (light, type-driven)          */
+/* ============================================================ */
+.card.d2 {
+  background: oklch(96% 0.018 85);
+  color: oklch(20% 0.04 260);
+  border-radius: 4px;
+  padding: 32px 28px 28px;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  border: 1px solid oklch(86% 0.02 85);
+  box-shadow: 0 1px 0 oklch(86% 0.02 85), 0 24px 50px -28px rgba(40,40,80,0.18);
+}
+.surface.dark .card.d2 {
+  box-shadow: 0 1px 0 oklch(86% 0.02 85), 0 30px 60px -20px rgba(0,0,0,0.5);
+}
+.d2-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: oklch(45% 0.08 30);
+  display: flex; align-items: center; gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid oklch(86% 0.02 85);
+}
+.d2-eyebrow::before {
+  content: '';
+  width: 28px; height: 1.5px;
+  background: oklch(45% 0.08 30);
+}
+.d2-headline {
+  margin-top: 22px;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-weight: 600;
+  font-size: clamp(34px, 7vw, 44px);
+  letter-spacing: -0.028em;
+  line-height: 1.0;
+  color: oklch(20% 0.04 260);
+}
+.d2-headline em {
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: 'opsz' 144;
+  color: oklch(40% 0.06 260);
+  margin: 0 -2px;
+  font-size: 0.62em;
+  vertical-align: 0.18em;
+  letter-spacing: 0;
+}
+.d2-headline .vs {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.55em;
+  vertical-align: 0.22em;
+  color: oklch(45% 0.08 30);
+  margin: 0 4px;
+}
+.d2-meta {
+  margin-top: 14px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14.5px;
+  color: oklch(40% 0.04 260);
+  line-height: 1.4;
+}
+.d2-rule {
+  margin: 24px -4px 12px;
+  border-top: 1px solid oklch(86% 0.02 85);
+}
+.d2-pickintro {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  color: oklch(45% 0.08 30);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.d2-options {
+  list-style: none;
+  margin-top: 10px;
+}
+.d2-option {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 14px;
+  align-items: baseline;
+  padding: 16px 4px 16px 0;
+  border-bottom: 1px solid oklch(86% 0.02 85);
+  cursor: pointer;
+  transition: padding-left 0.25s cubic-bezier(0.2,0.8,0.2,1), background 0.2s;
+  position: relative;
+}
+.d2-option:last-child { border-bottom: 0; }
+.d2-option:hover { padding-left: 8px; }
+.d2-option::before {
+  content:'';
+  position: absolute;
+  left: 0; top: 50%;
+  width: 0;
+  height: 1px;
+  background: oklch(45% 0.08 30);
+  transform: translateY(-50%);
+  transition: width 0.3s cubic-bezier(0.2,0.8,0.2,1);
+}
+.d2-option.selected::before { width: 24px; }
+.d2-option.selected { padding-left: 32px; }
+.d2-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 500;
+  font-size: 11px;
+  color: oklch(45% 0.04 260);
+  letter-spacing: 0.06em;
+  padding-top: 5px;
+}
+.d2-text {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 96;
+  font-weight: 400;
+  font-size: 21px;
+  letter-spacing: -0.012em;
+  line-height: 1.2;
+}
+.d2-option.selected .d2-text { font-weight: 600; }
+.d2-text em {
+  font-style: italic;
+  font-weight: 400;
+  color: oklch(45% 0.08 30);
+}
+.d2-odds {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 500;
+  font-size: 13px;
+  color: oklch(40% 0.04 260);
+  font-variant-numeric: tabular-nums;
+}
+.d2-option.selected .d2-odds {
+  color: oklch(45% 0.08 30);
+  font-weight: 600;
+}
+.d2-foot {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid oklch(86% 0.02 85);
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: oklch(45% 0.04 260);
+}
+.d2-foot .cd {
+  color: oklch(45% 0.08 30);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================ */
+/* DIRECTION 3 · BRUTALIST TABLOID (newsprint, raw)               */
+/* ============================================================ */
+.card.d3 {
+  background: oklch(94% 0.025 85);
+  color: oklch(15% 0.02 260);
+  border: 3px solid oklch(15% 0.02 260);
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+.card.d3::after {
+  content:'';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.d3-strip {
+  background: oklch(15% 0.02 260);
+  color: oklch(94% 0.025 85);
+  padding: 6px 14px;
+  display: flex; justify-content: space-between;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  position: relative; z-index: 1;
+}
+.d3-marquee {
+  border-bottom: 3px solid oklch(15% 0.02 260);
+  padding: 8px 0;
+  text-align: center;
+  font-family: 'Anton', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: oklch(45% 0.18 28);
+  position: relative; z-index: 1;
+}
+.d3-headline {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(72px, 16vw, 92px);
+  line-height: 0.84;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin: 14px 16px 8px;
+  position: relative; z-index: 1;
+}
+.d3-headline span:nth-child(2) { color: oklch(45% 0.18 28); }
+.d3-fixture {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 14px 16px;
+  border-top: 1px solid oklch(15% 0.02 260);
+  border-bottom: 3px solid oklch(15% 0.02 260);
+  background: oklch(15% 0.02 260);
+  color: oklch(94% 0.025 85);
+  position: relative; z-index: 1;
+}
+.d3-fixture .vs {
+  display: inline-block;
+  margin: 0 12px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 18px;
+  text-transform: lowercase;
+  letter-spacing: 0;
+  color: oklch(60% 0.18 28);
+  vertical-align: 1px;
+}
+.d3-fixture small {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  margin-top: 4px;
+  opacity: 0.55;
+}
+.d3-options { position: relative; z-index: 1; }
+.d3-option {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  width: 100%;
+  text-align: left;
+  border-bottom: 1.5px solid oklch(15% 0.02 260);
+  background: transparent;
+  transition: background 0.15s;
+  position: relative;
+}
+.d3-option:last-child { border-bottom: 0; }
+.d3-option:hover { background: oklch(90% 0.025 85); }
+.d3-option.selected {
+  background: oklch(15% 0.02 260);
+  color: oklch(94% 0.025 85);
+}
+.d3-option.selected .d3-rank { color: oklch(60% 0.18 28); }
+.d3-option.selected .d3-pick {
+  background: oklch(60% 0.2 28);
+  color: oklch(98% 0.01 85);
+  border-color: oklch(60% 0.2 28);
+}
+.d3-option.selected .d3-odds { color: oklch(94% 0.025 85); }
+.d3-rank {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  color: oklch(15% 0.02 260);
+}
+.d3-text {
+  font-family: 'Anton', sans-serif;
+  font-size: 19px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.d3-contrarian .d3-text { color: oklch(45% 0.18 28); }
+.d3-odds {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.d3-pick {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  padding: 5px 8px;
+  border: 1.5px solid oklch(15% 0.02 260);
+  text-transform: uppercase;
+}
+.d3-stamp {
+  position: absolute;
+  bottom: 12px; right: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: oklch(45% 0.18 28);
+  border: 1.5px solid oklch(45% 0.18 28);
+  padding: 3px 6px;
+  transform: rotate(-3deg);
+  background: oklch(94% 0.025 85);
+  font-variant-numeric: tabular-nums;
+  z-index: 2;
+}
+
+/* ============================================================ */
+/* DIRECTION 4 · RISOGRAPH STICKER (pastel, playful)              */
+/* ============================================================ */
+.card.d4 {
+  background: oklch(93% 0.085 95);
+  color: oklch(22% 0.06 260);
+  border-radius: 14px;
+  padding: 28px 22px 26px;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
+  border: 2.5px solid oklch(22% 0.06 260);
+  box-shadow: 5px 5px 0 oklch(22% 0.06 260);
+}
+.card.d4::after {
+  content:'';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.05  0 0 0 0 0.2  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.12;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  border-radius: 12px;
+}
+.d4-tag {
+  display: inline-block;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  background: oklch(60% 0.18 28);
+  color: oklch(98% 0.02 85);
+  padding: 4px 10px 5px;
+  transform: rotate(-2deg);
+  border: 2px solid oklch(22% 0.06 260);
+  position: relative;
+  z-index: 1;
+}
+.d4-tag::after {
+  content:'';
+  position: absolute; inset: 2px 2px 2px 2px;
+  background: oklch(60% 0.18 28);
+  z-index: -1;
+}
+.d4-headline {
+  margin-top: 18px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: clamp(36px, 7.5vw, 46px);
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  position: relative;
+  color: oklch(22% 0.06 260);
+  text-shadow: 2px 2px 0 oklch(60% 0.18 28);
+}
+.d4-headline span { display: inline-block; transform: rotate(-1deg); }
+.d4-fixture {
+  margin-top: 22px;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  position: relative; z-index: 1;
+}
+.d4-sticker {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  border: 2.5px solid oklch(22% 0.06 260);
+  letter-spacing: 0.04em;
+  position: relative;
+}
+.d4-sticker::before {
+  content:''; position: absolute; inset: -7px;
+  border: 1.5px dashed oklch(22% 0.06 260);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+.d4-bra {
+  background: oklch(85% 0.16 95);
+  color: oklch(22% 0.06 260);
+  transform: rotate(-4deg);
+  box-shadow: 3px 3px 0 oklch(22% 0.06 260);
+}
+.d4-arg {
+  background: oklch(78% 0.09 235);
+  color: oklch(22% 0.06 260);
+  transform: rotate(4deg);
+  box-shadow: 3px 3px 0 oklch(22% 0.06 260);
+}
+.d4-vs {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: oklch(60% 0.18 28);
+  text-shadow: 1.5px 1.5px 0 oklch(22% 0.06 260);
+}
+.d4-meta {
+  margin-top: 18px;
+  text-align: center;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 500;
+  font-size: 12.5px;
+  color: oklch(38% 0.04 260);
+  letter-spacing: 0.02em;
+}
+.d4-options {
+  margin-top: 22px;
+  display: grid; gap: 10px;
+  position: relative; z-index: 1;
+}
+.d4-option {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 16px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: lowercase;
+  letter-spacing: -0.005em;
+  border: 2px solid oklch(22% 0.06 260);
+  background: oklch(97% 0.04 95);
+  color: oklch(22% 0.06 260);
+  transition: transform 0.15s;
+  cursor: pointer;
+}
+.d4-option:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 oklch(22% 0.06 260); }
+.d4-pill { border-radius: 999px; }
+.d4-burst {
+  border-radius: 6px;
+  background: oklch(60% 0.18 28);
+  color: oklch(97% 0.02 85);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 14px;
+  position: relative;
+}
+.d4-burst::before, .d4-burst::after {
+  content:'★';
+  font-size: 10px;
+  color: oklch(85% 0.16 95);
+  vertical-align: 2px;
+}
+.d4-burst::before { margin-right: 8px; }
+.d4-burst::after { margin-left: 8px; }
+.d4-pts {
+  font-family: 'Bricolage Grotesque'; font-weight: 800;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.d4-option.selected {
+  background: oklch(22% 0.06 260);
+  color: oklch(97% 0.04 95);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 oklch(60% 0.18 28);
+}
+.d4-option.selected.d4-burst {
+  background: oklch(85% 0.16 95);
+  color: oklch(22% 0.06 260);
+  box-shadow: 4px 4px 0 oklch(22% 0.06 260);
+}
+.d4-option.selected.d4-burst::before, .d4-option.selected.d4-burst::after {
+  color: oklch(60% 0.18 28);
+}
+
+/* ============================================================ */
+/* FOOTER NOTE                                                    */
+/* ============================================================ */
+.foot-note {
+  margin-top: 96px;
+  padding-top: 32px;
+  border-top: 1px solid var(--rule);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  display: flex; justify-content: space-between; align-items: baseline;
+  flex-wrap: wrap; gap: 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ===================== PAGE HEAD ===================== -->
+  <header class="page-head">
+    <div class="page-eyebrow">Lazy Fantasy · Football · Studio Notes</div>
+    <h1 class="page-title">Four directions for the <em>prediction card</em>.</h1>
+    <p class="page-sub">
+      Same match. Same picks. Four takes — refined, editorial, raw, and playful.
+      Each rendered against light and dark surfaces so we can see how each one carries.
+    </p>
+  </header>
+
+  <!-- ===================== DIRECTION 01 ===================== -->
+  <section class="direction">
+    <div class="dir-head">
+      <span class="dir-num">01 / 04</span>
+      <div>
+        <h2 class="dir-name">Stadium Ticket</h2>
+        <p class="dir-desc">
+          Native to the existing Lazy Fantasy palette. Perforated ticket-stub edges,
+          kit-color crests, scoreboard digits, brand-green selection. Polished and
+          social — designed for a phone in someone's hand at 9 PM IST.
+        </p>
+      </div>
+    </div>
+    <div class="surface-grid">
+
+      <div class="surface dark">
+        <span class="surface-label">On dark</span>
+        <div class="card d1" data-card>
+          <div class="d1-stub">
+            <div class="d1-kicker"><span><span class="d1-livedot"></span>WC · QF</span><span>SAT · 9 PM IST</span></div>
+            <div class="d1-fixture">
+              <div class="d1-team"><div class="d1-crest d1-crest-bra">BRA</div><span class="d1-name">BRAZIL</span></div>
+              <span class="d1-vs">vs</span>
+              <div class="d1-team"><div class="d1-crest d1-crest-arg">ARG</div><span class="d1-name">ARGENTINA</span></div>
+            </div>
+            <div class="d1-countdown"><span class="d1-cd">02:14:36</span><span class="d1-cdlabel">to kickoff</span></div>
+            <div class="perf"></div>
+          </div>
+          <div class="d1-pick">
+            <div class="d1-picklabel">Pick the result</div>
+            <div class="d1-options">
+              <button class="d1-option" data-key="bra"><span class="d1-badge d1-badge-bra">BRA</span><div><div class="d1-optlabel">Brazil to win</div><div class="d1-optsub">41% picked this</div></div><span class="d1-odds">+25</span></button>
+              <button class="d1-option selected" data-key="draw"><span class="d1-badge d1-badge-draw">X</span><div><div class="d1-optlabel">Draw <em>contrarian</em></div><div class="d1-optsub">12% picked · double points</div></div><span class="d1-odds">+50</span></button>
+              <button class="d1-option" data-key="arg"><span class="d1-badge d1-badge-arg">ARG</span><div><div class="d1-optlabel">Argentina to win</div><div class="d1-optsub">47% picked this</div></div><span class="d1-odds">+25</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="surface light">
+        <span class="surface-label">On light</span>
+        <div class="card d1" data-card>
+          <div class="d1-stub">
+            <div class="d1-kicker"><span><span class="d1-livedot"></span>WC · QF</span><span>SAT · 9 PM IST</span></div>
+            <div class="d1-fixture">
+              <div class="d1-team"><div class="d1-crest d1-crest-bra">BRA</div><span class="d1-name">BRAZIL</span></div>
+              <span class="d1-vs">vs</span>
+              <div class="d1-team"><div class="d1-crest d1-crest-arg">ARG</div><span class="d1-name">ARGENTINA</span></div>
+            </div>
+            <div class="d1-countdown"><span class="d1-cd">02:14:36</span><span class="d1-cdlabel">to kickoff</span></div>
+            <div class="perf"></div>
+          </div>
+          <div class="d1-pick">
+            <div class="d1-picklabel">Pick the result</div>
+            <div class="d1-options">
+              <button class="d1-option" data-key="bra"><span class="d1-badge d1-badge-bra">BRA</span><div><div class="d1-optlabel">Brazil to win</div><div class="d1-optsub">41% picked this</div></div><span class="d1-odds">+25</span></button>
+              <button class="d1-option selected" data-key="draw"><span class="d1-badge d1-badge-draw">X</span><div><div class="d1-optlabel">Draw <em>contrarian</em></div><div class="d1-optsub">12% picked · double points</div></div><span class="d1-odds">+50</span></button>
+              <button class="d1-option" data-key="arg"><span class="d1-badge d1-badge-arg">ARG</span><div><div class="d1-optlabel">Argentina to win</div><div class="d1-optsub">47% picked this</div></div><span class="d1-odds">+25</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== DIRECTION 02 ===================== -->
+  <section class="direction">
+    <div class="dir-head">
+      <span class="dir-num">02 / 04</span>
+      <div>
+        <h2 class="dir-name">Editorial Magazine</h2>
+        <p class="dir-desc">
+          A sports-monthly take. Big serif headline, italic descenders, type does
+          almost all the work. Numbered options sit on a typographic baseline; selection
+          is a thin red rule. Reads more like a feature spread than a form.
+        </p>
+      </div>
+    </div>
+    <div class="surface-grid">
+
+      <div class="surface dark">
+        <span class="surface-label">On dark</span>
+        <div class="card d2" data-card>
+          <div class="d2-eyebrow">Issue 47 · The Pick</div>
+          <h3 class="d2-headline">Brasil <span class="vs">vs</span> Argentina</h3>
+          <div class="d2-meta">Quarterfinal — Saturday, 9 PM IST<br/>Estadio Único, La Plata</div>
+          <div class="d2-rule"></div>
+          <div class="d2-pickintro">— Make your call.</div>
+          <ol class="d2-options">
+            <li class="d2-option" data-key="bra"><span class="d2-num">01</span><span class="d2-text">Brazil takes it home</span><span class="d2-odds">+25</span></li>
+            <li class="d2-option selected" data-key="draw"><span class="d2-num">02</span><span class="d2-text">The draw <em>— a bold call —</em></span><span class="d2-odds">+50</span></li>
+            <li class="d2-option" data-key="arg"><span class="d2-num">03</span><span class="d2-text">Argentina holds court</span><span class="d2-odds">+25</span></li>
+          </ol>
+          <div class="d2-foot"><span>Locks in</span><span class="cd">02:14:36</span></div>
+        </div>
+      </div>
+
+      <div class="surface light">
+        <span class="surface-label">On light</span>
+        <div class="card d2" data-card>
+          <div class="d2-eyebrow">Issue 47 · The Pick</div>
+          <h3 class="d2-headline">Brasil <span class="vs">vs</span> Argentina</h3>
+          <div class="d2-meta">Quarterfinal — Saturday, 9 PM IST<br/>Estadio Único, La Plata</div>
+          <div class="d2-rule"></div>
+          <div class="d2-pickintro">— Make your call.</div>
+          <ol class="d2-options">
+            <li class="d2-option" data-key="bra"><span class="d2-num">01</span><span class="d2-text">Brazil takes it home</span><span class="d2-odds">+25</span></li>
+            <li class="d2-option selected" data-key="draw"><span class="d2-num">02</span><span class="d2-text">The draw <em>— a bold call —</em></span><span class="d2-odds">+50</span></li>
+            <li class="d2-option" data-key="arg"><span class="d2-num">03</span><span class="d2-text">Argentina holds court</span><span class="d2-odds">+25</span></li>
+          </ol>
+          <div class="d2-foot"><span>Locks in</span><span class="cd">02:14:36</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== DIRECTION 03 ===================== -->
+  <section class="direction">
+    <div class="dir-head">
+      <span class="dir-num">03 / 04</span>
+      <div>
+        <h2 class="dir-name">Brutalist Tabloid</h2>
+        <p class="dir-desc">
+          Back-page-of-a-Mumbai-newspaper energy. Anton condensed caps, paper grain
+          showing through, blood-red ink for emphasis, hard black borders. Selection
+          flips a row to inverse with a red corner stamp. The most aggressive option.
+        </p>
+      </div>
+    </div>
+    <div class="surface-grid">
+
+      <div class="surface dark">
+        <span class="surface-label">On dark</span>
+        <div class="card d3" data-card>
+          <div class="d3-strip"><span>Special Edition</span><span>Vol. 12</span></div>
+          <div class="d3-marquee">★ Make the call ★ Make the call ★ Make the call ★</div>
+          <h3 class="d3-headline"><span>Who.</span><br/><span>Ya.</span><br/><span>Got?</span></h3>
+          <div class="d3-fixture">Brazil <span class="vs">vs</span> Argentina<small>Quarterfinal · Sat 21:00 IST</small></div>
+          <div class="d3-options">
+            <button class="d3-option" data-key="bra"><span class="d3-rank">A</span><span class="d3-text">Brazil to win.</span><span class="d3-odds">+25</span><span class="d3-pick">Pick →</span></button>
+            <button class="d3-option d3-contrarian selected" data-key="draw"><span class="d3-rank">B</span><span class="d3-text">Call it a draw.</span><span class="d3-odds">+50</span><span class="d3-pick">Pick →</span></button>
+            <button class="d3-option" data-key="arg"><span class="d3-rank">C</span><span class="d3-text">Argentina wins.</span><span class="d3-odds">+25</span><span class="d3-pick">Pick →</span></button>
+          </div>
+          <div class="d3-stamp">Locks in 02:14:36</div>
+        </div>
+      </div>
+
+      <div class="surface light">
+        <span class="surface-label">On light</span>
+        <div class="card d3" data-card>
+          <div class="d3-strip"><span>Special Edition</span><span>Vol. 12</span></div>
+          <div class="d3-marquee">★ Make the call ★ Make the call ★ Make the call ★</div>
+          <h3 class="d3-headline"><span>Who.</span><br/><span>Ya.</span><br/><span>Got?</span></h3>
+          <div class="d3-fixture">Brazil <span class="vs">vs</span> Argentina<small>Quarterfinal · Sat 21:00 IST</small></div>
+          <div class="d3-options">
+            <button class="d3-option" data-key="bra"><span class="d3-rank">A</span><span class="d3-text">Brazil to win.</span><span class="d3-odds">+25</span><span class="d3-pick">Pick →</span></button>
+            <button class="d3-option d3-contrarian selected" data-key="draw"><span class="d3-rank">B</span><span class="d3-text">Call it a draw.</span><span class="d3-odds">+50</span><span class="d3-pick">Pick →</span></button>
+            <button class="d3-option" data-key="arg"><span class="d3-rank">C</span><span class="d3-text">Argentina wins.</span><span class="d3-odds">+25</span><span class="d3-pick">Pick →</span></button>
+          </div>
+          <div class="d3-stamp">Locks in 02:14:36</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== DIRECTION 04 ===================== -->
+  <section class="direction">
+    <div class="dir-head">
+      <span class="dir-num">04 / 04</span>
+      <div>
+        <h2 class="dir-name">Risograph Sticker</h2>
+        <p class="dir-desc">
+          Two-color riso print, pastel butter paper, hand-drawn dotted halos around
+          the crests, slight rotations and offset shadows so nothing sits perfectly square.
+          Reads younger and more "group chat" — least tournament-formal of the four.
+        </p>
+      </div>
+    </div>
+    <div class="surface-grid">
+
+      <div class="surface dark">
+        <span class="surface-label">On dark</span>
+        <div class="card d4" data-card>
+          <span class="d4-tag">!! big match !!</span>
+          <h3 class="d4-headline"><span>Pick your</span><br/><span>poison.</span></h3>
+          <div class="d4-fixture">
+            <div class="d4-sticker d4-bra">BRA</div>
+            <span class="d4-vs">×</span>
+            <div class="d4-sticker d4-arg">ARG</div>
+          </div>
+          <div class="d4-meta">Sat · 9PM IST · 2h 14m to kickoff</div>
+          <div class="d4-options">
+            <button class="d4-option d4-pill" data-key="bra"><span>brazil wins</span><span class="d4-pts">+25</span></button>
+            <button class="d4-option d4-burst selected" data-key="draw"><span>D R A W</span><span class="d4-pts">+50</span></button>
+            <button class="d4-option d4-pill" data-key="arg"><span>argentina wins</span><span class="d4-pts">+25</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="surface light">
+        <span class="surface-label">On light</span>
+        <div class="card d4" data-card>
+          <span class="d4-tag">!! big match !!</span>
+          <h3 class="d4-headline"><span>Pick your</span><br/><span>poison.</span></h3>
+          <div class="d4-fixture">
+            <div class="d4-sticker d4-bra">BRA</div>
+            <span class="d4-vs">×</span>
+            <div class="d4-sticker d4-arg">ARG</div>
+          </div>
+          <div class="d4-meta">Sat · 9PM IST · 2h 14m to kickoff</div>
+          <div class="d4-options">
+            <button class="d4-option d4-pill" data-key="bra"><span>brazil wins</span><span class="d4-pts">+25</span></button>
+            <button class="d4-option d4-burst selected" data-key="draw"><span>D R A W</span><span class="d4-pts">+50</span></button>
+            <button class="d4-option d4-pill" data-key="arg"><span>argentina wins</span><span class="d4-pts">+25</span></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== FOOT ===================== -->
+  <div class="foot-note">
+    <span>Lazy Fantasy · Football v1 explorations</span>
+    <span>Tap any option in any card</span>
+  </div>
+
+</div>
+
+<script>
+  // Per-card single-select behaviour
+  document.querySelectorAll('[data-card]').forEach(card => {
+    const options = card.querySelectorAll('[data-key]');
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        options.forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

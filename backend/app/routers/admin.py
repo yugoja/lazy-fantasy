@@ -3,9 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Match, MatchStatus, Team, Tournament, Player, User, MatchLineup, Prediction
+from app.models import (
+    Match, MatchStatus, Team, Tournament, Player, User, MatchLineup, Prediction,
+    FootballMatchResult, FootballPlayerMatchEvent,
+)
 from app.schemas.admin import (
-    MatchCreate, MatchResultCreate, SetLineupRequest,
+    MatchCreate, MatchResultCreate, FootballMatchResultCreate, SetLineupRequest,
     LinkMatchRequest, BulkPlayerMappingRequest, SyncStatusResponse,
 )
 from app.schemas.match import MatchResponse, TeamResponse, PlayerResponse
@@ -170,6 +173,118 @@ async def set_match_result(
     
     return {
         "message": "Match results set successfully",
+        "match_id": match_id,
+        "status": "COMPLETED",
+        "predictions_processed": predictions_processed,
+    }
+
+
+@router.post("/matches/{match_id}/result/football")
+async def set_football_match_result(
+    match_id: int,
+    result_data: FootballMatchResultCreate,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Set a football match result + per-player events, then score (Admin only).
+
+    `team_goals_conceded` for each player is derived server-side from the final
+    scoreline and the player's team, so it is not part of the request body.
+    """
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+    if not match.tournament or match.tournament.sport != "football":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This endpoint is only for football matches",
+        )
+
+    # Extra time must be provided for both teams or neither.
+    if (result_data.team1_goals_et is None) != (result_data.team2_goals_et is None):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provide extra-time goals for both teams or neither",
+        )
+
+    if result_data.shootout_winner_id is not None and result_data.shootout_winner_id not in (
+        match.team_1_id, match.team_2_id,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="shootout_winner_id must be one of the match teams",
+        )
+
+    # Validate players and reject duplicate event rows.
+    valid_team_ids = {match.team_1_id, match.team_2_id}
+    seen_player_ids: set[int] = set()
+    players_by_id: dict[int, Player] = {}
+    for ev in result_data.player_events:
+        if ev.player_id in seen_player_ids:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Duplicate event row for player {ev.player_id}",
+            )
+        seen_player_ids.add(ev.player_id)
+        player = db.query(Player).filter(Player.id == ev.player_id).first()
+        if not player:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player with ID {ev.player_id} not found")
+        if player.team_id not in valid_team_ids:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Player {player.name} is not in either team")
+        players_by_id[ev.player_id] = player
+
+    # Final scoreline (end-of-ET if played) drives per-player goals conceded.
+    if result_data.team1_goals_et is not None:
+        t1_total, t2_total = result_data.team1_goals_et, result_data.team2_goals_et
+    else:
+        t1_total, t2_total = result_data.team1_goals_reg, result_data.team2_goals_reg
+
+    # Replace any existing result (and its events) for this match.
+    existing = db.query(FootballMatchResult).filter_by(match_id=match_id).first()
+    if existing:
+        db.delete(existing)
+        db.flush()
+
+    fr = FootballMatchResult(
+        match_id=match_id,
+        team1_goals_reg=result_data.team1_goals_reg,
+        team2_goals_reg=result_data.team2_goals_reg,
+        team1_goals_et=result_data.team1_goals_et,
+        team2_goals_et=result_data.team2_goals_et,
+        shootout_winner_id=result_data.shootout_winner_id,
+    )
+    for ev in result_data.player_events:
+        conceded = t2_total if players_by_id[ev.player_id].team_id == match.team_1_id else t1_total
+        fr.player_events.append(
+            FootballPlayerMatchEvent(
+                player_id=ev.player_id,
+                minutes_played=ev.minutes_played,
+                goals=ev.goals,
+                assists=ev.assists,
+                team_goals_conceded=conceded,
+                ingame_pen_saves=ev.ingame_pen_saves,
+                shootout_pen_saves=ev.shootout_pen_saves,
+                red_card=ev.red_card,
+                own_goals=ev.own_goals,
+                ingame_pen_misses=ev.ingame_pen_misses,
+            )
+        )
+    db.add(fr)
+    match.status = MatchStatus.COMPLETED
+    db.commit()
+
+    # Reset processed flag so scores can be recalculated on correction
+    db.query(Prediction).filter(Prediction.match_id == match_id).update(
+        {"is_processed": False, "points_earned": 0}
+    )
+    db.commit()
+
+    snapshot_league_ranks(db, match_id)
+    predictions_processed = calculate_scores(db, match_id)
+
+    return {
+        "message": "Football match result set successfully",
         "match_id": match_id,
         "status": "COMPLETED",
         "predictions_processed": predictions_processed,

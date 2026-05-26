@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Match-Level Winners · Four Designs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --paper: oklch(97% 0.012 85);
+  --paper-2: oklch(93% 0.018 85);
+  --ink: oklch(22% 0.03 260);
+  --ink-mute: oklch(48% 0.025 260);
+  --rule: oklch(86% 0.02 85);
+  --green: #26d666;
+  --green-deep: #18a44d;
+  --gold: #f39c3a;
+  --crimson: oklch(54% 0.21 25);
+  --navy: oklch(15% 0.025 260);
+  --navy-2: oklch(20% 0.035 260);
+  --stub: oklch(22% 0.04 260);
+  --line: oklch(30% 0.04 260);
+  --line-strong: oklch(38% 0.04 260);
+  --text-l: oklch(95% 0.01 260);
+  --text-dim-l: oklch(70% 0.03 260);
+  --text-mute-l: oklch(55% 0.03 260);
+  --rcb: oklch(48% 0.21 25);
+  --mi: oklch(40% 0.16 250);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: 'Inter', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+body { background: var(--paper); }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: transparent; }
+ol, ul { list-style: none; }
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: clamp(36px, 5vw, 72px) clamp(20px, 4vw, 48px) 160px; }
+
+/* === HEAD === */
+.page-head { margin-bottom: 56px; max-width: 740px; }
+.page-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 18px;
+}
+.page-eyebrow::before {
+  content: '●'; margin-right: 10px; color: var(--green-deep);
+}
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-size: clamp(40px, 6.4vw, 64px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+.page-title em { font-style: italic; font-weight: 400; }
+.page-sub {
+  font-size: 17px; color: var(--ink-mute);
+  margin-top: 20px; line-height: 1.55;
+  max-width: 580px;
+}
+
+/* === SYSTEM-AT-A-GLANCE === */
+.glance {
+  margin-top: 40px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
+  padding: 24px 28px;
+  background: var(--paper-2);
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+}
+@media (max-width: 640px) { .glance { grid-template-columns: 1fr; gap: 20px; } }
+.glance h4 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 12px;
+}
+.glance .have h4::before { content: '✓ '; color: var(--green-deep); }
+.glance .miss h4::before { content: '✗ '; color: var(--crimson); }
+.glance dl { display: grid; gap: 8px; }
+.glance dt {
+  font-family: 'Inter';
+  font-weight: 600; font-size: 13px;
+  color: var(--ink);
+}
+.glance dd {
+  font-size: 12.5px; color: var(--ink-mute); line-height: 1.45;
+}
+.glance .miss p {
+  font-size: 13.5px; color: var(--ink); line-height: 1.55;
+}
+.glance .miss p em {
+  font-family: 'Fraunces', serif; font-style: italic;
+  color: var(--crimson);
+}
+
+/* === DESIGN SECTIONS === */
+.design {
+  margin-top: clamp(64px, 8vw, 104px);
+  padding-top: 36px;
+  border-top: 1px solid var(--rule);
+}
+.design-head {
+  display: grid; grid-template-columns: auto 1fr; gap: 24px;
+  align-items: baseline; margin-bottom: 32px; max-width: 740px;
+}
+.design-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px; color: var(--ink-mute);
+  letter-spacing: 0.16em; padding-top: 14px;
+}
+.design-name {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 96;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 600; letter-spacing: -0.02em;
+}
+.design-meta {
+  margin-top: 10px;
+  display: flex; gap: 16px; flex-wrap: wrap;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-mute);
+}
+.design-meta b { color: var(--ink); font-weight: 500; }
+.design-desc {
+  margin-top: 14px;
+  font-size: 14.5px; color: var(--ink-mute);
+  line-height: 1.55; max-width: 580px;
+}
+.design-stage {
+  margin-top: 28px;
+  padding: clamp(36px, 5vw, 64px) clamp(20px, 4vw, 40px);
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  min-height: 480px;
+  position: relative;
+  overflow: hidden;
+}
+.stage-dark { background: oklch(14% 0.022 260); }
+.stage-cream { background: oklch(94% 0.018 85); }
+.stage-bare {
+  background:
+    radial-gradient(circle at 20% 10%, oklch(95% 0.04 25 / 0.5), transparent 50%),
+    radial-gradient(circle at 80% 90%, oklch(94% 0.06 240 / 0.4), transparent 50%),
+    oklch(96% 0.015 85);
+}
+.stage-tag {
+  position: absolute;
+  top: 18px; left: 22px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.stage-dark .stage-tag { color: var(--text-mute-l); }
+.stage-cream .stage-tag, .stage-bare .stage-tag { color: var(--ink-mute); }
+
+/* === FOOT === */
+.foot {
+  margin-top: 96px;
+  padding-top: 28px;
+  border-top: 1px solid var(--rule);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+
+/* =================================================== */
+/* DESIGN 01 · MATCH VERDICT CARD                       */
+/* =================================================== */
+.verdict {
+  width: 100%; max-width: 400px;
+  background: var(--navy);
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  color: var(--text-l);
+  font-family: 'Inter';
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -20px rgba(0,0,0,0.45);
+}
+.verdict::before {
+  content:''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, oklch(60% 0.18 145 / 0.18), transparent 60%);
+  pointer-events: none;
+}
+.verdict > * { position: relative; }
+
+.v-kicker {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Space Grotesk';
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--text-mute-l);
+}
+.v-trophy {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--gold);
+}
+.v-trophy::before {
+  content:'';
+  width: 8px; height: 8px;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+.v-fixture {
+  margin-top: 14px;
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--line);
+}
+.v-fix-crest {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.v-fix-mi { background: var(--mi); color: var(--text-l); }
+.v-fix-rcb { background: var(--rcb); color: var(--text-l); }
+.v-fix-score {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.v-fix-score .winner { color: var(--green); }
+.v-fix-score .lose { color: var(--text-dim-l); font-weight: 500; }
+.v-fix-score .dash { color: var(--text-mute-l); margin: 0 8px; font-weight: 400; }
+.v-fix-spacer { flex: 1; }
+.v-fix-stat {
+  font-family: 'Space Grotesk';
+  font-weight: 600; font-size: 10.5px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-mute-l);
+}
+
+.v-headline {
+  margin-top: 20px;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-weight: 600;
+  font-size: 30px;
+  line-height: 1.0;
+  letter-spacing: -0.022em;
+  color: var(--text-l);
+}
+.v-headline em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold);
+}
+.v-sub {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--text-dim-l);
+  line-height: 1.45;
+}
+.v-sub b { color: var(--text-l); font-weight: 600; }
+
+.v-winner {
+  margin-top: 18px;
+  padding: 14px 14px;
+  background: linear-gradient(180deg, oklch(60% 0.18 145 / 0.12), oklch(60% 0.18 145 / 0.03));
+  border: 1.5px solid oklch(60% 0.18 145 / 0.4);
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 14px; align-items: center;
+}
+.v-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, oklch(70% 0.18 145), oklch(50% 0.18 145));
+  color: var(--navy);
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 17px;
+  letter-spacing: 0.03em;
+  position: relative;
+}
+.v-avatar::after {
+  content:''; position: absolute; inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid oklch(60% 0.18 145 / 0.4);
+}
+.v-winner-name {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 16px;
+  letter-spacing: -0.005em;
+}
+.v-winner-tags {
+  margin-top: 4px;
+  display: flex; gap: 6px; flex-wrap: wrap;
+  font-family: 'Space Grotesk';
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.v-tag-rank {
+  color: var(--gold);
+  display: inline-flex; align-items: center; gap: 3px;
+}
+.v-tag-rank::before { content:'↑'; font-size: 11px; }
+.v-tag-rank-from {
+  color: var(--text-mute-l);
+}
+.v-score-big {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 36px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.v-score-big sub {
+  font-size: 11px; font-weight: 500;
+  color: var(--text-mute-l);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  vertical-align: 5px; margin-left: 2px;
+}
+
+.v-hits {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.v-hit {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px;
+  background: oklch(30% 0.04 260 / 0.4);
+  border-radius: 8px;
+  font-family: 'Space Grotesk';
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-dim-l);
+}
+.v-hit-mark {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: oklch(60% 0.18 145);
+  color: var(--navy);
+  display: grid; place-items: center;
+  font-size: 11px;
+}
+.v-hit-mark.miss {
+  background: transparent;
+  border: 1.5px solid var(--line);
+  color: var(--text-mute-l);
+}
+.v-hit-mark.miss::after { content: '−'; font-weight: 700; }
+
+.v-runners {
+  margin-top: 14px;
+  display: grid; gap: 6px;
+}
+.v-run {
+  display: grid;
+  grid-template-columns: 22px 28px 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 8px 12px;
+  background: var(--navy-2);
+  border-radius: 8px;
+  font-family: 'Inter';
+  font-size: 13px;
+}
+.v-run-rank {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 12px;
+  color: var(--text-mute-l);
+}
+.v-run-av {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.v-run-name {
+  font-weight: 500;
+  color: var(--text-l);
+}
+.v-run-name small {
+  color: var(--text-mute-l);
+  font-size: 10.5px;
+  margin-left: 6px;
+}
+.v-run-pts {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-l);
+}
+.v-run-pts small {
+  font-size: 10px; font-weight: 500;
+  color: var(--text-mute-l);
+  margin-left: 2px; letter-spacing: 0.06em;
+}
+
+.v-cta {
+  margin-top: 16px;
+  display: flex; gap: 8px;
+}
+.v-btn {
+  flex: 1; height: 42px;
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 13px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; cursor: pointer;
+}
+.v-btn-primary {
+  background: var(--green); color: oklch(15% 0.04 145);
+}
+.v-btn-ghost {
+  background: transparent;
+  color: var(--text-dim-l);
+  border: 1.5px solid var(--line);
+}
+
+/* =================================================== */
+/* DESIGN 02 · JUDGES' SCORECARD                        */
+/* =================================================== */
+.judges {
+  width: 100%; max-width: 410px;
+  background: oklch(96% 0.015 85);
+  color: oklch(15% 0.02 260);
+  border-radius: 4px;
+  font-family: 'Inter';
+  border: 1px solid oklch(80% 0.02 85);
+  box-shadow: 0 24px 50px -28px rgba(0,0,0,0.5);
+  overflow: hidden;
+  position: relative;
+}
+.j-top {
+  background: oklch(15% 0.02 260);
+  color: oklch(96% 0.015 85);
+  padding: 16px 22px 18px;
+  position: relative;
+}
+.j-top::after {
+  content:'';
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 4px;
+  background: repeating-linear-gradient(90deg,
+    var(--crimson) 0 16px,
+    oklch(96% 0.015 85) 16px 32px);
+}
+.j-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px; letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: oklch(70% 0.04 260);
+  display: flex; justify-content: space-between;
+}
+.j-eyebrow .live {
+  color: var(--crimson);
+}
+.j-eyebrow .live::before {
+  content:'●'; margin-right: 6px;
+}
+.j-headline {
+  margin-top: 10px;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.025em;
+  line-height: 1.0;
+}
+.j-headline em {
+  font-style: italic; font-weight: 400;
+  color: var(--crimson);
+}
+.j-fixture {
+  margin-top: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 0.06em;
+  color: oklch(75% 0.04 260);
+}
+.j-fixture b { color: oklch(95% 0.01 85); font-weight: 600; }
+
+.j-cats {
+  display: grid;
+  grid-template-columns: 1fr 28px 28px 28px 28px 38px;
+  gap: 8px;
+  padding: 14px 22px 10px;
+  background: oklch(94% 0.015 85);
+  border-bottom: 1px solid oklch(82% 0.025 85);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: oklch(35% 0.04 260);
+  font-weight: 600;
+}
+.j-cats span:nth-child(n+2) { text-align: center; }
+
+.j-rows { padding: 0 14px; }
+.j-row {
+  display: grid;
+  grid-template-columns: 1fr 28px 28px 28px 28px 38px;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid oklch(86% 0.02 85);
+  position: relative;
+}
+.j-row:last-child { border-bottom: 0; }
+.j-row.winner {
+  background: oklch(15% 0.02 260);
+  color: oklch(96% 0.015 85);
+  margin: 6px -8px;
+  padding: 14px 16px;
+  border-radius: 4px;
+  border-bottom: 0;
+  position: relative;
+}
+.j-row.winner::before {
+  content: 'CHAMP';
+  position: absolute;
+  top: -7px; right: 12px;
+  background: var(--crimson);
+  color: oklch(98% 0.01 85);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  padding: 3px 7px;
+  letter-spacing: 0.2em;
+}
+.j-name {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 96;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.012em;
+}
+.j-name small {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: oklch(45% 0.04 260);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+.j-row.winner .j-name small { color: oklch(70% 0.04 260); }
+.j-mark {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  margin: 0 auto;
+}
+.j-mark.hit {
+  background: var(--crimson);
+  color: oklch(98% 0.01 85);
+}
+.j-mark.miss {
+  background: transparent;
+  border: 1.5px solid oklch(82% 0.025 85);
+  color: oklch(75% 0.025 260);
+}
+.j-row.winner .j-mark.miss {
+  border-color: oklch(35% 0.04 260);
+  color: oklch(45% 0.04 260);
+}
+.j-total {
+  text-align: right;
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.j-row.winner .j-total {
+  color: oklch(75% 0.18 60);
+}
+
+.j-foot {
+  background: oklch(94% 0.015 85);
+  border-top: 1px solid oklch(80% 0.02 85);
+  padding: 14px 22px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.j-foot-q {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+  color: oklch(35% 0.04 260);
+  max-width: 240px;
+  line-height: 1.3;
+}
+.j-foot-q b {
+  font-style: normal; font-weight: 600;
+  color: var(--crimson);
+}
+.j-foot-sig {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: oklch(50% 0.04 260);
+  text-align: right;
+}
+
+/* =================================================== */
+/* DESIGN 03 · TRADING CARD                             */
+/* =================================================== */
+.card-stage {
+  perspective: 1200px;
+  width: 100%;
+  display: grid; place-items: center;
+}
+.trading {
+  width: 320px;
+  aspect-ratio: 5 / 7;
+  background:
+    linear-gradient(140deg, var(--rcb) 0%, oklch(18% 0.04 260) 60%, oklch(14% 0.04 260) 100%);
+  border-radius: 22px;
+  position: relative;
+  overflow: hidden;
+  color: oklch(96% 0.01 85);
+  font-family: 'Inter';
+  box-shadow:
+    0 30px 80px -20px rgba(0,0,0,0.6),
+    0 0 0 1.5px oklch(50% 0.18 25 / 0.6);
+  transform: rotate(-2deg);
+  transition: transform 0.6s cubic-bezier(0.2,0.8,0.2,1);
+  cursor: pointer;
+}
+.trading:hover {
+  transform: rotate(0deg) translateY(-4px);
+}
+.trading::before {
+  content:'';
+  position: absolute; inset: 0;
+  background:
+    conic-gradient(from 210deg at 60% 35%,
+      transparent 0deg,
+      oklch(80% 0.18 60 / 0.18) 60deg,
+      oklch(70% 0.18 280 / 0.16) 130deg,
+      transparent 200deg,
+      oklch(75% 0.16 180 / 0.14) 280deg,
+      transparent 360deg);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: shimmer 7s linear infinite;
+}
+@keyframes shimmer {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.trading::after {
+  content:'';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.tc-inner {
+  position: relative; z-index: 1;
+  padding: 20px 22px 22px;
+  display: flex; flex-direction: column;
+  height: 100%;
+}
+.tc-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.tc-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.18em;
+  color: oklch(85% 0.02 25);
+}
+.tc-rarity {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 8px;
+  border: 1px solid oklch(80% 0.18 60 / 0.7);
+  border-radius: 4px;
+  font-family: 'Space Grotesk';
+  font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.2em;
+  color: oklch(85% 0.16 60);
+  text-transform: uppercase;
+}
+.tc-rarity::before {
+  content: '◆';
+  font-size: 8px;
+  margin-right: 1px;
+}
+
+.tc-portrait {
+  margin: 28px auto 0;
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, oklch(85% 0.05 60), oklch(60% 0.18 60) 60%, oklch(45% 0.18 60));
+  display: grid; place-items: center;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-weight: 900;
+  font-size: 56px;
+  color: oklch(98% 0.01 60);
+  letter-spacing: -0.02em;
+  position: relative;
+  box-shadow:
+    0 0 0 4px oklch(50% 0.18 25 / 0.3),
+    0 0 0 5px oklch(80% 0.18 60 / 0.5);
+}
+.tc-portrait::after {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1px dashed oklch(80% 0.18 60 / 0.5);
+}
+
+.tc-name {
+  margin-top: 18px;
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: -0.018em;
+  text-align: center;
+  line-height: 1.0;
+}
+.tc-name em {
+  font-style: italic;
+  font-weight: 400;
+  color: oklch(85% 0.16 60);
+}
+.tc-title {
+  margin-top: 6px;
+  text-align: center;
+  font-family: 'Space Grotesk';
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: oklch(85% 0.16 60);
+}
+
+.tc-stats {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.tc-stat {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  background: oklch(15% 0.02 260 / 0.6);
+  border-radius: 6px;
+  border: 1px solid oklch(50% 0.18 25 / 0.3);
+}
+.tc-stat-v {
+  font-family: 'Space Grotesk';
+  font-weight: 700; font-size: 13px;
+  color: oklch(85% 0.16 60);
+}
+.tc-stat-l {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: oklch(75% 0.04 60);
+}
+
+.tc-foot {
+  margin-top: 14px;
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-top: 12px;
+  border-top: 1px solid oklch(50% 0.18 25 / 0.3);
+}
+.tc-total {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.tc-total small {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  color: oklch(70% 0.04 60);
+  letter-spacing: 0.18em;
+  margin-left: 4px;
+}
+.tc-flawless {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  color: oklch(15% 0.04 260);
+  background: oklch(85% 0.16 60);
+  padding: 4px 9px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.tc-collection {
+  margin-top: 18px;
+  display: flex; gap: 6px; justify-content: center;
+  flex-wrap: wrap;
+}
+.tc-coll {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-mute);
+  padding: 4px 8px;
+  background: oklch(94% 0.012 85);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  display: inline-flex; gap: 6px; align-items: center;
+}
+.tc-coll b { font-family: 'Space Grotesk'; font-weight: 700; color: var(--ink); }
+
+/* =================================================== */
+/* DESIGN 04 · MATCH RECEIPT                            */
+/* =================================================== */
+.receipt {
+  width: 100%; max-width: 340px;
+  background: oklch(95% 0.018 85);
+  color: oklch(20% 0.025 260);
+  font-family: 'IBM Plex Mono', monospace;
+  position: relative;
+  padding: 22px 22px 28px;
+  box-shadow:
+    0 30px 60px -20px rgba(0,0,0,0.25),
+    0 0 0 1px oklch(85% 0.025 85);
+}
+.receipt::before, .receipt::after {
+  content:'';
+  position: absolute; left: 0; right: 0;
+  height: 14px;
+  background:
+    radial-gradient(circle at 8px 0, oklch(94% 0.018 85) 6px, transparent 6.5px),
+    linear-gradient(to right,
+      oklch(85% 0.025 85) 0, oklch(85% 0.025 85) 100%);
+  background-repeat: repeat-x;
+  background-size: 16px 14px, 100% 100%;
+}
+.receipt::before {
+  top: -13px;
+  transform: scaleY(-1);
+}
+.receipt::after {
+  bottom: -13px;
+}
+.receipt-body {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.3' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-blend-mode: multiply;
+  background-size: 240px 240px;
+  position: relative;
+  z-index: 1;
+}
+
+.r-brand {
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.012em;
+  margin-bottom: 2px;
+}
+.r-tagline {
+  text-align: center;
+  font-size: 9px; font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: oklch(45% 0.04 260);
+  margin-bottom: 14px;
+}
+.r-divider {
+  border-top: 1px dashed oklch(50% 0.04 260);
+  margin: 10px 0;
+  position: relative;
+}
+.r-divider-text {
+  position: absolute;
+  top: -7px; left: 50%;
+  transform: translateX(-50%);
+  background: oklch(95% 0.018 85);
+  padding: 0 8px;
+  font-size: 8.5px; font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: oklch(45% 0.04 260);
+}
+
+.r-meta {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 6px 14px;
+  font-size: 11px;
+  margin: 12px 0;
+}
+.r-meta dt {
+  color: oklch(45% 0.04 260);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 9.5px;
+  padding-top: 2px;
+  font-weight: 500;
+}
+.r-meta dd {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.r-line {
+  margin-top: 12px;
+}
+.r-line-name {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.r-line-name .pts {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.r-line.winner .r-line-name {
+  font-weight: 700;
+}
+.r-line.winner .r-line-name::after {
+  content: '★ MATCH WINNER';
+  margin-left: 8px;
+  font-size: 8.5px; font-weight: 700;
+  letter-spacing: 0.18em;
+  color: oklch(50% 0.18 60);
+  border: 1px solid oklch(50% 0.18 60);
+  padding: 1px 5px;
+  align-self: center;
+}
+.r-line-items {
+  margin-top: 4px;
+  padding-left: 12px;
+  display: grid; gap: 1px;
+}
+.r-item {
+  display: flex; justify-content: space-between;
+  font-size: 10.5px;
+  color: oklch(40% 0.03 260);
+  letter-spacing: 0.02em;
+}
+.r-item span:last-child {
+  font-family: 'Space Grotesk';
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.r-item.miss {
+  color: oklch(60% 0.04 260);
+  font-style: italic;
+}
+.r-item.miss span:last-child::before { content: ''; }
+
+.r-totals {
+  margin-top: 16px;
+  padding: 10px 0;
+  border-top: 1px dashed oklch(50% 0.04 260);
+  border-bottom: 1px dashed oklch(50% 0.04 260);
+  display: grid; gap: 4px;
+}
+.r-totals .r-tot {
+  display: flex; justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.r-totals .r-tot.grand {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid oklch(50% 0.04 260);
+}
+.r-totals .r-tot .v { font-family: 'Space Grotesk'; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.r-thanks {
+  margin-top: 14px;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+  color: oklch(35% 0.04 260);
+}
+.r-share {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: oklch(50% 0.04 260);
+}
+.r-barcode {
+  margin: 14px auto 0;
+  height: 32px;
+  width: 70%;
+  background: repeating-linear-gradient(
+    90deg,
+    oklch(20% 0.025 260) 0 2px, transparent 2px 4px,
+    oklch(20% 0.025 260) 4px 5px, transparent 5px 8px,
+    oklch(20% 0.025 260) 8px 11px, transparent 11px 13px,
+    oklch(20% 0.025 260) 13px 14px, transparent 14px 17px
+  );
+}
+.r-barcode-num {
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  margin-top: 4px;
+  color: oklch(45% 0.04 260);
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ===================== HEAD ===================== -->
+  <header class="page-head">
+    <div class="page-eyebrow">Lazy Fantasy · Cricket · Studio notes</div>
+    <h1 class="page-title">Per-match winners, <em>not just a season trophy.</em></h1>
+    <p class="page-sub">
+      Today the leaderboard is a single number per player that ticks up silently across the
+      season. Match-level winners turn each fixture into its own moment — bragging rights,
+      a screenshot, a reason to open the group chat.
+    </p>
+  </header>
+
+  <div class="glance">
+    <div class="have">
+      <h4>What the system already does</h4>
+      <dl>
+        <dt>Per-match scoring · max 140 pts</dt>
+        <dd>10 (winner) + 4 × 20 (top runs / top wickets, per team) + 50 (POM)</dd>
+        <dt>Tournament-level picks</dt>
+        <dd>Top-4 teams + best batsman + best bowler, scored once the tournament ends</dd>
+        <dt>League leaderboard</dt>
+        <dd>Season cumulative — sums per-match points and tournament picks for every member</dd>
+      </dl>
+    </div>
+    <div class="miss">
+      <h4>What's missing</h4>
+      <p>
+        <em>Match-level recognition.</em> When a fixture ends, every member's per-match
+        score is calculated and quietly added to their season total. Nobody is named
+        the "winner of match 24." Four design takes below — each surfaces the missing
+        moment, with a clear sense of where it would live in the app.
+      </p>
+    </div>
+  </div>
+
+  <!-- ===================== DESIGN 01 ===================== -->
+  <section class="design">
+    <div class="design-head">
+      <span class="design-num">01 / 04</span>
+      <div>
+        <h2 class="design-name">Match Verdict</h2>
+        <div class="design-meta">
+          <span>Lives on · <b>dashboard</b></span>
+          <span>Tone · <b>refined / editorial</b></span>
+          <span>Density · <b>high</b></span>
+        </div>
+        <p class="design-desc">
+          A single card that lands on the dashboard the moment a match resolves. Names the
+          winner with editorial weight, shows the four-category hit list that got them there,
+          and stacks the runners-up below. Closest to the existing app's voice — would ship
+          most easily.
+        </p>
+      </div>
+    </div>
+    <div class="design-stage stage-dark">
+      <span class="stage-tag">Dashboard hero · dark</span>
+
+      <div class="verdict">
+        <div class="v-kicker">
+          <span>Aag Lagao League · Match 24</span>
+          <span class="v-trophy">Verdict in</span>
+        </div>
+        <div class="v-fixture">
+          <div class="v-fix-crest v-fix-mi">MI</div>
+          <span class="v-fix-score"><span class="lose">168/4</span><span class="dash">—</span><span class="winner">172/3</span></span>
+          <div class="v-fix-crest v-fix-rcb">RCB</div>
+          <div class="v-fix-spacer"></div>
+          <span class="v-fix-stat">RCB · 7 wkts</span>
+        </div>
+
+        <h3 class="v-headline"><em>Anjali</em> ran the table.</h3>
+        <p class="v-sub">First flawless card of the season. Called the winner, both star pickers, and the POM. <b>Yuvraj</b> kept it close at 70.</p>
+
+        <div class="v-winner">
+          <div class="v-avatar">AK</div>
+          <div>
+            <div class="v-winner-name">Anjali Krishnan</div>
+            <div class="v-winner-tags">
+              <span class="v-tag-rank">1 spot · now #1</span>
+              <span class="v-tag-rank-from">was 2nd</span>
+            </div>
+          </div>
+          <div class="v-score-big">100<sub>/100</sub></div>
+        </div>
+
+        <div class="v-hits">
+          <div class="v-hit"><span class="v-hit-mark">✓</span>Winner</div>
+          <div class="v-hit"><span class="v-hit-mark">✓</span>Runs MI</div>
+          <div class="v-hit"><span class="v-hit-mark">✓</span>Wkts RCB</div>
+          <div class="v-hit"><span class="v-hit-mark">✓</span>POM</div>
+        </div>
+
+        <div class="v-runners">
+          <div class="v-run">
+            <span class="v-run-rank">2</span>
+            <span class="v-run-av" style="background: oklch(70% 0.16 240); color: oklch(15% 0.04 240);">YK</span>
+            <span class="v-run-name">Yuvraj K. <small>was #1</small></span>
+            <span class="v-run-pts">70<small>pts</small></span>
+          </div>
+          <div class="v-run">
+            <span class="v-run-rank">3</span>
+            <span class="v-run-av" style="background: oklch(75% 0.14 30); color: oklch(15% 0.04 30);">SK</span>
+            <span class="v-run-name">Sarika K. <small>held #3</small></span>
+            <span class="v-run-pts">60<small>pts</small></span>
+          </div>
+        </div>
+
+        <div class="v-cta">
+          <button class="v-btn v-btn-primary">Drop in group →</button>
+          <button class="v-btn v-btn-ghost">Full table</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DESIGN 02 ===================== -->
+  <section class="design">
+    <div class="design-head">
+      <span class="design-num">02 / 04</span>
+      <div>
+        <h2 class="design-name">Judges' Scorecard</h2>
+        <div class="design-meta">
+          <span>Lives on · <b>match result screen</b></span>
+          <span>Tone · <b>sport-broadcast / boxing</b></span>
+          <span>Density · <b>highest — full league grid</b></span>
+        </div>
+        <p class="design-desc">
+          A judges' card. Every member as a row, four prediction categories as columns,
+          a red dot for every cell they hit. The total column declares the winner with a
+          CHAMP tab. Most informative — readable at a glance who got what — but heavier
+          to ship and harder to fit when leagues grow beyond ~8 members.
+        </p>
+      </div>
+    </div>
+    <div class="design-stage stage-cream">
+      <span class="stage-tag">Match result screen · light</span>
+
+      <div class="judges">
+        <div class="j-top">
+          <div class="j-eyebrow"><span>Aag Lagao League · MD 24</span><span class="live">Decision</span></div>
+          <h3 class="j-headline">The judges score it — <em>Anjali</em>.</h3>
+          <div class="j-fixture"><b>MI 168/4</b> vs <b>RCB 172/3</b> · Wankhede · 11 May</div>
+        </div>
+
+        <div class="j-cats">
+          <span>Member</span><span>W</span><span>R</span><span>Wk</span><span>★</span><span>Pts</span>
+        </div>
+
+        <div class="j-rows">
+          <div class="j-row winner">
+            <span class="j-name">Anjali K. <small>@anjali_k</small></span>
+            <span class="j-mark hit">✓</span><span class="j-mark hit">✓</span>
+            <span class="j-mark hit">✓</span><span class="j-mark hit">✓</span>
+            <span class="j-total">100</span>
+          </div>
+          <div class="j-row">
+            <span class="j-name">Yuvraj K. <small>@yuvraj</small></span>
+            <span class="j-mark hit">✓</span><span class="j-mark hit">✓</span>
+            <span class="j-mark hit">✓</span><span class="j-mark miss">·</span>
+            <span class="j-total">50</span>
+          </div>
+          <div class="j-row">
+            <span class="j-name">Sarika K. <small>@sarika9</small></span>
+            <span class="j-mark hit">✓</span><span class="j-mark miss">·</span>
+            <span class="j-mark miss">·</span><span class="j-mark hit">✓</span>
+            <span class="j-total">60</span>
+          </div>
+          <div class="j-row">
+            <span class="j-name">Rohan M. <small>@rohanm</small></span>
+            <span class="j-mark hit">✓</span><span class="j-mark miss">·</span>
+            <span class="j-mark hit">✓</span><span class="j-mark miss">·</span>
+            <span class="j-total">30</span>
+          </div>
+          <div class="j-row">
+            <span class="j-name">Priya R. <small>@priya</small></span>
+            <span class="j-mark hit">✓</span><span class="j-mark hit">✓</span>
+            <span class="j-mark miss">·</span><span class="j-mark miss">·</span>
+            <span class="j-total">30</span>
+          </div>
+          <div class="j-row">
+            <span class="j-name">Vikram S. <small>@vik</small></span>
+            <span class="j-mark hit">✓</span><span class="j-mark miss">·</span>
+            <span class="j-mark miss">·</span><span class="j-mark miss">·</span>
+            <span class="j-total">10</span>
+          </div>
+        </div>
+
+        <div class="j-foot">
+          <p class="j-foot-q">"A unanimous decision. <b>Anjali</b> takes match 24 by knockout."</p>
+          <div class="j-foot-sig">Ringside, IPL '26<br/>11 May · 23:47 IST</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DESIGN 03 ===================== -->
+  <section class="design">
+    <div class="design-head">
+      <span class="design-num">03 / 04</span>
+      <div>
+        <h2 class="design-name">MVP Trading Card</h2>
+        <div class="design-meta">
+          <span>Lives on · <b>profile + share sheet</b></span>
+          <span>Tone · <b>collectible / premium</b></span>
+          <span>Density · <b>low — single hero</b></span>
+        </div>
+        <p class="design-desc">
+          Every match win mints a numbered card. Holographic foil for flawless games, plain
+          finish for ordinary wins. Stacks up in the user's profile as a season-long collection
+          — long-term retention play. Easy to share; the back of the card carries a generated caption.
+          Hover the card to see it settle.
+        </p>
+      </div>
+    </div>
+    <div class="design-stage stage-bare">
+      <span class="stage-tag">Profile / share sheet</span>
+
+      <div class="card-stage">
+        <div class="trading">
+          <div class="tc-inner">
+            <div class="tc-top">
+              <span class="tc-num">N° 024 / 074</span>
+              <span class="tc-rarity">Mythic</span>
+            </div>
+
+            <div class="tc-portrait">A</div>
+            <h3 class="tc-name"><em>Anjali</em> Krishnan</h3>
+            <div class="tc-title">Match 24 · MVP</div>
+
+            <div class="tc-stats">
+              <div class="tc-stat"><span class="tc-stat-v">✓</span><span class="tc-stat-l">Win</span></div>
+              <div class="tc-stat"><span class="tc-stat-v">✓</span><span class="tc-stat-l">Runs</span></div>
+              <div class="tc-stat"><span class="tc-stat-v">✓</span><span class="tc-stat-l">Wkts</span></div>
+              <div class="tc-stat"><span class="tc-stat-v">✓</span><span class="tc-stat-l">POM</span></div>
+            </div>
+
+            <div class="tc-foot">
+              <span class="tc-total">100<small>/100</small></span>
+              <span class="tc-flawless">Flawless</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tc-collection">
+        <span class="tc-coll"><b>04</b> Cards this season</span>
+        <span class="tc-coll"><b>01</b> Mythic</span>
+        <span class="tc-coll"><b>03</b> Common</span>
+        <span class="tc-coll" style="color: var(--crimson); border-color: oklch(80% 0.06 25);">Next match → <b>+1?</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DESIGN 04 ===================== -->
+  <section class="design">
+    <div class="design-head">
+      <span class="design-num">04 / 04</span>
+      <div>
+        <h2 class="design-name">Match Receipt</h2>
+        <div class="design-meta">
+          <span>Lives on · <b>share sheet / WhatsApp drop</b></span>
+          <span>Tone · <b>lo-fi / utility</b></span>
+          <span>Density · <b>medium — itemised breakdown</b></span>
+        </div>
+        <p class="design-desc">
+          Every match prints a receipt. Itemised points per member, perforated edges, paper
+          grain, barcode at the foot. Designed to be screenshot and dropped in the group chat
+          intact — feels less like a brag and more like a record. Most distinct visual language
+          of the four; would also work well as a shareable PDF post-match.
+        </p>
+      </div>
+    </div>
+    <div class="design-stage stage-cream">
+      <span class="stage-tag">Group-chat drop · cream</span>
+
+      <div class="receipt">
+        <div class="receipt-body">
+        <h4 class="r-brand">Lazy Fantasy.</h4>
+        <div class="r-tagline">Match Receipt · No refunds</div>
+
+        <div class="r-divider"><span class="r-divider-text">Fixture</span></div>
+        <dl class="r-meta">
+          <dt>League</dt><dd>Aag Lagao League</dd>
+          <dt>Match</dt><dd>MI 168/4 vs RCB 172/3</dd>
+          <dt>Result</dt><dd>RCB won by 7 wkts</dd>
+          <dt>Stamp</dt><dd>11 May '26 · 23:47 IST</dd>
+        </dl>
+
+        <div class="r-divider"><span class="r-divider-text">Itemised</span></div>
+
+        <div class="r-line winner">
+          <div class="r-line-name">Anjali K. <span class="pts">100 pts</span></div>
+          <div class="r-line-items">
+            <div class="r-item"><span>Match winner</span><span>+10</span></div>
+            <div class="r-item"><span>Top runs · MI</span><span>+20</span></div>
+            <div class="r-item"><span>Top wickets · RCB</span><span>+20</span></div>
+            <div class="r-item"><span>Player of the match</span><span>+50</span></div>
+          </div>
+        </div>
+        <div class="r-line">
+          <div class="r-line-name">Yuvraj K. <span class="pts">50 pts</span></div>
+          <div class="r-line-items">
+            <div class="r-item"><span>Match winner</span><span>+10</span></div>
+            <div class="r-item"><span>Top runs · MI</span><span>+20</span></div>
+            <div class="r-item"><span>Top wickets · MI</span><span>+20</span></div>
+            <div class="r-item miss"><span>POM — missed</span><span>—</span></div>
+          </div>
+        </div>
+        <div class="r-line">
+          <div class="r-line-name">Sarika K. <span class="pts">60 pts</span></div>
+          <div class="r-line-items">
+            <div class="r-item"><span>Match winner</span><span>+10</span></div>
+            <div class="r-item miss"><span>Top runs — missed</span><span>—</span></div>
+            <div class="r-item miss"><span>Top wickets — missed</span><span>—</span></div>
+            <div class="r-item"><span>Player of the match</span><span>+50</span></div>
+          </div>
+        </div>
+        <div class="r-line">
+          <div class="r-line-name">Rohan M. <span class="pts">30 pts</span></div>
+        </div>
+        <div class="r-line">
+          <div class="r-line-name">Priya R. <span class="pts">30 pts</span></div>
+        </div>
+        <div class="r-line">
+          <div class="r-line-name">Vikram S. <span class="pts">10 pts</span></div>
+        </div>
+
+        <div class="r-totals">
+          <div class="r-tot"><span>League pool</span><span class="v">280 pts</span></div>
+          <div class="r-tot"><span>Avg / head</span><span class="v">46.7 pts</span></div>
+          <div class="r-tot grand"><span>Winner takeaway</span><span class="v">+100 pts</span></div>
+        </div>
+
+        <p class="r-thanks">Thank you for picking.</p>
+        <div class="r-share">Forward to your league →</div>
+
+        <div class="r-barcode"></div>
+        <div class="r-barcode-num">LF-24-AAGLG-A-0524</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>Lazy Fantasy · IPL '26 explorations</span>
+    <span>4 designs · 1 system question</span>
+  </div>
+
+</div>
+
+</body>
+</html>

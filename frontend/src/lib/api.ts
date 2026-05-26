@@ -222,7 +222,7 @@ export interface PredictionDetail {
 }
 
 export async function getMyPredictionsDetailed() {
-    return request<PredictionDetail[]>('/predictions/my/detailed');
+    return request<Array<PredictionDetail | FootballPredictionDetail>>('/predictions/my/detailed');
 }
 
 export interface FootballPlayerPickDetail {

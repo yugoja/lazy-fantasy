@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lazy Fantasy WC · ESP 2 — 1 FRA · Your scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #0a0f1c;
+  --stub: #161f30;
+  --stub-2: #1b2538;
+  --line: rgba(255,255,255,0.07);
+  --line-strong: rgba(255,255,255,0.16);
+  --text: #f4f6fb;
+  --text-dim: #8b97b5;
+  --text-mute: #5d6886;
+  --green: #26d666;
+  --green-soft: rgba(38,214,102,0.12);
+  --red: #ff5a6e;
+  --red-soft: rgba(255,90,110,0.10);
+  --gold: #f39c3a;
+  --wc: #c9a44c;
+  --esp: #c8102e;
+  --fra-blue: #1f4ea6;
+  --fra-red: #ed2939;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #050811; color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh; display: grid; place-items: center; padding: 24px;
+}
+.app {
+  width: 100%; max-width: 430px; height: 920px;
+  background: var(--bg); position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+  border-radius: 28px;
+}
+
+/* hero scorecard */
+.hero {
+  flex-shrink: 0;
+  padding: 22px 22px 28px;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 100%, rgba(38,214,102,0.18), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,164,76,0.12), transparent 60%),
+    linear-gradient(180deg, #0e1424, #0a0f1c);
+  position: relative;
+}
+.hero::after {
+  content:''; position: absolute; bottom: 0; left: 14px; right: 14px; height: 2px;
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 4px, transparent 4px 10px);
+}
+
+.hero-top {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Space Grotesk'; font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.hero-top .ft { color: var(--green); }
+.hero-top .grp { color: var(--text-mute); }
+
+.scorebox {
+  margin-top: 22px;
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; gap: 4px;
+}
+.sb-team { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.sb-crest {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 16px;
+}
+.sb-crest.esp { background: linear-gradient(180deg, var(--esp), #fff, var(--esp)); color: #0a0a0a; }
+.sb-crest.fra { background: linear-gradient(90deg, var(--fra-blue) 0 33%, #fff 33% 66%, var(--fra-red) 66%); color: #0a0a0a; }
+.sb-name {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px; letter-spacing: 0.08em;
+}
+.sb-score {
+  font-family: 'Space Grotesk'; font-weight: 700;
+  font-size: 76px; line-height: 0.85; letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #fff 30%, #7c8aa8 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sb-score.win { background: linear-gradient(180deg, #fff 20%, #26d666 110%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.sb-dash {
+  font-family: 'Space Grotesk'; font-weight: 500; font-size: 44px;
+  color: rgba(255,255,255,0.18); letter-spacing: -0.04em;
+}
+
+/* total banner */
+.totals {
+  margin-top: 22px;
+  display: grid; grid-template-columns: auto 1fr auto;
+  align-items: center; gap: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(90deg, rgba(38,214,102,0.10), transparent);
+  border: 1px solid rgba(38,214,102,0.25);
+  border-radius: 14px;
+}
+.totals-num {
+  font-family: 'Space Grotesk'; font-weight: 700;
+  font-size: 38px; line-height: 1; letter-spacing: -0.03em;
+  color: var(--green); font-variant-numeric: tabular-nums;
+}
+.totals-num small {
+  font-size: 14px; color: var(--text-dim); margin-left: 4px;
+  letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
+}
+.totals-mid { font-size: 12px; color: var(--text-dim); line-height: 1.35; }
+.totals-mid b { color: var(--text); font-family: 'Space Grotesk'; font-weight: 700; }
+.rank-delta {
+  font-family: 'Space Grotesk'; font-weight: 700;
+  font-size: 12px;
+  padding: 6px 10px; border-radius: 8px;
+  background: rgba(38,214,102,0.16); color: var(--green);
+  letter-spacing: 0.05em;
+}
+
+/* body */
+.body { flex: 1; overflow-y: auto; padding: 22px 22px 100px; }
+.body::-webkit-scrollbar { width: 0; }
+
+.section-h {
+  font-family: 'Space Grotesk'; font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-mute);
+  margin: 0 0 12px; display: flex; align-items: center; gap: 10px;
+}
+.section-h::after {
+  content:''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--line-strong), transparent);
+}
+
+/* breakdown cards */
+.breakdown { display: grid; gap: 10px; }
+.bdc {
+  padding: 14px 16px;
+  background: var(--stub); border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid; grid-template-columns: 36px 1fr auto;
+  align-items: center; gap: 14px;
+  position: relative; overflow: hidden;
+}
+.bdc.hit { border-color: rgba(38,214,102,0.35); background: linear-gradient(90deg, rgba(38,214,102,0.06), var(--stub) 60%); }
+.bdc.miss { border-color: rgba(255,90,110,0.20); }
+.bdc.partial { border-color: rgba(243,156,58,0.30); background: linear-gradient(90deg, rgba(243,156,58,0.05), var(--stub) 60%); }
+.bdc .icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 16px;
+}
+.bdc.hit .icon { background: var(--green-soft); color: var(--green); }
+.bdc.miss .icon { background: var(--red-soft); color: var(--red); }
+.bdc.partial .icon { background: rgba(243,156,58,0.12); color: var(--gold); }
+.bdc .title-line {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 14.5px;
+  letter-spacing: -0.005em;
+}
+.bdc .sub-line {
+  font-size: 12px; color: var(--text-dim); margin-top: 3px;
+}
+.bdc .sub-line b { color: var(--text); }
+.bdc .pts {
+  font-family: 'Space Grotesk'; font-weight: 700;
+  font-size: 18px; font-variant-numeric: tabular-nums;
+}
+.bdc.hit .pts { color: var(--green); }
+.bdc.partial .pts { color: var(--gold); }
+.bdc.miss .pts { color: var(--text-mute); }
+
+/* players grid */
+.pl-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+.pl-card {
+  position: relative;
+  padding: 14px 8px 12px;
+  background: var(--stub); border: 1.5px solid var(--line);
+  border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-align: center;
+}
+.pl-card.hit { border-color: rgba(38,214,102,0.4); background: linear-gradient(180deg, rgba(38,214,102,0.07), var(--stub)); }
+.pl-card.miss { opacity: 0.55; }
+.pl-card .pl-pts {
+  position: absolute; top: -8px; right: -6px;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 11px;
+  padding: 3px 8px; border-radius: 8px;
+  background: var(--green); color: #07120a;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 12px rgba(38,214,102,0.3);
+}
+.pl-card.miss .pl-pts { background: var(--stub-2); color: var(--text-mute); box-shadow: none; }
+.pl-card .pl-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px;
+}
+.pl-card .pl-n {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 12.5px;
+  line-height: 1.15;
+}
+.pl-card .pl-stat {
+  font-size: 10.5px; color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.pl-card.hit .pl-stat { color: var(--green); }
+
+/* league standing snippet */
+.league-card {
+  margin-top: 22px;
+  padding: 16px;
+  background: var(--stub); border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.lc-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.lc-name {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 14px; letter-spacing: -0.005em;
+}
+.lc-link {
+  font-family: 'Space Grotesk'; font-size: 11px; font-weight: 600;
+  color: var(--wc); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.lb-row {
+  display: grid; grid-template-columns: 28px 1fr auto auto;
+  align-items: center; gap: 10px;
+  padding: 10px 4px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.lb-row:first-of-type { border-top: none; }
+.lb-row.me {
+  background: rgba(38,214,102,0.06);
+  margin: 0 -8px; padding-left: 12px; padding-right: 12px;
+  border-radius: 8px; border-top-color: transparent;
+}
+.lb-row.me + .lb-row { border-top-color: transparent; }
+.lb-rank {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 12px;
+  color: var(--text-mute); font-variant-numeric: tabular-nums;
+}
+.lb-row.me .lb-rank { color: var(--green); }
+.lb-name { font-family: 'Space Grotesk'; font-weight: 600; font-size: 13.5px; }
+.lb-row.me .lb-name { color: var(--green); }
+.lb-pts {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+.lb-delta {
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 11px;
+  padding: 2px 6px; border-radius: 5px; min-width: 38px; text-align: center;
+}
+.lb-delta.up { background: rgba(38,214,102,0.14); color: var(--green); }
+.lb-delta.down { background: var(--red-soft); color: var(--red); }
+.lb-delta.flat { background: rgba(255,255,255,0.04); color: var(--text-mute); }
+
+/* action bar */
+.action-bar {
+  flex-shrink: 0;
+  padding: 14px 22px 24px;
+  display: flex; gap: 10px;
+  background: linear-gradient(180deg, transparent, var(--bg) 35%);
+  margin-top: -50px; position: relative; z-index: 5;
+}
+.btn-share {
+  flex: 1; height: 50px;
+  background: var(--green); color: #07120a; border: none;
+  border-radius: 12px;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 14.5px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 6px 20px rgba(38,214,102,0.25);
+}
+.btn-next-match {
+  height: 50px; padding: 0 16px;
+  background: var(--stub); border: 1px solid var(--line);
+  color: var(--text-dim); border-radius: 12px;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 12.5px;
+  letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="hero">
+    <div class="hero-top">
+      <span class="ft">● FULL TIME</span>
+      <span class="grp">GROUP D · MATCHDAY 2</span>
+    </div>
+    <div class="scorebox">
+      <div class="sb-team">
+        <div class="sb-crest esp">ESP</div>
+        <div class="sb-name">SPAIN</div>
+        <div class="sb-score win">2</div>
+      </div>
+      <div class="sb-dash">—</div>
+      <div class="sb-team">
+        <div class="sb-crest fra">FRA</div>
+        <div class="sb-name">FRANCE</div>
+        <div class="sb-score">1</div>
+      </div>
+    </div>
+
+    <div class="totals">
+      <div class="totals-num">42<small>PTS</small></div>
+      <div class="totals-mid">Your scorecard · <b>top 8%</b> in your league this matchday</div>
+      <div class="rank-delta">↑ 4</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <h4 class="section-h">Result breakdown</h4>
+    <div class="breakdown">
+
+      <div class="bdc hit">
+        <div class="icon">✓</div>
+        <div>
+          <div class="title-line">Winner — Spain</div>
+          <div class="sub-line">You called it · <b>52%</b> of your league did too</div>
+        </div>
+        <div class="pts">+5</div>
+      </div>
+
+      <div class="bdc partial">
+        <div class="icon">≈</div>
+        <div>
+          <div class="title-line">Exact score · 2 — 1</div>
+          <div class="sub-line">You picked <b>2 — 1</b>. Nailed it. <span style="color:var(--gold)">+15 bonus</span></div>
+        </div>
+        <div class="pts">+15</div>
+      </div>
+
+    </div>
+
+    <h4 class="section-h" style="margin-top:24px">Impact picks</h4>
+    <div class="pl-grid">
+
+      <div class="pl-card hit">
+        <div class="pl-pts">+10</div>
+        <div class="pl-avatar" style="background: linear-gradient(180deg, var(--esp), #fff, var(--esp)); color:#0a0a0a;">LY</div>
+        <div class="pl-n">Lamine<br/>Yamal</div>
+        <div class="pl-stat">1 G · 1 A</div>
+      </div>
+
+      <div class="pl-card hit">
+        <div class="pl-pts">+10</div>
+        <div class="pl-avatar" style="background: linear-gradient(90deg, var(--fra-blue) 0 33%, #fff 33% 66%, var(--fra-red) 66%); color:#0a0a0a;">KM</div>
+        <div class="pl-n">K.<br/>Mbappé</div>
+        <div class="pl-stat">1 G</div>
+      </div>
+
+      <div class="pl-card miss">
+        <div class="pl-pts">0</div>
+        <div class="pl-avatar" style="background: linear-gradient(180deg, var(--esp), #fff, var(--esp)); color:#0a0a0a;">AM</div>
+        <div class="pl-n">Á.<br/>Morata</div>
+        <div class="pl-stat">No involvement</div>
+      </div>
+
+    </div>
+
+    <div class="league-card">
+      <div class="lc-top">
+        <div class="lc-name">Office Squad · top 5</div>
+        <a class="lc-link">View all →</a>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank">1</span>
+        <span class="lb-name">Priya</span>
+        <span class="lb-pts">218</span>
+        <span class="lb-delta up">↑ 2</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank">2</span>
+        <span class="lb-name">Karthik</span>
+        <span class="lb-pts">206</span>
+        <span class="lb-delta flat">—</span>
+      </div>
+      <div class="lb-row me">
+        <span class="lb-rank">3</span>
+        <span class="lb-name">You</span>
+        <span class="lb-pts">194</span>
+        <span class="lb-delta up">↑ 4</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank">4</span>
+        <span class="lb-name">Aman</span>
+        <span class="lb-pts">181</span>
+        <span class="lb-delta down">↓ 1</span>
+      </div>
+      <div class="lb-row">
+        <span class="lb-rank">5</span>
+        <span class="lb-name">Sneha</span>
+        <span class="lb-pts">175</span>
+        <span class="lb-delta down">↓ 2</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="btn-share">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      Share scorecard
+    </button>
+    <button class="btn-next-match">Next →</button>
+  </div>
+</div>
+
+</body>
+</html>
