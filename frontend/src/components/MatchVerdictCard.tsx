@@ -46,7 +46,6 @@ function getCopy(
   variant: Variant,
   winners: VerdictWinner[],
   topScore: number,
-  maxScore: number,
   isFlawless: boolean,
   isTight: boolean,
   tightMargin: number | null,
@@ -55,7 +54,7 @@ function getCopy(
   if (variant === 'you' && winners.length === 1) {
     return {
       headline: <><em>You</em> ran the table.</>,
-      sub: <>{topScore}/{maxScore}. <i>Best card on the board.</i></>,
+      sub: <>{topScore}/140. <i>Best card on the board.</i></>,
       primaryCta: 'Brag now →',
     };
   }
@@ -159,7 +158,7 @@ function CompactHitRow({ winner }: { winner: VerdictWinner }) {
   );
 }
 
-function SoloWinnerPanel({ winner, topScore, maxScore, variant }: { winner: VerdictWinner; topScore: number; maxScore: number; variant: Variant }) {
+function SoloWinnerPanel({ winner, topScore, variant }: { winner: VerdictWinner; topScore: number; variant: Variant }) {
   const rank = rankShiftLabel(winner.prev_rank, winner.new_rank);
   const bigScore =
     variant === 'you' ? 'text-accent'
@@ -188,7 +187,7 @@ function SoloWinnerPanel({ winner, topScore, maxScore, variant }: { winner: Verd
         </div>
       </div>
       <div className={cn('font-heading font-bold text-3xl leading-none tabular-nums tracking-tight', bigScore)}>
-        {topScore}<span className="ml-0.5 align-[5px] text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">/{maxScore}</span>
+        {topScore}<span className="ml-0.5 align-[5px] text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">/140</span>
       </div>
     </div>
   );
@@ -278,7 +277,6 @@ export function MatchVerdictCard({ event, currentUsername, onDismiss }: Props) {
   const winners = event.winners ?? [];
   const runnersUp = event.runners_up ?? [];
   const topScore = event.top_score ?? 0;
-  const maxScore = event.max_score ?? 140;
   const runnerScore = event.runner_up_score;
 
   if (winners.length === 0) return null;
@@ -288,11 +286,11 @@ export function MatchVerdictCard({ event, currentUsername, onDismiss }: Props) {
   const variant: Variant = isYou ? 'you' : isCold ? 'cold' : 'default';
 
   const isMultiTie = winners.length >= 2;
-  const isFlawless = winners.length === 1 && topScore === maxScore;
+  const isFlawless = winners.length === 1 && topScore === 140;
   const tightMargin = (!isMultiTie && runnerScore != null) ? topScore - runnerScore : null;
   const isTight = tightMargin != null && tightMargin > 0 && tightMargin <= TIGHT_MARGIN;
 
-  const copy = getCopy(variant, winners, topScore, maxScore, isFlawless, isTight, tightMargin, isMultiTie);
+  const copy = getCopy(variant, winners, topScore, isFlawless, isTight, tightMargin, isMultiTie);
 
   const headlineEmClass =
     variant === 'you' ? 'not-italic font-normal text-accent'
@@ -369,7 +367,7 @@ export function MatchVerdictCard({ event, currentUsername, onDismiss }: Props) {
         </p>
 
         {/* Winner panel(s) */}
-        {winners.length === 1 && <SoloWinnerPanel winner={winners[0]} topScore={topScore} maxScore={maxScore} variant={variant} />}
+        {winners.length === 1 && <SoloWinnerPanel winner={winners[0]} topScore={topScore} variant={variant} />}
         {winners.length === 2 && <TwoWayTiePanel winners={winners} topScore={topScore} />}
         {winners.length >= 3 && <ThreeWayTiePanel winners={winners} topScore={topScore} />}
 

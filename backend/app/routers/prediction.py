@@ -24,7 +24,6 @@ from app.services.prediction import (
     update_prediction,
     validate_prediction_players,
 )
-from app.services import scoring_cricket
 from app.services.scoring import football_score_breakdown
 from app.services.scoring_football import KNOCKOUT_STAGES
 
@@ -303,8 +302,6 @@ async def get_my_predictions_detailed(
             team_2=TeamResponse.model_validate(match.team_2),
             start_time=match.start_time,
             status=match.status.value,
-            stage=match.stage,
-            is_knockout=scoring_cricket.is_knockout(match),
             predicted_winner=TeamResponse.model_validate(pred.predicted_winner),
             predicted_most_runs_team1_player=PlayerResponse.model_validate(pred.predicted_most_runs_team1_player),
             predicted_most_runs_team2_player=PlayerResponse.model_validate(pred.predicted_most_runs_team2_player),

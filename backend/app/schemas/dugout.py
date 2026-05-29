@@ -61,9 +61,6 @@ class DugoutEvent(BaseModel):
     match_label: str | None = None
     top_score: int | None = None
     runner_up_score: int | None = None
-    # Per-match points ceiling (140, doubled to 280 for knockouts). Lets the UI
-    # render "X/max" and detect a flawless card without hard-coding 140.
-    max_score: int | None = None
 
 
 class DugoutDismissRequest(BaseModel):

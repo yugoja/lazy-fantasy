@@ -207,8 +207,6 @@ export interface PredictionDetail {
     team_2: TeamInfo;
     start_time: string;
     status: string;
-    stage: string | null;
-    is_knockout: boolean;
     predicted_winner: TeamInfo;
     predicted_most_runs_team1_player: PlayerInfo;
     predicted_most_runs_team2_player: PlayerInfo;
@@ -447,7 +445,6 @@ export interface DugoutEvent {
     match_label?: string | null;
     top_score?: number | null;
     runner_up_score?: number | null;
-    max_score?: number | null;
 }
 
 export async function getDugoutEvents() {

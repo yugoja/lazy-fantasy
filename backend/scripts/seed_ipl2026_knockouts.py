@@ -41,14 +41,12 @@ IST_TO_UTC = {
 }
 
 # label is for humans/logs only (the Match model has no playoff-name column).
-# `stage` is the canonical knockout code stored on Match.stage; it drives the
-# 2x scoring multiplier (see app.services.scoring_cricket.KNOCKOUT_STAGES).
 # Use TBD_SHORT for either side that isn't decided yet.
 FIXTURES = [
-    {"label": "Qualifier 1", "stage": "Q1",    "date": "2026-05-26", "time": "19:30 IST", "team1": "RCB",     "team2": "GT"},
-    {"label": "Eliminator",  "stage": "ELIM",  "date": "2026-05-27", "time": "19:30 IST", "team1": "RR",      "team2": "SRH"},
-    {"label": "Qualifier 2", "stage": "Q2",    "date": "2026-05-29", "time": "19:30 IST", "team1": TBD_SHORT, "team2": TBD_SHORT},
-    {"label": "Final",       "stage": "FINAL", "date": "2026-05-31", "time": "19:30 IST", "team1": TBD_SHORT, "team2": TBD_SHORT},
+    {"label": "Qualifier 1", "date": "2026-05-26", "time": "19:30 IST", "team1": "RCB",     "team2": "GT"},
+    {"label": "Eliminator",  "date": "2026-05-27", "time": "19:30 IST", "team1": "RR",      "team2": "SRH"},
+    {"label": "Qualifier 2", "date": "2026-05-29", "time": "19:30 IST", "team1": TBD_SHORT, "team2": TBD_SHORT},
+    {"label": "Final",       "date": "2026-05-31", "time": "19:30 IST", "team1": TBD_SHORT, "team2": TBD_SHORT},
 ]
 
 
@@ -118,17 +116,16 @@ def run(mode: str):
             if m.start_time.date() == start.date()
         ]
 
-        stage = f["stage"]
         tbd_label = f"{f['team1']} v {f['team2']}"
         if existing:
             m = existing[0]
             # start_time may come back tz-aware from Postgres; compare naive UTC.
             cur_start = m.start_time.replace(tzinfo=None)
-            if (m.team_1_id, m.team_2_id, cur_start, m.stage) == (t1, t2, start, stage):
+            if (m.team_1_id, m.team_2_id, cur_start) == (t1, t2, start):
                 unchanged += 1
                 print(f"  = {f['label']:<12} {tbd_label} unchanged (id {m.id})")
             else:
-                m.team_1_id, m.team_2_id, m.start_time, m.stage = t1, t2, start, stage
+                m.team_1_id, m.team_2_id, m.start_time = t1, t2, start
                 updated += 1
                 print(f"  ~ {f['label']:<12} {tbd_label} updated (id {m.id})")
         else:
@@ -138,7 +135,6 @@ def run(mode: str):
                 team_2_id=t2,
                 start_time=start,
                 status=MatchStatus.SCHEDULED,
-                stage=stage,
             ))
             inserted += 1
             print(f"  + {f['label']:<12} {tbd_label} inserted ({f['date']} {f['time']})")
