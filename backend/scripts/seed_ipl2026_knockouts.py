@@ -45,8 +45,9 @@ IST_TO_UTC = {
 FIXTURES = [
     {"label": "Qualifier 1", "date": "2026-05-26", "time": "19:30 IST", "team1": "RCB",     "team2": "GT"},
     {"label": "Eliminator",  "date": "2026-05-27", "time": "19:30 IST", "team1": "RR",      "team2": "SRH"},
-    {"label": "Qualifier 2", "date": "2026-05-29", "time": "19:30 IST", "team1": TBD_SHORT, "team2": TBD_SHORT},
-    {"label": "Final",       "date": "2026-05-31", "time": "19:30 IST", "team1": TBD_SHORT, "team2": TBD_SHORT},
+    {"label": "Qualifier 2", "date": "2026-05-29", "time": "19:30 IST", "team1": "GT",      "team2": "RR"},
+    # Final: RCB confirmed (won Q1); opponent is the Q2 winner — still TBD.
+    {"label": "Final",       "date": "2026-05-31", "time": "19:30 IST", "team1": "RCB",     "team2": TBD_SHORT},
 ]
 
 
