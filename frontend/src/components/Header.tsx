@@ -28,7 +28,7 @@ export default function Header() {
       <div className="container-mobile h-14 flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
+          <img src="/logo.png" alt="" width={28} height={28} className="h-7 w-7" />
           <span className="text-lg font-extrabold tracking-tight">Lazy<span className="text-primary">F</span></span>
         </Link>
 

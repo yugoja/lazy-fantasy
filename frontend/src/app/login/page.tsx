@@ -65,7 +65,7 @@ export default function LoginPage() {
                     <CardHeader className="items-center text-center space-y-3 pb-2">
                         <div>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src="/icon.svg" alt="Lazy Fantasy" width={48} height={48} className="h-12 w-12" />
+                            <img src="/logo.png" alt="Lazy Fantasy" width={48} height={48} className="h-12 w-12" />
                         </div>
                         <div>
                             <CardTitle className="text-xl">Welcome back</CardTitle>
