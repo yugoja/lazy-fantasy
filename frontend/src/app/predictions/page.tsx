@@ -673,14 +673,7 @@ export default function PredictionsPage() {
   };
 
   return (
-    <div className="container-mobile py-6 space-y-6 pb-24">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Match Predictions</h1>
-          <p className="text-sm text-muted-foreground mt-1">Pick a match to make your predictions.</p>
-        </div>
-      </div>
-
+    <div className="container-mobile pt-3 pb-24 space-y-3">
       {loadError && (
         <Card className="p-3 border-destructive/50 bg-destructive/10">
           <p className="text-sm text-destructive">{loadError}</p>
@@ -693,8 +686,8 @@ export default function PredictionsPage() {
           <TabsTrigger value="live" className="flex-1">Live ({ongoing.length})</TabsTrigger>
           <TabsTrigger value="done" className="flex-1">Done ({detailedPredictions.length})</TabsTrigger>
         </TabsList>
-        <TabsContent value="upcoming" className="mt-4">{renderMatches(upcoming)}</TabsContent>
-        <TabsContent value="live" className="mt-4">
+        <TabsContent value="upcoming" className="mt-3">{renderMatches(upcoming)}</TabsContent>
+        <TabsContent value="live" className="mt-3">
           {ongoing.length === 0 ? (
             <Card className="p-8 text-center"><p className="text-sm text-muted-foreground">No live matches right now</p></Card>
           ) : (
@@ -720,7 +713,7 @@ export default function PredictionsPage() {
             </div>
           )}
         </TabsContent>
-        <TabsContent value="done" className="mt-4">{renderPredictionHistory()}</TabsContent>
+        <TabsContent value="done" className="mt-3">{renderPredictionHistory()}</TabsContent>
       </Tabs>
     </div>
   );

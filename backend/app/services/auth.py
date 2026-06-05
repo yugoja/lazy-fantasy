@@ -59,8 +59,8 @@ def get_user_by_id(db: Session, user_id: int) -> User | None:
 
 
 def authenticate_user(db: Session, username: str, password: str) -> User | None:
-    """Authenticate user with username and password."""
-    user = get_user_by_username(db, username)
+    """Authenticate user with username or email and password."""
+    user = get_user_by_username(db, username) or get_user_by_email(db, username)
     if not user:
         return None
     if not user.hashed_password:

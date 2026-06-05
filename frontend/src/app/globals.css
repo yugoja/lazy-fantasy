@@ -100,4 +100,15 @@
   .step-enter {
     animation: stepFadeUp 0.22s ease-out both;
   }
+
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(32px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(-32px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .animate-slide-in-left  { animation: slideInLeft  0.22s cubic-bezier(0.2, 0, 0, 1) both; }
+  .animate-slide-in-right { animation: slideInRight 0.22s cubic-bezier(0.2, 0, 0, 1) both; }
 }
