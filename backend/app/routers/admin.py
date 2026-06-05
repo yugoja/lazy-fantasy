@@ -5,11 +5,11 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import (
     Match, MatchStatus, Team, Tournament, Player, User, MatchLineup, Prediction,
-    FootballMatchResult, FootballPlayerMatchEvent,
 )
 from app.schemas.admin import (
     MatchCreate, MatchResultCreate, FootballMatchResultCreate, SetLineupRequest,
     LinkMatchRequest, BulkPlayerMappingRequest, SyncStatusResponse,
+    LinkFootballRequest, FootballSyncResponse,
 )
 from app.schemas.match import MatchResponse, TeamResponse, PlayerResponse
 from app.schemas.tournament_picks import SetPicksWindowRequest, SetPicksResultRequest
@@ -240,48 +240,38 @@ async def set_football_match_result(
     else:
         t1_total, t2_total = result_data.team1_goals_reg, result_data.team2_goals_reg
 
-    # Replace any existing result (and its events) for this match.
-    existing = db.query(FootballMatchResult).filter_by(match_id=match_id).first()
-    if existing:
-        db.delete(existing)
-        db.flush()
+    from app.services.football_provider import FootballPlayerStat
+    from app.services.football_sync import _apply_football_result
 
-    fr = FootballMatchResult(
-        match_id=match_id,
+    resolved_events = [
+        (players_by_id[ev.player_id], FootballPlayerStat(
+            api_player_id=0,
+            name="",
+            team_api_id=0,
+            minutes_played=ev.minutes_played,
+            goals=ev.goals,
+            assists=ev.assists,
+            red_card=ev.red_card,
+            own_goals=ev.own_goals,
+            ingame_pen_saves=ev.ingame_pen_saves,
+            shootout_pen_saves=ev.shootout_pen_saves,
+            ingame_pen_misses=ev.ingame_pen_misses,
+        ))
+        for ev in result_data.player_events
+    ]
+
+    predictions_processed = _apply_football_result(
+        db=db,
+        match=match,
         team1_goals_reg=result_data.team1_goals_reg,
         team2_goals_reg=result_data.team2_goals_reg,
         team1_goals_et=result_data.team1_goals_et,
         team2_goals_et=result_data.team2_goals_et,
         shootout_winner_id=result_data.shootout_winner_id,
+        resolved_events=resolved_events,
+        t1_total=t1_total,
+        t2_total=t2_total,
     )
-    for ev in result_data.player_events:
-        conceded = t2_total if players_by_id[ev.player_id].team_id == match.team_1_id else t1_total
-        fr.player_events.append(
-            FootballPlayerMatchEvent(
-                player_id=ev.player_id,
-                minutes_played=ev.minutes_played,
-                goals=ev.goals,
-                assists=ev.assists,
-                team_goals_conceded=conceded,
-                ingame_pen_saves=ev.ingame_pen_saves,
-                shootout_pen_saves=ev.shootout_pen_saves,
-                red_card=ev.red_card,
-                own_goals=ev.own_goals,
-                ingame_pen_misses=ev.ingame_pen_misses,
-            )
-        )
-    db.add(fr)
-    match.status = MatchStatus.COMPLETED
-    db.commit()
-
-    # Reset processed flag so scores can be recalculated on correction
-    db.query(Prediction).filter(Prediction.match_id == match_id).update(
-        {"is_processed": False, "points_earned": 0}
-    )
-    db.commit()
-
-    snapshot_league_ranks(db, match_id)
-    predictions_processed = calculate_scores(db, match_id)
 
     return {
         "message": "Football match result set successfully",
@@ -289,6 +279,71 @@ async def set_football_match_result(
         "status": "COMPLETED",
         "predictions_processed": predictions_processed,
     }
+
+
+@router.post("/matches/{match_id}/link-football", response_model=FootballSyncResponse)
+async def link_football_fixture(
+    match_id: int,
+    body: LinkFootballRequest,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Link a football match to an api-football.com fixture ID."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+
+    match.external_match_id = str(body.fixture_id)
+    match.sync_state = "linked"
+    match.sync_error = None
+    db.commit()
+
+    return FootballSyncResponse(
+        match_id=match.id,
+        status="linked",
+        predictions_processed=0,
+        unresolved_players=[],
+        sync_error=None,
+        sync_state=match.sync_state,
+        last_synced_at=match.last_synced_at,
+    )
+
+
+@router.post("/matches/{match_id}/sync-football", response_model=FootballSyncResponse)
+async def sync_football_result(
+    match_id: int,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Manually trigger an api-football.com result sync for a match."""
+    match = db.query(Match).filter(Match.id == match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+    if not match.external_match_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Match has no fixture ID — link it first",
+        )
+
+    from app.services.football_sync import get_provider, sync_match_result
+    if not get_provider():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Football API not configured — set FOOTBALL_API_KEY in environment",
+        )
+
+    result = sync_match_result(db, match_id)
+    db.refresh(match)
+
+    return FootballSyncResponse(
+        match_id=match_id,
+        status=result.get("status", "unknown"),
+        predictions_processed=result.get("predictions_processed", 0),
+        unresolved_players=result.get("unresolved_players", []),
+        sync_error=result.get("sync_error"),
+        sync_state=match.sync_state,
+        last_synced_at=match.last_synced_at,
+    )
 
 
 @router.get("/matches")
@@ -318,6 +373,7 @@ async def list_all_matches(
             "sync_state": match.sync_state,
             "sync_error": match.sync_error,
             "last_synced_at": match.last_synced_at.isoformat() if match.last_synced_at else None,
+            "tournament_sport": match.tournament.sport if match.tournament else None,
         })
     
     return result

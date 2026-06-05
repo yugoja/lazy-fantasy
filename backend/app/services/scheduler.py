@@ -103,6 +103,42 @@ def _run_sync(fn) -> None:
         db.close()
 
 
+def _sync_football_results() -> None:
+    """Poll football matches that should be finished and auto-score them."""
+    from datetime import timedelta
+    from app.models.match import Match, MatchStatus
+    from app.services.football_sync import get_provider, sync_match_result
+
+    if not get_provider():
+        return
+
+    db: Session = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        cutoff = now - timedelta(minutes=100)
+        candidates = (
+            db.query(Match)
+            .filter(
+                Match.external_match_id.isnot(None),
+                Match.status == MatchStatus.SCHEDULED,
+                Match.start_time <= cutoff,
+                Match.sync_state != "result_synced",
+            )
+            .all()
+        )
+        # Only football matches have an external_match_id that's purely numeric
+        for match in candidates:
+            if not match.tournament or match.tournament.sport != "football":
+                continue
+            result = sync_match_result(db, match.id)
+            logger.info(f"Football auto-sync match {match.id}: {result['status']}")
+    except Exception as e:
+        logger.error(f"Football sync job failed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 def start_scheduler() -> None:
     from app.services.cricket_sync import sync_lineups
     from app.config import settings
@@ -132,6 +168,23 @@ def start_scheduler() -> None:
         logger.info("Cricket lineup sync registered (every 10m)")
     else:
         logger.info("CRICAPI_KEY not set — lineup sync skipped")
+
+    # Football result sync — only active when FOOTBALL_API_KEY is configured
+    if settings.FOOTBALL_API_KEY:
+        from app.services.football_provider import ApiFootballProvider
+        from app.services.football_sync import set_provider as set_football_provider
+        set_football_provider(ApiFootballProvider(settings.FOOTBALL_API_KEY, settings.FOOTBALL_API_BASE_URL))
+
+        scheduler.add_job(
+            _sync_football_results,
+            trigger="interval",
+            minutes=15,
+            id="football_result_sync",
+            replace_existing=True,
+        )
+        logger.info("Football result sync registered (every 15m)")
+    else:
+        logger.info("FOOTBALL_API_KEY not set — football result sync skipped")
 
     scheduler.start()
     logger.info("Scheduler started")

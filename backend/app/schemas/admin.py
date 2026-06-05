@@ -75,3 +75,17 @@ class SyncStatusResponse(BaseModel):
     last_synced_at: datetime | None
     sync_error: str | None
     cricapi_preview: dict | None = None
+
+
+class LinkFootballRequest(BaseModel):
+    fixture_id: int
+
+
+class FootballSyncResponse(BaseModel):
+    match_id: int
+    status: str
+    predictions_processed: int
+    unresolved_players: list[str]
+    sync_error: str | None
+    sync_state: str
+    last_synced_at: datetime | None
