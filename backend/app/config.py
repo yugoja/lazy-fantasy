@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     CRICAPI_KEY: str = ""
     CRICAPI_BASE_URL: str = "https://api.cricapi.com/v1"
 
+    # api-football.com — for auto football result sync
+    FOOTBALL_API_KEY: str = ""
+    FOOTBALL_API_BASE_URL: str = "https://v3.football.api-sports.io"
+
     # CORS Configuration (comma-separated origins for production)
     CORS_ORIGINS: str = "http://localhost:3000"
     FRONTEND_URL: str = "http://localhost:3000"

@@ -23,6 +23,7 @@ interface AdminMatch {
   sync_state: string;
   sync_error: string | null;
   last_synced_at: string | null;
+  tournament_sport: string | null;
 }
 
 function SyncStateBadge({ match }: { match: AdminMatch }) {
@@ -203,12 +204,21 @@ export default function AdminPage() {
                         View Predictions
                       </Button>
                     </Link>
-                    <Link href={`/admin/matches/${match.id}/sync`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full text-xs gap-1">
-                        <Link2 className="h-3 w-3" />
-                        {match.external_match_id ? 'Sync' : 'Link CricAPI'}
-                      </Button>
-                    </Link>
+                    {match.tournament_sport === 'football' ? (
+                      <Link href={`/admin/matches/${match.id}/football-sync`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full text-xs gap-1">
+                          <Link2 className="h-3 w-3" />
+                          {match.external_match_id ? 'Sync' : 'Link API'}
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link href={`/admin/matches/${match.id}/sync`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full text-xs gap-1">
+                          <Link2 className="h-3 w-3" />
+                          {match.external_match_id ? 'Sync' : 'Link CricAPI'}
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -253,7 +263,12 @@ export default function AdminPage() {
                     </Badge>
                   </div>
                   <div className="flex gap-2">
-                    <Link href={`/admin/matches/${match.id}/result`} className="flex-1">
+                    <Link
+                      href={match.tournament_sport === 'football'
+                        ? `/admin/matches/${match.id}/football-sync`
+                        : `/admin/matches/${match.id}/result`}
+                      className="flex-1"
+                    >
                       <Button size="sm" className="w-full text-xs">
                         Set Result
                       </Button>

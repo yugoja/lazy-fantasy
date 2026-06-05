@@ -13,6 +13,7 @@ class Player(Base):
     team_id: Mapped[int] = mapped_column(Integer, ForeignKey("teams.id"))
     role: Mapped[str] = mapped_column(String(50))  # Batsman, Bowler, All-Rounder, Wicketkeeper
     cricapi_player_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, unique=True)
+    api_football_player_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, unique=True)
 
     # Relationships
     team = relationship("Team", back_populates="players")
