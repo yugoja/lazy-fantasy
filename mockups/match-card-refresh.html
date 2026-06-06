@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match Prediction Card — Refresh Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        oklch(15% 0.022 258);
+    --surface:   oklch(20% 0.026 258);
+    --surface2:  oklch(24% 0.028 258);
+    --surface3:  oklch(28% 0.028 258);
+    --border:    oklch(30% 0.024 258);
+    --border2:   oklch(37% 0.022 258);
+    --text:      oklch(95% 0.008 258);
+    --muted:     oklch(64% 0.020 258);
+    --dim:       oklch(48% 0.020 258);
+
+    --green:     oklch(76% 0.20 150);
+    --green-hi:  oklch(82% 0.21 150);
+    --green-bg:  oklch(76% 0.20 150 / 0.12);
+    --green-bd:  oklch(76% 0.20 150 / 0.32);
+    --green-ink: oklch(18% 0.06 150);
+
+    --orange:    oklch(76% 0.16 64);
+    --orange-bg: oklch(76% 0.16 64 / 0.13);
+    --orange-bd: oklch(76% 0.16 64 / 0.30);
+
+    --yellow:    oklch(86% 0.16 92);
+    --yellow-bg: oklch(86% 0.16 92 / 0.12);
+
+    /* team accents */
+    --srh:  oklch(72% 0.17 50);   /* orange */
+    --gt:   oklch(60% 0.13 250);  /* navy-blue */
+  }
+
+  body {
+    background:
+      radial-gradient(1200px 600px at 50% -10%, oklch(22% 0.04 258), transparent 60%),
+      var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    padding: 56px 20px 120px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-head {
+    max-width: 460px;
+    margin: 0 auto 8px;
+    text-align: left;
+  }
+  .page-head h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .page-head p {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .stack {
+    max-width: 460px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+    padding-top: 48px;
+  }
+
+  .concept-head { margin-bottom: 18px; }
+  .concept-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+  .concept-tag b {
+    color: var(--bg);
+    background: var(--green);
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .concept-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-top: 12px;
+  }
+  .concept-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-top: 6px;
+    max-width: 420px;
+  }
+
+  /* shared bits */
+  .crest {
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+    box-shadow: inset 0 0 0 1px oklch(100% 0 0 / 0.12), 0 4px 12px oklch(0% 0 0 / 0.3);
+  }
+  .crest.srh { background: linear-gradient(150deg, oklch(74% 0.17 55), oklch(58% 0.16 38)); }
+  .crest.gt  { background: linear-gradient(150deg, oklch(64% 0.13 248), oklch(42% 0.12 262)); }
+
+  .icon { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ════════════════════════════════════════════════════════════ */
+  /* CONCEPT 1 — CLASH                                             */
+  /* Diagonal split arena. Two teams lean into a charged seam.     */
+  /* ════════════════════════════════════════════════════════════ */
+  .c1 {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    isolation: isolate;
+  }
+  .c1::before {           /* team color wash, split diagonally */
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(110deg,
+        oklch(72% 0.17 50 / 0.22) 0%,
+        oklch(72% 0.17 50 / 0.04) 38%,
+        transparent 50%,
+        oklch(60% 0.13 250 / 0.05) 62%,
+        oklch(60% 0.13 250 / 0.24) 100%);
+    z-index: -1;
+  }
+  .c1-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px 0;
+  }
+  .c1-status { display: flex; align-items: center; gap: 7px; }
+  .c1-live {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--green);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .c1-live::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 0 4px var(--green-bg);
+  }
+  .c1-pred {
+    font-size: 10.5px; font-weight: 600; color: var(--muted);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .c1-pred svg { width: 12px; height: 12px; color: var(--green); }
+  .c1-clock {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--yellow);
+    font-variant-numeric: tabular-nums;
+  }
+  .c1-clock svg { width: 13px; height: 13px; }
+
+  .c1-arena {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 18px 18px 14px;
+    gap: 4px;
+  }
+  .c1-side { display: flex; flex-direction: column; align-items: center; gap: 9px; text-align: center; }
+  .c1-side .crest { width: 52px; height: 52px; font-size: 16px; }
+  .c1-side .nm {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 700; line-height: 1.1;
+  }
+  .c1-side .sub { font-size: 10.5px; color: var(--dim); font-weight: 500; }
+  .c1-vs {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px; font-weight: 700; font-style: italic;
+    color: var(--text);
+    opacity: 0.25;
+    padding: 0 4px;
+  }
+  .c1-meta {
+    text-align: center;
+    font-size: 11.5px; color: var(--muted);
+    padding-bottom: 14px;
+  }
+  .c1-meta b { color: var(--text); font-weight: 600; }
+  .c1-foot {
+    display: flex; gap: 10px;
+    padding: 0 16px 16px;
+  }
+  .c1-cta {
+    flex: 1;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--green-ink);
+    background: var(--green);
+    border: none; border-radius: 12px;
+    padding: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .c1-cta:hover { background: var(--green-hi); transform: translateY(-1px); }
+  .c1-cta svg { width: 15px; height: 15px; }
+  .c1-nudge {
+    width: 46px; flex-shrink: 0;
+    background: oklch(100% 0 0 / 0.04);
+    border: 1px solid var(--border2);
+    border-radius: 12px; cursor: pointer;
+    color: var(--muted);
+    display: grid; place-items: center;
+    transition: color .15s, border-color .15s;
+  }
+  .c1-nudge:hover { color: var(--text); border-color: var(--text); }
+  .c1-nudge svg { width: 17px; height: 17px; }
+
+  /* ════════════════════════════════════════════════════════════ */
+  /* CONCEPT 2 — THE CALL                                          */
+  /* Your prediction is the headline. Banter-forward, opinionated. */
+  /* ════════════════════════════════════════════════════════════ */
+  .c2 {
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .c2-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .c2-mini {
+    display: flex; align-items: center; gap: -6px;
+  }
+  .c2-mini .crest { width: 30px; height: 30px; font-size: 10px; }
+  .c2-mini .crest:last-child { margin-left: -10px; box-shadow: inset 0 0 0 1px oklch(100% 0 0 / 0.12), 0 0 0 3px var(--surface); }
+  .c2-matchup {
+    flex: 1; min-width: 0;
+  }
+  .c2-matchup .t {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13.5px; font-weight: 700; line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .c2-matchup .d { font-size: 10.5px; color: var(--dim); margin-top: 1px; }
+  .c2-clock {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 700; color: var(--yellow);
+    background: var(--yellow-bg); border-radius: 100px;
+    padding: 5px 10px; white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .c2-body { padding: 18px 18px 16px; }
+  .c2-label {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--green);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .c2-label svg { width: 13px; height: 13px; }
+  .c2-call {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 23px; font-weight: 700; line-height: 1.18;
+    letter-spacing: -0.015em;
+    margin-top: 8px;
+  }
+  .c2-call em {
+    font-style: normal;
+    color: var(--orange);
+  }
+  .c2-foot {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 16px;
+  }
+  .c2-edit {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13.5px; font-weight: 700;
+    color: var(--green); background: var(--green-bg);
+    border: 1px solid var(--green-bd); border-radius: 11px;
+    padding: 11px 18px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: background .15s;
+  }
+  .c2-edit:hover { background: oklch(76% 0.20 150 / 0.18); }
+  .c2-edit svg { width: 14px; height: 14px; }
+  .c2-nudge {
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    background: none; border: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: color .15s;
+  }
+  .c2-nudge:hover { color: var(--text); }
+  .c2-nudge svg { width: 15px; height: 15px; }
+
+  /* ════════════════════════════════════════════════════════════ */
+  /* CONCEPT 3 — THE LINEUP (social)                               */
+  /* Who in your group is in. Competition + peer pressure.         */
+  /* ════════════════════════════════════════════════════════════ */
+  .c3 {
+    border-radius: 20px;
+    background: linear-gradient(180deg, var(--surface2), var(--surface));
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .c3-top { padding: 15px 17px 0; }
+  .c3-row1 { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .c3-chip {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--green);
+    background: var(--green-bg); border: 1px solid var(--green-bd);
+    border-radius: 6px; padding: 4px 8px;
+  }
+  .c3-clock {
+    font-family: 'Space Grotesk', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 700; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .c3-clock b { color: var(--yellow); }
+  .c3-clock svg { width: 13px; height: 13px; color: var(--yellow); }
+  .c3-teams {
+    display: flex; align-items: center; gap: 12px;
+    padding-bottom: 16px;
+  }
+  .c3-t { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
+  .c3-t.r { justify-content: flex-end; }
+  .c3-t .crest { width: 34px; height: 34px; font-size: 11px; }
+  .c3-t .nm {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; font-weight: 700; line-height: 1.1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .c3-vs { font-size: 11px; font-weight: 600; color: var(--dim); }
+
+  .c3-social {
+    background: oklch(0% 0 0 / 0.18);
+    border-top: 1px solid var(--border);
+    padding: 12px 17px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .c3-avatars { display: flex; }
+  .c3-avatars .av {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid var(--surface);
+    margin-left: -8px;
+    display: grid; place-items: center;
+    font-size: 10px; font-weight: 700; color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .c3-avatars .av:first-child { margin-left: 0; }
+  .c3-avatars .av.more {
+    background: var(--surface3); color: var(--muted);
+    font-size: 9.5px;
+  }
+  .c3-social-txt { flex: 1; font-size: 12px; line-height: 1.35; color: var(--muted); }
+  .c3-social-txt b { color: var(--text); font-weight: 700; }
+  .c3-social-txt .you { color: var(--orange); font-weight: 700; }
+
+  .c3-foot { display: flex; gap: 10px; padding: 13px 17px 16px; }
+  .c3-cta {
+    flex: 1;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--green-ink);
+    background: var(--green); border: none; border-radius: 12px;
+    padding: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background .15s, transform .15s;
+  }
+  .c3-cta:hover { background: var(--green-hi); transform: translateY(-1px); }
+  .c3-cta svg { width: 15px; height: 15px; }
+  .c3-nudge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 700; color: var(--orange);
+    background: var(--orange-bg); border: 1px solid var(--orange-bd);
+    border-radius: 12px; padding: 12px 16px; cursor: pointer;
+    display: flex; align-items: center; gap: 7px; white-space: nowrap;
+    transition: background .15s;
+  }
+  .c3-nudge:hover { background: oklch(76% 0.16 64 / 0.2); }
+  .c3-nudge svg { width: 15px; height: 15px; }
+
+  /* ════════════════════════════════════════════════════════════ */
+  /* CONCEPT 4 — SCOREBOARD                                        */
+  /* Stadium LED marquee. Big codes, flap-clock countdown.         */
+  /* ════════════════════════════════════════════════════════════ */
+  .c4 {
+    border-radius: 18px;
+    background:
+      repeating-linear-gradient(90deg, oklch(100% 0 0 / 0.015) 0 2px, transparent 2px 4px),
+      linear-gradient(180deg, oklch(18% 0.026 258), oklch(13% 0.022 258));
+    border: 1px solid var(--border2);
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.05);
+  }
+  .c4-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px dashed var(--border2);
+  }
+  .c4-tag {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .c4-pred {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--green);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .c4-pred svg { width: 11px; height: 11px; }
+  .c4-board {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 20px 16px 14px;
+  }
+  .c4-code {
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .c4-code .crest { width: 38px; height: 38px; font-size: 12px; }
+  .c4-code .big {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 34px; font-weight: 700; letter-spacing: 0.02em;
+    line-height: 0.9;
+    color: var(--text);
+  }
+  .c4-code .full { font-size: 10.5px; color: var(--dim); font-weight: 500; }
+  .c4-mid { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 8px; }
+  .c4-mid .vs {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 700; color: var(--dim);
+    letter-spacing: 0.1em;
+  }
+  .c4-flap {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .c4-flap .unit {
+    background: oklch(10% 0.02 258);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    padding: 5px 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--yellow);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    box-shadow: inset 0 -1px 0 oklch(0% 0 0 / 0.5);
+    position: relative;
+  }
+  .c4-flap .unit::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%;
+    height: 1px; background: oklch(0% 0 0 / 0.4);
+  }
+  .c4-flap .sep { font-size: 10px; color: var(--dim); font-weight: 700; }
+  .c4-board-meta {
+    text-align: center; font-size: 11px; color: var(--muted);
+    padding: 0 16px 14px;
+    letter-spacing: 0.02em;
+  }
+  .c4-foot {
+    display: flex; border-top: 1px solid var(--border2);
+  }
+  .c4-cta {
+    flex: 1;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13.5px; font-weight: 700; color: var(--green);
+    background: none; border: none; cursor: pointer;
+    padding: 14px; display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background .15s;
+  }
+  .c4-cta:hover { background: var(--green-bg); }
+  .c4-cta svg { width: 15px; height: 15px; }
+  .c4-div { width: 1px; background: var(--border2); }
+  .c4-nudge {
+    width: 56px; flex-shrink: 0;
+    background: none; border: none; cursor: pointer;
+    color: var(--muted);
+    display: grid; place-items: center;
+    transition: color .15s, background .15s;
+  }
+  .c4-nudge:hover { color: var(--text); background: oklch(100% 0 0 / 0.03); }
+  .c4-nudge svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>Match Card, refreshed</h1>
+  <p>Four full-card directions — same data, four personalities. All mobile-first (430px), dark, Space&nbsp;Grotesk + Inter.</p>
+</div>
+
+<div class="stack">
+
+  <!-- ─────────── CONCEPT 1 — CLASH ─────────── -->
+  <section>
+    <div class="concept-head">
+      <div class="concept-tag"><b>01</b> Clash</div>
+      <div class="concept-name">Diagonal Arena</div>
+      <div class="concept-desc">Each team's colour bleeds in from its own corner and meets at a charged seam. It reads like a face-off, not a list. Asymmetric footer kills the boxy double-button.</div>
+    </div>
+
+    <div class="c1">
+      <div class="c1-top">
+        <div class="c1-status">
+          <span class="c1-live">Upcoming</span>
+          <span class="c1-pred">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Predicted
+          </span>
+        </div>
+        <span class="c1-clock">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+          2d 9h
+        </span>
+      </div>
+
+      <div class="c1-arena">
+        <div class="c1-side">
+          <div class="crest srh">SRH</div>
+          <div>
+            <div class="nm">Sunrisers</div>
+            <div class="sub">Hyderabad</div>
+          </div>
+        </div>
+        <div class="c1-vs">vs</div>
+        <div class="c1-side">
+          <div class="crest gt">GT</div>
+          <div>
+            <div class="nm">Gujarat</div>
+            <div class="sub">Titans</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="c1-meta"><b>Jun 9</b> · 05:13 AM · Rajiv Gandhi Stadium</div>
+
+      <div class="c1-foot">
+        <button class="c1-cta">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Update Prediction
+        </button>
+        <button class="c1-nudge" title="Nudge your group">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── CONCEPT 2 — THE CALL ─────────── -->
+  <section>
+    <div class="concept-head">
+      <div class="concept-tag"><b>02</b> The Call</div>
+      <div class="concept-name">Your Verdict, Front & Centre</div>
+      <div class="concept-desc">Friends-first: once you've predicted, the card stops being a fixture and starts being <i>your opinion</i>. The matchup shrinks to a header; your call becomes the headline you can defend in the group chat.</div>
+    </div>
+
+    <div class="c2">
+      <div class="c2-head">
+        <div class="c2-mini">
+          <div class="crest srh">SRH</div>
+          <div class="crest gt">GT</div>
+        </div>
+        <div class="c2-matchup">
+          <div class="t">Sunrisers vs Gujarat</div>
+          <div class="d">Jun 9 · 05:13 AM</div>
+        </div>
+        <span class="c2-clock">2d 9h</span>
+      </div>
+      <div class="c2-body">
+        <div class="c2-label">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-6 0v4"/><rect x="2" y="9" width="20" height="11" rx="2"/></svg>
+          You called it
+        </div>
+        <div class="c2-call">Sunrisers by <em>14 runs</em>.<br>Locked &amp; ready to gloat.</div>
+        <div class="c2-foot">
+          <button class="c2-edit">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Change my mind
+          </button>
+          <button class="c2-nudge">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+            Nudge group
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── CONCEPT 3 — THE LINEUP ─────────── -->
+  <section>
+    <div class="concept-head">
+      <div class="concept-tag"><b>03</b> The Lineup</div>
+      <div class="concept-name">Who's In</div>
+      <div class="concept-desc">Surfaces the social stakes right on the card — who in your group has locked a pick and who's slacking. Nudge gets promoted to an orange accent because peer pressure is the product.</div>
+    </div>
+
+    <div class="c3">
+      <div class="c3-top">
+        <div class="c3-row1">
+          <span class="c3-chip">Upcoming</span>
+          <span class="c3-clock">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+            locks in <b>2d 9h</b>
+          </span>
+        </div>
+        <div class="c3-teams">
+          <div class="c3-t">
+            <div class="crest srh">SRH</div>
+            <span class="nm">Sunrisers</span>
+          </div>
+          <span class="c3-vs">VS</span>
+          <div class="c3-t r">
+            <span class="nm">Gujarat</span>
+            <div class="crest gt">GT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="c3-social">
+        <div class="c3-avatars">
+          <div class="av" style="background:linear-gradient(135deg,oklch(70% 0.16 20),oklch(55% 0.15 10))">A</div>
+          <div class="av" style="background:linear-gradient(135deg,oklch(70% 0.15 280),oklch(55% 0.15 290))">R</div>
+          <div class="av" style="background:linear-gradient(135deg,oklch(72% 0.16 150),oklch(58% 0.15 160))">K</div>
+          <div class="av more">+1</div>
+        </div>
+        <div class="c3-social-txt"><b>4 of 6</b> mates locked in — <span class="you">you included</span>. Two still ghosting.</div>
+      </div>
+
+      <div class="c3-foot">
+        <button class="c3-cta">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Update Prediction
+        </button>
+        <button class="c3-nudge">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+          Nudge 2
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────── CONCEPT 4 — SCOREBOARD ─────────── -->
+  <section>
+    <div class="concept-head">
+      <div class="concept-tag"><b>04</b> Scoreboard</div>
+      <div class="concept-name">Stadium Marquee</div>
+      <div class="concept-desc">Leans into the sport itself — fine LED scanlines, oversized team codes, and a split-flap countdown that feels like a real venue board. The action row is a clean two-zone strip, no chunky buttons.</div>
+    </div>
+
+    <div class="c4">
+      <div class="c4-bar">
+        <span class="c4-tag">IPL · Match 41</span>
+        <span class="c4-pred">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Predicted
+        </span>
+      </div>
+      <div class="c4-board">
+        <div class="c4-code">
+          <div class="crest srh">SRH</div>
+          <div class="big">SRH</div>
+          <div class="full">Sunrisers</div>
+        </div>
+        <div class="c4-mid">
+          <span class="vs">VS</span>
+          <div class="c4-flap">
+            <span class="unit">02</span><span class="sep">d</span>
+            <span class="unit">09</span><span class="sep">h</span>
+          </div>
+        </div>
+        <div class="c4-code">
+          <div class="crest gt">GT</div>
+          <div class="big">GT</div>
+          <div class="full">Gujarat</div>
+        </div>
+      </div>
+      <div class="c4-board-meta">JUN 9 · 05:13 AM · HYDERABAD</div>
+      <div class="c4-foot">
+        <button class="c4-cta">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Update Prediction
+        </button>
+        <div class="c4-div"></div>
+        <button class="c4-nudge" title="Nudge your group">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

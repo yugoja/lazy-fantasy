@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match Card — Action Area Mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       oklch(16% 0.022 255);
+    --surface:  oklch(21% 0.026 255);
+    --surface2: oklch(25% 0.028 255);
+    --border:   oklch(30% 0.024 255);
+    --border2:  oklch(35% 0.022 255);
+    --text:     oklch(93% 0.008 255);
+    --muted:    oklch(56% 0.018 255);
+    --dim:      oklch(42% 0.020 255);
+    --green:    oklch(76% 0.22 145);
+    --green-bg: oklch(76% 0.22 145 / 0.1);
+    --green-border: oklch(76% 0.22 145 / 0.3);
+    --orange:   oklch(74% 0.19 60);
+    --orange-bg: oklch(74% 0.19 60 / 0.12);
+    --yellow:   oklch(85% 0.18 88);
+    --yellow-bg: oklch(85% 0.18 88 / 0.12);
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    padding: 40px 24px 80px;
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 48px 32px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .variant-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 12px;
+  }
+  .variant-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .variant-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  /* ─── Shared card base ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .card-body {
+    padding: 14px 16px 0;
+  }
+
+  /* Status row */
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 5px;
+    border: 1px solid;
+  }
+  .badge-upcoming {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: var(--green-border);
+  }
+  .badge-predicted {
+    background: transparent;
+    color: var(--muted);
+    border-color: var(--border2);
+  }
+  .countdown {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--yellow);
+    background: var(--yellow-bg);
+    padding: 4px 9px;
+    border-radius: 20px;
+  }
+  .countdown svg { width: 11px; height: 11px; }
+
+  /* Teams row */
+  .teams-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+  .team.right { justify-content: flex-end; }
+  .flag {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface2);
+  }
+  .flag-placeholder {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .team-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vs {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    flex-shrink: 0;
+    padding: 0 4px;
+  }
+
+  /* Match meta */
+  .match-meta {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ─────────────────────────────────────────── */
+  /* VARIANT A: Asymmetric Action Row            */
+  /* ─────────────────────────────────────────── */
+
+  .va-footer {
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+  .va-btn-primary {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .va-btn-primary svg { width: 13px; height: 13px; }
+  .va-btn-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .va-btn-icon svg { width: 14px; height: 14px; }
+  .va-nudge-text {
+    font-size: 11px;
+    color: var(--dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+
+  /* ─────────────────────────────────────────── */
+  /* VARIANT B: Inline Pick Row                  */
+  /* ─────────────────────────────────────────── */
+
+  .vb-pick-row {
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .vb-pick-info {
+    flex: 1;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .vb-pick-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+  .vb-pick-label {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .vb-pick-score {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--green);
+    white-space: nowrap;
+  }
+  .vb-actions {
+    display: flex;
+    border-left: 1px solid var(--border);
+  }
+  .vb-action-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-right: 1px solid var(--border);
+  }
+  .vb-action-btn:last-child { border-right: none; }
+  .vb-action-btn svg { width: 14px; height: 14px; margin-bottom: 1px; }
+  .vb-action-btn.primary { color: var(--green); }
+
+
+  /* ─────────────────────────────────────────── */
+  /* VARIANT C: Pill pair                        */
+  /* ─────────────────────────────────────────── */
+
+  .vc-footer {
+    padding: 12px 16px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vc-predict-pill {
+    flex: 1;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--green);
+    border: none;
+    border-radius: 100px;
+    padding: 9px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .vc-predict-pill svg { width: 13px; height: 13px; }
+  .vc-nudge-pill {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 100px;
+    padding: 9px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .vc-nudge-pill svg { width: 12px; height: 12px; }
+
+
+  /* ─────────────────────────────────────────── */
+  /* VARIANT D: Ticket Stub                      */
+  /* ─────────────────────────────────────────── */
+
+  .vd-card {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+  }
+  .vd-main {
+    flex: 1;
+    padding: 14px 16px;
+    min-width: 0;
+  }
+  /* Dashed perforation line */
+  .vd-perf {
+    width: 1px;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 4px,
+      var(--border2) 4px,
+      var(--border2) 9px
+    );
+    flex-shrink: 0;
+    position: relative;
+  }
+  .vd-perf::before {
+    content: '';
+    position: absolute;
+    top: -8px; left: -7px;
+    width: 14px; height: 14px;
+    background: var(--bg);
+    border-radius: 50%;
+    border: 1px solid var(--border);
+  }
+  .vd-perf::after {
+    content: '';
+    position: absolute;
+    bottom: -8px; left: -7px;
+    width: 14px; height: 14px;
+    background: var(--bg);
+    border-radius: 50%;
+    border: 1px solid var(--border);
+  }
+  .vd-stub {
+    width: 80px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 10px;
+    background: oklch(19% 0.024 255);
+  }
+  .vd-stub-btn {
+    width: 100%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    padding: 7px 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: none;
+  }
+  .vd-stub-btn svg { width: 14px; height: 14px; }
+  .vd-stub-primary {
+    background: var(--green);
+    color: oklch(14% 0.02 145);
+  }
+  .vd-stub-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border2) !important;
+  }
+  .vd-stub-divider {
+    width: 28px;
+    height: 1px;
+    background: var(--border);
+  }
+  /* Predicted chip in stub */
+  .vd-stub-pick {
+    font-size: 9px;
+    color: var(--green);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    text-align: center;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 4px;
+    padding: 3px 6px;
+    width: 100%;
+    line-height: 1.3;
+  }
+
+  /* spacing helper */
+  .mt-10 { margin-top: 10px; }
+  .mt-12 { margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Match Card — Action Area Concepts</h1>
+
+<div class="grid">
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- VARIANT A: Asymmetric Action Row             -->
+  <!-- ════════════════════════════════════════════ -->
+  <div>
+    <div class="variant-label">Variant A</div>
+    <div class="variant-name">Asymmetric Row</div>
+    <div class="variant-desc">Primary action takes 70% of the footer strip. Nudge becomes a small icon button — same zone, totally different weight. No full-width buttons.</div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="status-row">
+          <span class="badge badge-upcoming">Upcoming</span>
+          <span class="badge badge-predicted">✓ Predicted</span>
+          <span class="countdown">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            5d 4h
+          </span>
+        </div>
+        <div class="teams-row">
+          <div class="team">
+            <div class="flag-placeholder">KOR</div>
+            <span class="team-name">South Korea</span>
+          </div>
+          <span class="vs">vs</span>
+          <div class="team right">
+            <span class="team-name">Czech Rep.</span>
+            <div class="flag-placeholder">CZE</div>
+          </div>
+        </div>
+        <div class="match-meta">Jun 12 · 12:00 AM</div>
+      </div>
+      <div class="va-footer">
+        <div class="va-btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Update Prediction
+        </div>
+        <div class="va-btn-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.46 2 2 0 0 1 3.59 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.83a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- VARIANT B: Inline Pick Row                   -->
+  <!-- ════════════════════════════════════════════ -->
+  <div>
+    <div class="variant-label">Variant B</div>
+    <div class="variant-name">Pick Status Strip</div>
+    <div class="variant-desc">The prediction status and actions live in one tight row. Your current pick shows inline. Edit and Nudge become small, equal icon-tab buttons. Zero wasted height.</div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="status-row">
+          <span class="badge badge-upcoming">Upcoming</span>
+          <span class="countdown">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            5d 4h
+          </span>
+        </div>
+        <div class="teams-row">
+          <div class="team">
+            <div class="flag-placeholder">KOR</div>
+            <span class="team-name">South Korea</span>
+          </div>
+          <span class="vs">vs</span>
+          <div class="team right">
+            <span class="team-name">Czech Rep.</span>
+            <div class="flag-placeholder">CZE</div>
+          </div>
+        </div>
+        <div class="match-meta">Jun 12 · 12:00 AM</div>
+      </div>
+      <div class="vb-pick-row">
+        <div class="vb-pick-info">
+          <div class="vb-pick-dot"></div>
+          <span class="vb-pick-label">Your pick</span>
+          <span class="vb-pick-score">2 – 1 · Korea win</span>
+        </div>
+        <div class="vb-actions">
+          <div class="vb-action-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </div>
+          <div class="vb-action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Nudge
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- VARIANT C: Pill Pair                         -->
+  <!-- ════════════════════════════════════════════ -->
+  <div>
+    <div class="variant-label">Variant C</div>
+    <div class="variant-name">Pill Pair</div>
+    <div class="variant-desc">Solid pill for the primary CTA, ghost pill for nudge. The contrast in size, color, and fill creates instant hierarchy without full-width monotony.</div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="status-row">
+          <span class="badge badge-upcoming">Upcoming</span>
+          <span class="badge badge-predicted">✓ Predicted</span>
+          <span class="countdown">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            5d 4h
+          </span>
+        </div>
+        <div class="teams-row">
+          <div class="team">
+            <div class="flag-placeholder">KOR</div>
+            <span class="team-name">South Korea</span>
+          </div>
+          <span class="vs">vs</span>
+          <div class="team right">
+            <span class="team-name">Czech Rep.</span>
+            <div class="flag-placeholder">CZE</div>
+          </div>
+        </div>
+        <div class="match-meta">Jun 12 · 12:00 AM</div>
+      </div>
+      <div class="vc-footer">
+        <button class="vc-predict-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Update Prediction
+        </button>
+        <button class="vc-nudge-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="13" height="13"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Nudge
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- VARIANT D: Ticket Stub                       -->
+  <!-- ════════════════════════════════════════════ -->
+  <div>
+    <div class="variant-label">Variant D</div>
+    <div class="variant-name">Ticket Stub</div>
+    <div class="variant-desc">A perforated divider splits content from a compact action stub on the right. Football-ticket aesthetic. The card body stays completely clean — actions live in their own zone.</div>
+
+    <div class="vd-card">
+      <div class="vd-main">
+        <div class="status-row">
+          <span class="badge badge-upcoming">Upcoming</span>
+          <span class="countdown">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            5d 4h
+          </span>
+        </div>
+        <div class="teams-row">
+          <div class="team">
+            <div class="flag-placeholder">KOR</div>
+            <span class="team-name">South Korea</span>
+          </div>
+        </div>
+        <div class="teams-row" style="margin-top:-2px; margin-bottom:8px;">
+          <div class="team">
+            <div class="flag-placeholder">CZE</div>
+            <span class="team-name" style="font-size:15px; color:var(--muted);">Czech Republic</span>
+          </div>
+        </div>
+        <div class="match-meta">Jun 12 · 12:00 AM · Group Stage</div>
+        <div class="mt-10">
+          <div class="vd-stub-pick">Your pick: 2 – 1<br>Korea win</div>
+        </div>
+        <div style="height:14px;"></div>
+      </div>
+      <div class="vd-perf"></div>
+      <div class="vd-stub">
+        <button class="vd-stub-btn vd-stub-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Update
+        </button>
+        <div class="vd-stub-divider"></div>
+        <button class="vd-stub-btn vd-stub-secondary" style="border:1px solid var(--border2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Nudge
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
