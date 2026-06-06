@@ -3,17 +3,23 @@ Seed realistic dev data for local testing.
 
 Creates (idempotently):
   - 10 fake users  (username: seed_user_0..9, password: devpass)
-  - 3 leagues with overlapping membership
-  - 1 dev tournament (if no tournaments exist) + minimal teams/players
+  - 3 cricket leagues with overlapping membership
+  - 1 dev cricket tournament + minimal teams/players
   - 5 completed past matches with results and scored predictions
   - 3 upcoming scheduled matches with predictions (unprocessed)
+
+--with-history also creates:
+  - 1 football mini-tournament (4 teams, WC-style)
+  - 3 GROUP matchdays (6 matches) + 1 QF — all completed and scored
+  - 1 upcoming SF match
+  - A "WC Dev League" with all seed users
+  - Football predictions + player picks + results → full leaderboard with round filter data
 
 Safe to re-run — existing seed rows are detected and skipped.
 
 Usage (from backend/):
   python -m scripts.seed_dev
-  # or
-  python scripts/seed_dev.py
+  python -m scripts.seed_dev --with-history
 """
 import os
 import sys
@@ -300,10 +306,292 @@ def seed_matches(
 
 
 # ---------------------------------------------------------------------------
+# Football history seed
+# ---------------------------------------------------------------------------
+
+WC_TOURNAMENT_NAME = "Dev WC 2026 Mini"
+WC_LEAGUE_NAME = "WC Dev League"
+
+_WC_TEAMS = [
+    ("Brazil",    "BRA", "Forward"),
+    ("France",    "FRA", "Forward"),
+    ("Argentina", "ARG", "Forward"),
+    ("England",   "ENG", "Forward"),
+]
+
+# (team1_idx, team2_idx, group_round, result_1, result_2)
+# result_X = goals scored by that team in regulation
+_GROUP_FIXTURES = [
+    # Matchday 1
+    (0, 1, 1, 2, 1),  # Brazil 2-1 France
+    (2, 3, 1, 0, 0),  # Argentina 0-0 England
+    # Matchday 2
+    (0, 2, 2, 3, 2),  # Brazil 3-2 Argentina
+    (1, 3, 2, 1, 1),  # France 1-1 England
+    # Matchday 3
+    (0, 3, 3, 1, 0),  # Brazil 1-0 England
+    (1, 2, 3, 2, 0),  # France 2-0 Argentina
+]
+
+# QF: Brazil vs France (Brazil wins 2-1)
+_QF_FIXTURE = (0, 1, 2, 1)  # team1_idx, team2_idx, goals1, goals2
+
+
+def _ensure_football_teams(db: Session) -> list[Team]:
+    teams = []
+    for name, short, _ in _WC_TEAMS:
+        t = db.query(Team).filter(Team.name == name, Team.sport == "football").first()
+        if not t:
+            t = Team(name=name, short_name=short, sport="football")
+            db.add(t)
+            db.flush()
+        teams.append(t)
+    return teams
+
+
+def _ensure_football_players(db: Session, teams: list[Team]) -> dict[int, list[Player]]:
+    """1 GK, 2 DEF, 2 MID, 2 FWD per team — roles match Position enum values."""
+    roles = ["Goalkeeper", "Defender", "Defender", "Midfielder", "Midfielder", "Forward", "Forward"]
+    result: dict[int, list[Player]] = {}
+    for team in teams:
+        existing = db.query(Player).filter(Player.team_id == team.id).all()
+        if existing:
+            result[team.id] = existing
+            continue
+        created = []
+        for role in roles:
+            p = Player(name=fake.name(), team_id=team.id, role=role, sport="football")
+            db.add(p)
+            created.append(p)
+        db.flush()
+        result[team.id] = created
+    return result
+
+
+def _players_by_role(players: list[Player]) -> dict[str, list[Player]]:
+    d: dict[str, list[Player]] = {}
+    for p in players:
+        d.setdefault(p.role, []).append(p)
+    return d
+
+
+def _seed_football_match_result(
+    db: Session,
+    match: Match,
+    goals1: int,
+    goals2: int,
+    t1_players: list[Player],
+    t2_players: list[Player],
+) -> None:
+    from app.models.football_match_result import FootballMatchResult, FootballPlayerMatchEvent
+
+    if db.query(FootballMatchResult).filter(FootballMatchResult.match_id == match.id).first():
+        return
+
+    result = FootballMatchResult(
+        match_id=match.id,
+        team1_goals_reg=goals1,
+        team2_goals_reg=goals2,
+    )
+    db.add(result)
+    db.flush()
+
+    # Give each player minimal events so scoring has something to work with
+    team1_conceded = goals2
+    team2_conceded = goals1
+    all_sides = [(t1_players, team1_conceded), (t2_players, team2_conceded)]
+    for players, conceded in all_sides:
+        for p in players:
+            goals = 1 if p.role == "Forward" and random.random() < 0.4 else 0
+            assists = 1 if p.role == "Midfielder" and random.random() < 0.3 else 0
+            db.add(FootballPlayerMatchEvent(
+                match_id=match.id,
+                player_id=p.id,
+                minutes_played=90,
+                goals=goals,
+                assists=assists,
+                team_goals_conceded=conceded,
+            ))
+    db.flush()
+
+
+def _seed_football_prediction(
+    db: Session,
+    user: User,
+    match: Match,
+    t1: Team,
+    t2: Team,
+    actual_goals1: int,
+    actual_goals2: int,
+    t1_players: list[Player],
+    t2_players: list[Player],
+    accurate: bool,
+) -> None:
+    from app.models.football_prediction import FootballPrediction
+
+    if db.query(Prediction).filter(
+        Prediction.user_id == user.id, Prediction.match_id == match.id
+    ).first():
+        return
+
+    if accurate:
+        pg1, pg2 = actual_goals1, actual_goals2
+    else:
+        pg1 = max(0, actual_goals1 + random.choice([-1, 1]))
+        pg2 = max(0, actual_goals2 + random.choice([-1, 1]))
+
+    # Pick 3 players (one from each position tier)
+    by_role_t1 = _players_by_role(t1_players)
+    by_role_t2 = _players_by_role(t2_players)
+    pick1 = random.choice(by_role_t1.get("Forward", t1_players))
+    pick2 = random.choice(by_role_t2.get("Midfielder", t2_players) or t2_players)
+    pick3 = random.choice(by_role_t1.get("Defender", t1_players) or t1_players)
+
+    pred = Prediction(user_id=user.id, match_id=match.id)
+    db.add(pred)
+    db.flush()
+
+    fp = FootballPrediction(
+        prediction_id=pred.id,
+        team1_goals=pg1,
+        team2_goals=pg2,
+        player_pick_1_id=pick1.id,
+        player_pick_2_id=pick2.id,
+        player_pick_3_id=pick3.id,
+    )
+    db.add(fp)
+    db.flush()
+
+
+def seed_football_history(db: Session, users: list[User]) -> None:
+    # --- Tournament ---
+    tournament = db.query(Tournament).filter(Tournament.name == WC_TOURNAMENT_NAME).first()
+    if not tournament:
+        tournament = Tournament(
+            name=WC_TOURNAMENT_NAME,
+            start_date=datetime(2026, 5, 1).date(),
+            end_date=datetime(2026, 6, 30).date(),
+            sport="football",
+            picks_window="closed",
+        )
+        db.add(tournament)
+        db.flush()
+
+    teams = _ensure_football_teams(db)
+    players_by_team = _ensure_football_players(db, teams)
+
+    # --- League ---
+    league = db.query(League).filter(League.name == WC_LEAGUE_NAME).first()
+    if not league:
+        league = League(
+            name=WC_LEAGUE_NAME,
+            invite_code=_random_invite_code(db),
+            owner_id=users[0].id,
+            sport="football",
+        )
+        db.add(league)
+        db.flush()
+
+    existing_members = {m.user_id for m in db.query(LeagueMember).filter(LeagueMember.league_id == league.id).all()}
+    for u in users:
+        if u.id not in existing_members:
+            db.add(LeagueMember(league_id=league.id, user_id=u.id))
+    db.flush()
+
+    base_time = league.created_at - timedelta(days=30)
+
+    # --- Group stage matches ---
+    completed_matches = []
+    for i, (t1_idx, t2_idx, group_round, goals1, goals2) in enumerate(_GROUP_FIXTURES):
+        ext_id = f"wc_seed_group_{i}"
+        match = db.query(Match).filter(Match.external_match_id == ext_id).first()
+        if not match:
+            match = Match(
+                tournament_id=tournament.id,
+                team_1_id=teams[t1_idx].id,
+                team_2_id=teams[t2_idx].id,
+                start_time=base_time + timedelta(days=i * 4),
+                status=MatchStatus.COMPLETED,
+                stage="GROUP",
+                group_round=group_round,
+                external_match_id=ext_id,
+                sync_state="result_synced",
+            )
+            db.add(match)
+            db.flush()
+
+            _seed_football_match_result(
+                db, match, goals1, goals2,
+                players_by_team[teams[t1_idx].id],
+                players_by_team[teams[t2_idx].id],
+            )
+
+        completed_matches.append((match, teams[t1_idx], teams[t2_idx], goals1, goals2))
+
+    # --- QF ---
+    t1_idx, t2_idx, goals1, goals2 = _QF_FIXTURE
+    ext_id = "wc_seed_qf"
+    qf_match = db.query(Match).filter(Match.external_match_id == ext_id).first()
+    if not qf_match:
+        qf_match = Match(
+            tournament_id=tournament.id,
+            team_1_id=teams[t1_idx].id,
+            team_2_id=teams[t2_idx].id,
+            start_time=base_time + timedelta(days=28),
+            status=MatchStatus.COMPLETED,
+            stage="QF",
+            external_match_id=ext_id,
+            sync_state="result_synced",
+        )
+        db.add(qf_match)
+        db.flush()
+        _seed_football_match_result(
+            db, qf_match, goals1, goals2,
+            players_by_team[teams[t1_idx].id],
+            players_by_team[teams[t2_idx].id],
+        )
+    completed_matches.append((qf_match, teams[t1_idx], teams[t2_idx], goals1, goals2))
+
+    # --- Upcoming SF ---
+    ext_id = "wc_seed_sf"
+    if not db.query(Match).filter(Match.external_match_id == ext_id).first():
+        sf = Match(
+            tournament_id=tournament.id,
+            team_1_id=teams[0].id,
+            team_2_id=teams[2].id,
+            start_time=datetime.now(timezone.utc) + timedelta(days=3),
+            status=MatchStatus.SCHEDULED,
+            stage="SF",
+            external_match_id=ext_id,
+            sync_state="unlinked",
+        )
+        db.add(sf)
+        db.flush()
+
+    # --- Predictions for completed matches ---
+    for idx, (match, t1, t2, goals1, goals2) in enumerate(completed_matches):
+        t1_players = players_by_team[t1.id]
+        t2_players = players_by_team[t2.id]
+        for u_idx, user in enumerate(users):
+            # Vary accuracy: first 3 users are good, last 3 are bad, rest middling
+            accurate = random.random() < (0.7 if u_idx < 3 else 0.3 if u_idx >= 7 else 0.5)
+            _seed_football_prediction(
+                db, user, match, t1, t2, goals1, goals2,
+                t1_players, t2_players, accurate,
+            )
+        db.flush()
+        calculate_scores(db, match.id)
+
+    n_group = len(_GROUP_FIXTURES)
+    print(f"  football: {n_group} GROUP matches + 1 QF (completed+scored) + 1 SF upcoming")
+    print(f"  league:   '{WC_LEAGUE_NAME}' with all {len(users)} seed users")
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
-def run() -> None:
+def run(with_history: bool = False) -> None:
     db: Session = SessionLocal()
     try:
         print("Seeding dev data...")
@@ -316,6 +604,10 @@ def run() -> None:
         players_by_team = _ensure_players(db, teams)
         seed_matches(db, tournament, teams, players_by_team, users)
 
+        if with_history:
+            print("Seeding football history...")
+            seed_football_history(db, users)
+
         db.commit()
         print("Done. Login with any seed_user_0..9 / devpass")
     except Exception:
@@ -326,4 +618,8 @@ def run() -> None:
 
 
 if __name__ == "__main__":
-    run()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--with-history", action="store_true", help="Seed completed football WC history for UI testing")
+    args = parser.parse_args()
+    run(with_history=args.with_history)
