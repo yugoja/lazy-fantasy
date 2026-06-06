@@ -28,6 +28,7 @@ class Match(Base):
     # Canonical values: GROUP | R32 | R16 | QF | SF | THIRD | FINAL
     # (kept in sync with app.services.scoring_football.KNOCKOUT_STAGES).
     stage: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    group_round: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     # CricAPI sync fields
     external_match_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)

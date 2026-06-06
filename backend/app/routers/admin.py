@@ -59,7 +59,35 @@ async def create_match(
     start_time = match_data.start_time
     if start_time.tzinfo is None:
         start_time = start_time.replace(tzinfo=timezone.utc)
-    
+
+    # Auto-compute group_round for GROUP stage matches
+    group_round = None
+    if match_data.stage == "GROUP":
+        count_team1 = (
+            db.query(Match)
+            .filter(
+                Match.tournament_id == match_data.tournament_id,
+                Match.stage == "GROUP",
+                (Match.team_1_id == match_data.team_1_id) | (Match.team_2_id == match_data.team_1_id),
+            )
+            .count()
+        )
+        count_team2 = (
+            db.query(Match)
+            .filter(
+                Match.tournament_id == match_data.tournament_id,
+                Match.stage == "GROUP",
+                (Match.team_1_id == match_data.team_2_id) | (Match.team_2_id == match_data.team_2_id),
+            )
+            .count()
+        )
+        group_round = max(count_team1, count_team2) + 1
+        if group_round > 3:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Each team can play at most 3 GROUP stage matches",
+            )
+
     # Create match
     match = Match(
         tournament_id=match_data.tournament_id,
@@ -67,11 +95,13 @@ async def create_match(
         team_2_id=match_data.team_2_id,
         start_time=start_time,
         status=MatchStatus.SCHEDULED,
+        stage=match_data.stage,
+        group_round=group_round,
     )
     db.add(match)
     db.commit()
     db.refresh(match)
-    
+
     return MatchResponse(
         id=match.id,
         tournament_id=match.tournament_id,
@@ -79,6 +109,8 @@ async def create_match(
         team_2=TeamResponse.model_validate(team_2),
         start_time=match.start_time,
         status=match.status.value,
+        stage=match.stage,
+        group_round=match.group_round,
     )
 
 

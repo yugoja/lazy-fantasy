@@ -148,12 +148,16 @@ export async function getLeagueMatchPredictions(leagueId: number, matchId: numbe
     return request<FriendPrediction[]>(`/leagues/${leagueId}/matches/${matchId}/predictions`);
 }
 
-export async function getLeaderboard(leagueId: number) {
+export async function getLeaderboard(leagueId: number, round?: string) {
+    const url = round
+        ? `/leagues/${leagueId}/leaderboard?round=${encodeURIComponent(round)}`
+        : `/leagues/${leagueId}/leaderboard`;
     return request<{
         league_id: number;
         league_name: string;
-        entries: Array<{ user_id: number; username: string; total_points: number; rank: number; rank_delta: number | null }>;
-    }>(`/leagues/${leagueId}/leaderboard`);
+        entries: Array<{ user_id: number; username: string; display_name?: string | null; total_points: number; rank: number; rank_delta: number | null }>;
+        available_rounds: string[];
+    }>(url);
 }
 
 // Matches

@@ -10,6 +10,13 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Trophy, TrendingUp, TrendingDown, Minus, ArrowLeft, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { shareWithCard } from '@/lib/share';
@@ -22,6 +29,20 @@ interface LeaderboardEntry {
   rank: number;
   rank_delta: number | null;
 }
+
+type RoundKey = 'ALL' | string;
+
+const ROUND_LABELS: Record<string, string> = {
+  GROUP_1: 'Matchday 1',
+  GROUP_2: 'Matchday 2',
+  GROUP_3: 'Matchday 3',
+  R32: 'Round of 32',
+  R16: 'Round of 16',
+  QF: 'Quarter-finals',
+  SF: 'Semi-finals',
+  THIRD: '3rd Place',
+  FINAL: 'Final',
+};
 
 function entryLabel(entry: LeaderboardEntry) {
   return entry.display_name || entry.username;
@@ -36,7 +57,9 @@ export default function LeagueLeaderboardPage() {
   const [leagueName, setLeagueName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [availableRounds, setAvailableRounds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedRound, setSelectedRound] = useState<RoundKey>('ALL');
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -46,18 +69,21 @@ export default function LeagueLeaderboardPage() {
 
   useEffect(() => {
     if (isAuthenticated && leagueId) {
-      loadBoard();
+      loadBoard('ALL');
     }
   }, [isAuthenticated, leagueId]);
 
-  const loadBoard = async () => {
+  const loadBoard = async (round: RoundKey) => {
+    setIsLoading(true);
     try {
+      const roundParam = round === 'ALL' ? undefined : round;
       const [data, leagues] = await Promise.all([
-        getLeaderboard(leagueId),
+        getLeaderboard(leagueId, roundParam),
         getMyLeagues(),
       ]);
       setLeagueName(data.league_name);
       setEntries(data.entries);
+      setAvailableRounds(data.available_rounds ?? []);
       const league = leagues.find((l) => l.id === leagueId);
       if (league) setInviteCode(league.invite_code);
     } catch {
@@ -65,6 +91,11 @@ export default function LeagueLeaderboardPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRoundChange = (round: RoundKey) => {
+    setSelectedRound(round);
+    loadBoard(round);
   };
 
   const handleShare = async () => {
@@ -75,11 +106,14 @@ export default function LeagueLeaderboardPage() {
   };
 
   const currentUserEntry = entries.find(e => e.username === username);
+  const isRoundActive = selectedRound !== 'ALL';
+  const ptsLabel = isRoundActive ? 'rnd pts' : 'pts';
 
   if (authLoading || isLoading) {
     return (
       <div className="container-mobile py-6 space-y-6">
         <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-40" />
         <Skeleton className="h-32 w-full" />
         {[...Array(5)].map((_, i) => (
           <Skeleton key={i} className="h-16" />
@@ -112,6 +146,26 @@ export default function LeagueLeaderboardPage() {
         </div>
       </div>
 
+      {/* Round selector — only shown when at least one completed round exists */}
+      {availableRounds.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground shrink-0">Round:</span>
+          <Select value={selectedRound} onValueChange={handleRoundChange}>
+            <SelectTrigger className="w-44 h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All rounds</SelectItem>
+              {availableRounds.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {ROUND_LABELS[key] ?? key}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {entries.length === 0 ? (
         <Card className="p-8 text-center space-y-3">
           <Trophy className="h-10 w-10 text-muted-foreground mx-auto" />
@@ -127,7 +181,7 @@ export default function LeagueLeaderboardPage() {
                   <div className="text-2xl font-bold text-primary">#{currentUserEntry.rank}</div>
                   <div>
                     <div className="font-semibold">You</div>
-                    <div className="text-xs text-muted-foreground">{currentUserEntry.total_points} pts</div>
+                    <div className="text-xs text-muted-foreground">{currentUserEntry.total_points} {ptsLabel}</div>
                   </div>
                 </div>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
@@ -137,8 +191,8 @@ export default function LeagueLeaderboardPage() {
             </Card>
           )}
 
-          {/* Top 3 Podium — hidden when any podium position is shared */}
-          {topThree.length >= 3 && first.rank === 1 && second.rank === 2 && third.rank === 3 && entries.filter(e => e.rank <= 3).length === 3 && (
+          {/* Top 3 Podium — hidden when a round filter is active */}
+          {!isRoundActive && topThree.length >= 3 && first.rank === 1 && second.rank === 2 && third.rank === 3 && entries.filter(e => e.rank <= 3).length === 3 && (
             <div className="grid grid-cols-3 gap-2 items-end mb-6">
               {/* 2nd Place */}
               <Card className="p-3 text-center bg-gradient-to-b from-slate-700/10 to-transparent">
@@ -192,7 +246,7 @@ export default function LeagueLeaderboardPage() {
             <div className="divide-y divide-border">
               {entries.map((entry) => {
                 const isCurrentUser = entry.username === username;
-                const delta = entry.rank_delta ?? null;
+                const delta = isRoundActive ? null : (entry.rank_delta ?? null);
                 return (
                   <div
                     key={entry.user_id}
@@ -239,7 +293,7 @@ export default function LeagueLeaderboardPage() {
                       )}
                       <div className="text-right">
                         <div className="font-bold text-sm">{entry.total_points}</div>
-                        <div className="text-[10px] text-muted-foreground">pts</div>
+                        <div className="text-[10px] text-muted-foreground">{ptsLabel}</div>
                       </div>
                     </div>
                   </div>

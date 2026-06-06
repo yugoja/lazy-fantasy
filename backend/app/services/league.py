@@ -177,8 +177,41 @@ def snapshot_league_ranks(db: Session, match_id: int) -> None:
     db.commit()
 
 
+_ROUND_ORDER = ["GROUP_1", "GROUP_2", "GROUP_3", "R32", "R16", "QF", "SF", "THIRD", "FINAL"]
+
+
+def _get_available_rounds(db: Session, league_created_at) -> list[str]:
+    """Return round keys that have at least one COMPLETED match after league creation."""
+    from app.models.match import MatchStatus
+    rows = (
+        db.query(Match.stage, Match.group_round)
+        .filter(
+            Match.start_time >= league_created_at,
+            Match.status == MatchStatus.COMPLETED,
+            Match.stage.isnot(None),
+        )
+        .distinct()
+        .all()
+    )
+    found: set[str] = set()
+    for stage, group_round in rows:
+        if stage == "GROUP" and group_round is not None:
+            found.add(f"GROUP_{group_round}")
+        elif stage != "GROUP":
+            found.add(stage)
+    return [r for r in _ROUND_ORDER if r in found]
+
+
+def _round_filter_clause(round_key: str) -> tuple:
+    """Return SQLAlchemy filter clauses for a given round key."""
+    if round_key.startswith("GROUP_"):
+        n = int(round_key.split("_")[1])
+        return (Match.stage == "GROUP", Match.group_round == n)
+    return (Match.stage == round_key,)
+
+
 def get_league_leaderboard(
-    db: Session, league_id: int
+    db: Session, league_id: int, round_key: str | None = None
 ) -> list[tuple[int, str, int]]:
     """
     Get leaderboard for a league.
@@ -202,12 +235,14 @@ def get_league_leaderboard(
         .subquery()
     )
 
-    eligible_predictions = (
+    pred_query = (
         db.query(Prediction.user_id, Prediction.points_earned)
         .join(Match, Prediction.match_id == Match.id)
         .filter(Match.start_time >= league.created_at)
-        .subquery()
     )
+    if round_key:
+        pred_query = pred_query.filter(*_round_filter_clause(round_key))
+    eligible_predictions = pred_query.subquery()
 
     results = (
         db.query(
@@ -230,6 +265,16 @@ def get_league_leaderboard(
         .all()
     )
 
+    if round_key:
+        # Tournament picks have no per-round granularity; rank deltas are meaningless
+        augmented = [
+            (user_id, username, display_name, total_points)
+            for user_id, username, display_name, total_points in results
+        ]
+        augmented.sort(key=lambda x: x[3], reverse=True)
+        return [(user_id, username, display_name, total_points, None)
+                for user_id, username, display_name, total_points in augmented]
+
     # Add tournament pick points and re-sort
     tp_points = _get_tournament_pick_points(db, league.created_at)
     augmented = [
@@ -239,4 +284,5 @@ def get_league_leaderboard(
     augmented.sort(key=lambda x: x[3], reverse=True)
 
     # Attach prev_rank to each result row
-    return [(user_id, username, display_name, total_points, prev_rank_map.get(user_id)) for user_id, username, display_name, total_points in augmented]
+    return [(user_id, username, display_name, total_points, prev_rank_map.get(user_id))
+            for user_id, username, display_name, total_points in augmented]

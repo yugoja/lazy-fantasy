@@ -80,6 +80,7 @@ export const mockLeaderboardResponse = {
   league_id: 10,
   league_name: 'Test League',
   entries: mockLeaderboardEntries,
+  available_rounds: ['GROUP_1', 'GROUP_2', 'GROUP_3', 'R16', 'QF', 'SF', 'FINAL'],
 };
 
 // ---- Match Verdict test data ----

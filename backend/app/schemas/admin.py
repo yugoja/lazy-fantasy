@@ -9,6 +9,7 @@ class MatchCreate(BaseModel):
     team_1_id: int
     team_2_id: int
     start_time: datetime
+    stage: Optional[str] = None
 
 
 class MatchResultCreate(BaseModel):

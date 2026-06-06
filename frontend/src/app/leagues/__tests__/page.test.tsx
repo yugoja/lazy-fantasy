@@ -38,6 +38,7 @@ const mockLeaderboardLeague20 = {
     { user_id: 3, username: 'testuser', total_points: 200, rank: 1, rank_delta: 2 },
     { user_id: 2, username: 'bob', total_points: 180, rank: 2, rank_delta: null },
   ],
+  available_rounds: ['GROUP_1', 'GROUP_2', 'GROUP_3'],
 };
 
 describe('LeaguesPage', () => {

@@ -39,3 +39,4 @@ class LeaderboardResponse(BaseModel):
     league_id: int
     league_name: str
     entries: list[LeaderboardEntry]
+    available_rounds: list[str] = []

@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -24,9 +26,12 @@ from app.services.league import (
     get_user_leagues,
     is_user_in_league,
     join_league,
+    _get_available_rounds,
 )
 from app.services.match_verdict import get_match_verdict
 from app.models.league import LeagueMember
+
+VALID_ROUND_KEYS = {"GROUP_1", "GROUP_2", "GROUP_3", "R32", "R16", "QF", "SF", "THIRD", "FINAL"}
 
 router = APIRouter(prefix="/leagues", tags=["leagues"])
 
@@ -107,6 +112,7 @@ async def get_my_leagues(
 @router.get("/{league_id}/leaderboard", response_model=LeaderboardResponse)
 async def get_leaderboard(
     league_id: int,
+    round: Optional[str] = Query(default=None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -115,6 +121,9 @@ async def get_leaderboard(
 
     Only members of the league can view the leaderboard.
     """
+    if round and round not in VALID_ROUND_KEYS:
+        raise HTTPException(status_code=422, detail="Invalid round key")
+
     # Check if league exists
     league = get_league_by_id(db, league_id)
     if not league:
@@ -131,7 +140,7 @@ async def get_leaderboard(
         )
 
     # Get leaderboard data
-    leaderboard_data = get_league_leaderboard(db, league_id)
+    leaderboard_data = get_league_leaderboard(db, league_id, round_key=round)
 
     # Build response with ranks and deltas.
     # Use standard competition ranking: tied points share the same rank (1,2,2,4).
@@ -154,6 +163,7 @@ async def get_leaderboard(
         league_id=league.id,
         league_name=league.name,
         entries=entries,
+        available_rounds=_get_available_rounds(db, league.created_at),
     )
 
 
