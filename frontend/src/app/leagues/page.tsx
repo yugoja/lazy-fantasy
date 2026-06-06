@@ -210,6 +210,7 @@ function LeaguesContent() {
             <Skeleton key={i} className="h-24" />
           ))}
         </div>
+        <p className="text-xs text-muted-foreground text-center">Rounding up your leagues…</p>
       </div>
     );
   }
@@ -241,11 +242,12 @@ function LeaguesContent() {
       {/* League Cards */}
       {leagues.length === 0 ? (
         <Card className="p-8 text-center space-y-3">
-          <p className="text-sm text-muted-foreground">You haven&apos;t joined any leagues yet</p>
-          <p className="text-xs text-muted-foreground">Create a new league or join one with an invite code</p>
+          <Shield className="h-10 w-10 text-muted-foreground mx-auto" />
+          <p className="text-sm font-medium">No leagues yet</p>
+          <p className="text-xs text-muted-foreground">Create one and send the code to your mates.</p>
         </Card>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {leagues.map((league, idx) => {
             const info = rankInfo[league.id];
             const colorClass = SHIELD_COLORS[idx % SHIELD_COLORS.length];

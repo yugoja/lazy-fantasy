@@ -5,8 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/** Map cricket team short_name → ISO 3166 flag code for flagcdn.com */
+/** Map team short_name → ISO 3166 flag code for flagcdn.com (cricket + WC 2026 football) */
 const FLAG_MAP: Record<string, string> = {
+  // Cricket
   IND: "in",
   PAK: "pk",
   AUS: "au",
@@ -26,8 +27,23 @@ const FLAG_MAP: Record<string, string> = {
   OMA: "om",
   UAE: "ae",
   CAN: "ca",
-  WI: "wi",    // no real country — fallback handled in component
+  WI: "wi",
   BAN: "bd",
+  // WC 2026 Football
+  MEX: "mx", RSA: "za", BRA: "br", ARG: "ar", FRA: "fr", GER: "de",
+  ESP: "es", POR: "pt", BEL: "be", URU: "uy", COL: "co", CHL: "cl",
+  ECU: "ec", MAR: "ma", SEN: "sn", NGA: "ng", CMR: "cm", GHA: "gh",
+  CIV: "ci", EGY: "eg", TUN: "tn", ALG: "dz", JPN: "jp", KOR: "kr",
+  IRN: "ir", SAU: "sa", QAT: "qa", SUI: "ch", CRO: "hr", DEN: "dk",
+  SRB: "rs", POL: "pl", WAL: "gb-wls", UKR: "ua", SVN: "si", SVK: "sk",
+  ALB: "al", CZE: "cz", TUR: "tr", GRE: "gr", HAI: "ht", PAR: "py",
+  PAN: "pa", COS: "cr", HON: "hn", JAM: "jm", SLV: "sv", BOL: "bo",
+  PER: "pe", VEN: "ve", NZL: "nz", FIJ: "fj", PNG: "pg", TAH: "pf",
+  IRQ: "iq", BIH: "ba", ROU: "ro", HUN: "hu", ISL: "is", NOR: "no",
+  BFA: "bf", GUI: "gn", MLI: "ml", TAN: "tz",
+  // Additional qualifiers in DB
+  AUT: "at", COD: "cd", CPV: "cv", CUW: "cw",
+  JOR: "jo", KSA: "sa", SWE: "se", UZB: "uz",
 }
 
 export function getFlagCode(shortName: string): string | undefined {

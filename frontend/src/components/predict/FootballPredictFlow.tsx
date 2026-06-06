@@ -27,7 +27,7 @@ import {
   Minus,
   Plus,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getTeamLogoUrl } from '@/lib/utils';
 
 type Player = MatchPlayersResponse['team_1_players'][number];
 
@@ -136,11 +136,19 @@ const STEP_META = [
   { title: 'Who shows up?', sub: 'Pick three players. Goals, assists, clean sheets — they all score.' },
 ];
 
-function TeamCrest({ team, size = 'md' }: { team: { short_name: string }; size?: 'sm' | 'md' | 'lg' }) {
+function TeamCrest({ team, size = 'md' }: { team: { short_name: string; name: string }; size?: 'sm' | 'md' | 'lg' }) {
   const dim = size === 'lg' ? 'h-14 w-14 text-lg' : size === 'sm' ? 'h-8 w-8 text-[11px]' : 'h-11 w-11 text-sm';
+  const flagUrl = getTeamLogoUrl(team.short_name);
   return (
-    <div className={cn('grid place-items-center rounded-full font-heading font-bold tracking-wide shrink-0 bg-muted text-muted-foreground', dim)}>
-      {team.short_name.slice(0, 3).toUpperCase()}
+    <div className={cn('grid place-items-center rounded-full shrink-0 bg-muted overflow-hidden', dim)}>
+      {flagUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={flagUrl} alt={team.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+      ) : (
+        <span className={cn('font-heading font-bold tracking-wide text-muted-foreground', size === 'lg' ? 'text-lg' : size === 'sm' ? 'text-[11px]' : 'text-sm')}>
+          {team.short_name.slice(0, 3).toUpperCase()}
+        </span>
+      )}
     </div>
   );
 }
@@ -181,42 +189,55 @@ function PitchSVG() {
   );
 }
 
+function TeamFlag({ shortName, name, className }: { shortName: string; name: string; className?: string }) {
+  const flagUrl = getTeamLogoUrl(shortName);
+  if (!flagUrl) return null;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={flagUrl} alt={name} className={cn('inline-block rounded-sm object-cover', className)} onError={(e) => { e.currentTarget.style.display = 'none'; }} />;
+}
+
 function WinnerChip({
   score, team1, team2, isKnockout, advanceWinner,
 }: {
   score: { a: number; b: number };
-  team1: { short_name: string };
-  team2: { short_name: string };
+  team1: { short_name: string; name: string };
+  team2: { short_name: string; name: string };
   isKnockout: boolean;
   advanceWinner: 'team1' | 'team2' | null;
 }) {
-  let label: string;
+  let content: React.ReactNode;
   let cls: string;
   if (score.a > score.b) {
-    label = `${team1.short_name} win`;
+    content = <><TeamFlag shortName={team1.short_name} name={team1.name} className="h-3.5 w-5 mr-1" />{team1.name} win</>;
     cls = 'bg-primary/15 text-primary';
   } else if (score.b > score.a) {
-    label = `${team2.short_name} win`;
+    content = <><TeamFlag shortName={team2.short_name} name={team2.name} className="h-3.5 w-5 mr-1" />{team2.name} win</>;
     cls = 'bg-amber-500/15 text-amber-500';
   } else if (isKnockout && advanceWinner) {
     const adv = advanceWinner === 'team2' ? team2 : team1;
-    label = `Draw · ${adv.short_name} on pens`;
+    content = <>Draw · <TeamFlag shortName={adv.short_name} name={adv.name} className="h-3.5 w-5 mx-1" />{adv.name} on pens</>;
     cls = 'bg-muted text-muted-foreground';
   } else {
-    label = isKnockout ? 'Draw · goes to ET' : 'Draw';
+    content = isKnockout ? 'Draw · goes to ET' : 'Draw';
     cls = 'bg-muted text-muted-foreground';
   }
   return (
     <div className={cn('flex items-center justify-center rounded-full px-4 py-1.5 font-heading text-xs font-bold transition-all', cls)}>
-      {label}
+      {content}
     </div>
   );
 }
 
-function ScoreColumn({ label, value, onStep }: { label: string; value: number; onStep: (delta: number) => void }) {
+function ScoreColumn({ label, flagUrl, value, onStep }: { label: string; flagUrl?: string; value: number; onStep: (delta: number) => void }) {
   return (
     <div className="flex flex-col items-center gap-2">
-      <span className="rounded bg-muted px-2.5 py-1 font-heading text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-1.5 rounded bg-muted/60 px-2 py-1">
+        {flagUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={flagUrl} alt={label} className="h-3.5 w-5 shrink-0 rounded-[2px] object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        )}
+        <span className="font-heading text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      </div>
       <span className="font-heading text-7xl font-bold leading-none tabular-nums">{value}</span>
       <div className="flex gap-2">
         <button type="button" onClick={() => onStep(-1)} aria-label={`Decrease ${label}`} className="grid h-8 w-9 place-items-center rounded-lg border border-border text-muted-foreground hover:text-foreground active:scale-95">
@@ -362,11 +383,11 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
   };
 
   const resultText = (() => {
-    if (score.a > score.b) return `${team_1.short_name} win`;
-    if (score.b > score.a) return `${team_2.short_name} win`;
+    if (score.a > score.b) return `${team_1.name} win`;
+    if (score.b > score.a) return `${team_2.name} win`;
     if (isKnockout) {
       const adv = advanceWinner === 'team2' ? team_2 : team_1;
-      return `Draw · ${adv.short_name} on pens`;
+      return `Draw · ${adv.name} on pens`;
     }
     return 'Draw';
   })();
@@ -387,8 +408,24 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
       onTouchEnd={handleTouchEnd}
     >
       {/* ── Match stub (inline) ── */}
-      <div className="flex-shrink-0 px-4 py-2.5 border-b border-border bg-gradient-to-b from-primary/5 to-background">
-        <div className="flex items-center gap-2.5">
+      <div className="flex-shrink-0 px-4 pt-2 pb-2.5 border-b border-border bg-gradient-to-b from-primary/5 to-background space-y-1.5">
+        {/* Meta row — context before content */}
+        <div className="flex items-center gap-2">
+          <span className="font-heading text-[10px] uppercase tracking-wider text-muted-foreground/60">{stageLabel}</span>
+          {isKnockout && (
+            <span className="rounded bg-amber-500/15 px-1 py-px font-heading text-[9px] font-bold text-amber-500">2×</span>
+          )}
+          <div className="flex-1" />
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="font-heading text-[9px] uppercase tracking-wider text-muted-foreground/60">kickoff</span>
+            <div className="flex items-center gap-1 text-primary">
+              <Clock className="h-3 w-3" />
+              <span className="font-heading text-xs font-bold tabular-nums">{countdown}</span>
+            </div>
+          </div>
+        </div>
+        {/* Teams row */}
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => router.push('/predictions')}
@@ -397,31 +434,12 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-
-          <TeamCrest team={team_1} size="sm" />
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 leading-none">
-              <span className="font-heading text-sm font-bold">{team_1.short_name}</span>
-              <span className="font-heading text-[11px] italic text-muted-foreground/50">vs</span>
-              <span className="font-heading text-sm font-bold">{team_2.short_name}</span>
-            </div>
-            <div className="mt-0.5 flex items-center gap-1.5">
-              <span className="font-heading text-[10px] uppercase tracking-wider text-muted-foreground">{stageLabel}</span>
-              {isKnockout && (
-                <span className="rounded bg-amber-500/15 px-1 py-px font-heading text-[9px] font-bold text-amber-500">2×</span>
-              )}
-            </div>
-          </div>
-
-          <TeamCrest team={team_2} size="sm" />
-
-          <div className="shrink-0 text-right">
-            <div className="flex items-center justify-end gap-1 text-primary">
-              <Clock className="h-3 w-3" />
-              <span className="font-heading text-xs font-bold tabular-nums">{countdown}</span>
-            </div>
-            <div className="mt-0.5 font-heading text-[9px] uppercase tracking-wider text-muted-foreground">kickoff</div>
+          <div className="flex items-center gap-1.5 leading-none min-w-0 flex-1">
+            <TeamFlag shortName={team_1.short_name} name={team_1.name} className="h-3.5 w-5 shrink-0 rounded-[2px]" />
+            <span className="font-heading text-sm font-bold">{team_1.short_name}</span>
+            <span className="font-heading text-[10px] text-muted-foreground/40 shrink-0">vs</span>
+            <span className="font-heading text-sm font-bold">{team_2.short_name}</span>
+            <TeamFlag shortName={team_2.short_name} name={team_2.name} className="h-3.5 w-5 shrink-0 rounded-[2px]" />
           </div>
         </div>
       </div>
@@ -468,10 +486,10 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
             />
 
             <div className="rounded-2xl border border-border bg-card/60 px-4 py-7">
-              <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
-                <ScoreColumn label={team_1.short_name} value={score.a} onStep={d => changeScore('a', d)} />
-                <span className="mt-6 font-heading text-4xl font-medium text-muted-foreground/40">–</span>
-                <ScoreColumn label={team_2.short_name} value={score.b} onStep={d => changeScore('b', d)} />
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                <ScoreColumn label={team_1.name} flagUrl={getTeamLogoUrl(team_1.short_name)} value={score.a} onStep={d => changeScore('a', d)} />
+                <span className="font-heading text-4xl font-medium text-muted-foreground/40">–</span>
+                <ScoreColumn label={team_2.name} flagUrl={getTeamLogoUrl(team_2.short_name)} value={score.b} onStep={d => changeScore('b', d)} />
               </div>
             </div>
 
@@ -496,7 +514,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
                             : 'border-border text-muted-foreground active:scale-[0.98]',
                         )}
                       >
-                        {t.short_name} on pens
+                        {t.name} on pens
                       </button>
                     );
                   })}
@@ -672,7 +690,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="truncate font-heading text-sm font-bold">{p.name}</div>
-                              <div className="text-[11px] text-muted-foreground">{positionLabel(p.role)} · {team.short_name}</div>
+                              <div className="text-[11px] text-muted-foreground">{positionLabel(p.role)} · {team.name}</div>
                             </div>
                             <div className={cn(
                               'grid h-6 w-6 shrink-0 place-items-center rounded-md border transition-colors',
@@ -730,7 +748,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
           </div>
           <DialogHeader className="items-center pb-0 text-center">
             <DialogTitle className="text-xl">{isEditing ? 'Picks updated!' : 'Picks locked.'}</DialogTitle>
-            <DialogDescription>{team_1.short_name} vs {team_2.short_name} · {stageLabel}</DialogDescription>
+            <DialogDescription>{team_1.name} vs {team_2.name} · {stageLabel}</DialogDescription>
           </DialogHeader>
           <div className="divide-y divide-border rounded-lg border border-border bg-muted/30 text-sm">
             <SummaryRow label="Result" value={`${resultText} · ${score.a}–${score.b}`} />
@@ -742,7 +760,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
           <div className="flex flex-col gap-3">
             <a
               href={`https://wa.me/?text=${encodeURIComponent(
-                `⚽ ${team_1.short_name} vs ${team_2.short_name} — I've locked my picks!\nThink you can do better? ${process.env.NEXT_PUBLIC_APP_URL || 'https://lazyfantasy.app'}/predictions`,
+                `⚽ ${team_1.name} vs ${team_2.name} — I've locked my picks!\nThink you can do better? ${process.env.NEXT_PUBLIC_APP_URL || 'https://lazyfantasy.app'}/predictions`,
               )}`}
               target="_blank"
               rel="noopener noreferrer"

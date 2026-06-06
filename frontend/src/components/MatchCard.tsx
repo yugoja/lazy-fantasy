@@ -166,7 +166,7 @@ export function MatchCard({
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
-            <span className="font-bold text-2xl truncate">{team1.short_name}</span>
+            <span className="font-bold text-lg truncate leading-tight">{team1.name}</span>
           </div>
 
           {/* VS */}
@@ -174,7 +174,7 @@ export function MatchCard({
 
           {/* Team 2 */}
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <span className="font-bold text-2xl truncate">{team2.short_name}</span>
+            <span className="font-bold text-lg truncate leading-tight text-right">{team2.name}</span>
             {flagUrl2 && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -206,7 +206,7 @@ export function MatchCard({
 
         {isUpcoming && !isLocked && !isTbd && (
           <Link href={`/matches/${id}/predict`}>
-            <Button className={cn('w-full', hasPredicted && 'border-primary text-primary')} size="sm" variant={hasPredicted ? 'outline' : 'default'}>
+            <Button className={cn('w-full', hasPredicted && 'border-primary text-primary bg-primary/8')} size="default" variant={hasPredicted ? 'outline' : 'default'}>
               {hasPredicted ? 'Update Prediction' : 'Make Prediction'}
             </Button>
           </Link>

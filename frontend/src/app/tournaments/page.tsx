@@ -86,7 +86,7 @@ export default function TournamentsPage() {
           <p className="text-sm text-muted-foreground">No tournaments available</p>
         </Card>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {tournaments.map(tournament => {
             const status = statusInfo(tournament.picks_window);
             const picks = picksByTournament[tournament.id];

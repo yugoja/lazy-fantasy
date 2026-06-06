@@ -38,7 +38,7 @@ interface Prediction {
 }
 
 export default function DashboardPage() {
-    const { isAuthenticated, username, isLoading: authLoading } = useAuth();
+    const { isAuthenticated, username, displayName, isLoading: authLoading } = useAuth();
     const router = useRouter();
     const [leagues, setLeagues] = useState<League[]>([]);
     const [matches, setMatches] = useState<Match[]>([]);
@@ -182,7 +182,7 @@ export default function DashboardPage() {
         <div className="container-mobile pt-5 pb-8">
             {/* Greeting */}
             <p className="text-sm text-muted-foreground mb-1">
-                {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, <span className="text-foreground font-semibold">{username}</span>
+                {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, <span className="text-foreground font-semibold">{displayName || username}</span>
             </p>
 
             <div className="mt-4">
