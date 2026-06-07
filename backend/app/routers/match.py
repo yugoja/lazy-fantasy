@@ -60,6 +60,8 @@ async def list_matches(
             start_time=match.start_time,
             status=match.status.value,
             lineup_announced=match.id in lineup_match_ids,
+            sport=match.tournament.sport if match.tournament else "cricket",
+            stage=match.stage,
         ))
 
     return result

@@ -33,6 +33,7 @@ class MatchResponse(BaseModel):
     start_time: datetime
     status: str
     lineup_announced: bool = False
+    sport: str = "cricket"
     stage: Optional[str] = None
     group_round: Optional[int] = None
 

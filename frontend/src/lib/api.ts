@@ -246,6 +246,8 @@ export async function getMatches(tournamentId?: number) {
         start_time: string;
         status: string;
         lineup_announced: boolean;
+        sport: string;
+        stage: string | null;
     }>>(`/matches/?${params}`);
 }
 
@@ -421,6 +423,28 @@ export async function submitFootballPrediction(data: FootballPredictionRequest) 
     }>('/predictions/football', {
         method: 'POST',
         body: JSON.stringify(data),
+    });
+}
+
+export async function autoPickFootball(
+    matchId: number,
+    strategy: 'safe' | 'balanced' | 'bold',
+) {
+    return request<{
+        id: number;
+        user_id: number;
+        match_id: number;
+        team1_goals: number;
+        team2_goals: number;
+        advance_winner_id: number | null;
+        player_pick_1_id: number;
+        player_pick_2_id: number;
+        player_pick_3_id: number;
+        points_earned: number;
+        is_processed: boolean;
+    }>('/predictions/football/autopick', {
+        method: 'POST',
+        body: JSON.stringify({ match_id: matchId, strategy }),
     });
 }
 

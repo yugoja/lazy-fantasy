@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Lock, Users } from 'lucide-react';
+import { Clock, Lock, Users, Zap, Loader2, CheckCircle2, X } from 'lucide-react';
 import { cn, getTeamLogoUrl } from '@/lib/utils';
+import { autoPickFootball } from '@/lib/api';
 
 interface Team {
   name: string;
@@ -25,7 +26,21 @@ interface MatchCardProps {
   pointsEarned?: number;
   lineupAnnounced?: boolean;
   className?: string;
+  sport?: 'football' | 'cricket';
+  onAutoPickSuccess?: (matchId: number) => void;
 }
+
+type OverlayState = 'hidden' | 'picking' | 'loading' | 'success' | 'error';
+
+const STRATEGIES: Array<{
+  key: 'safe' | 'balanced' | 'bold';
+  label: string;
+  description: string;
+}> = [
+  { key: 'safe',     label: '📊 Accountant',    description: 'Safe picks, boring wins' },
+  { key: 'balanced', label: '⚖️ Diplomat',      description: 'Hedged bets, no regrets' },
+  { key: 'bold',     label: '🎲 Chaos Merchant', description: 'Who even needs logic?' },
+];
 
 function useCountdown(targetDate: string) {
   const [timeLeft, setTimeLeft] = useState('');
@@ -78,15 +93,44 @@ export function MatchCard({
   pointsEarned,
   lineupAnnounced,
   className,
+  sport,
+  onAutoPickSuccess,
 }: MatchCardProps) {
   const isLive = status === 'LIVE';
   const isCompleted = status === 'COMPLETED';
   const isUpcoming = status === 'UPCOMING' || status === 'SCHEDULED';
   const { timeLeft: countdown, isUrgent } = useCountdown(startTime);
   const isLocked = countdown === 'Locked';
-  // Playoffs whose line-up isn't decided yet are seeded with a "TBD" placeholder
-  // team — there's nothing to predict until the teams are set.
   const isTbd = team1.short_name === 'TBD' || team2.short_name === 'TBD';
+
+  const [overlayState, setOverlayState] = useState<OverlayState>('hidden');
+  const [overlayError, setOverlayError] = useState('');
+  const [localHasPredicted, setLocalHasPredicted] = useState(hasPredicted ?? false);
+
+  useEffect(() => {
+    setLocalHasPredicted(hasPredicted ?? false);
+  }, [hasPredicted]);
+
+  const handleStrategyPick = async (strategy: 'safe' | 'balanced' | 'bold') => {
+    setOverlayState('loading');
+    setOverlayError('');
+    try {
+      await autoPickFootball(id, strategy);
+      setOverlayState('success');
+      setLocalHasPredicted(true);
+      onAutoPickSuccess?.(id);
+      setTimeout(() => setOverlayState('hidden'), 1400);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Try again.';
+      setOverlayError(message);
+      setOverlayState('error');
+    }
+  };
+
+  const closeOverlay = () => {
+    setOverlayState('hidden');
+    setOverlayError('');
+  };
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -102,7 +146,7 @@ export function MatchCard({
   const flagUrl2 = getTeamLogoUrl(team2.short_name);
 
   return (
-    <Card className={cn('p-4 hover:border-primary/50 transition-colors', className)}>
+    <Card className={cn('relative overflow-hidden p-4 hover:border-primary/50 transition-colors', className)}>
       <div className="flex flex-col gap-3">
         {/* Status Badge + Predicted + Countdown */}
         <div className="flex items-center gap-2">
@@ -123,7 +167,7 @@ export function MatchCard({
             </Badge>
           )}
 
-          {hasPredicted && pointsEarned === undefined && (
+          {localHasPredicted && pointsEarned === undefined && (
             <Badge variant="outline" className="text-[10px]">
               Predicted
             </Badge>
@@ -197,7 +241,7 @@ export function MatchCard({
           </div>
         </div>
 
-        {/* Action Button */}
+        {/* Action Buttons */}
         {isUpcoming && isTbd && (
           <div className="w-full text-center text-xs text-muted-foreground rounded-md border border-dashed border-border py-2">
             Teams to be decided
@@ -205,11 +249,30 @@ export function MatchCard({
         )}
 
         {isUpcoming && !isLocked && !isTbd && (
-          <Link href={`/matches/${id}/predict`}>
-            <Button className={cn('w-full', hasPredicted && 'border-primary text-primary bg-primary/8')} size="default" variant={hasPredicted ? 'outline' : 'default'}>
-              {hasPredicted ? 'Update Prediction' : 'Make Prediction'}
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href={`/matches/${id}/predict`} className="flex-1">
+              <Button
+                className={cn('w-full', localHasPredicted && 'border-primary text-primary bg-primary/8')}
+                size="default"
+                variant={localHasPredicted ? 'outline' : 'default'}
+              >
+                {localHasPredicted ? 'Update Prediction' : 'Make Prediction'}
+              </Button>
+            </Link>
+
+            {sport === 'football' && (
+              <Button
+                size="default"
+                variant="outline"
+                className="border-primary/40 text-primary hover:bg-primary/10 px-3 shrink-0"
+                onClick={() => setOverlayState('picking')}
+                aria-label="Auto Pick"
+              >
+                <Zap className="h-4 w-4 mr-1" />
+                Auto
+              </Button>
+            )}
+          </div>
         )}
 
         {isLive && (
@@ -228,6 +291,60 @@ export function MatchCard({
           </Link>
         )}
       </div>
+
+      {/* Strategy Picker Overlay */}
+      {overlayState !== 'hidden' && (
+        <div className="absolute inset-0 z-10 flex flex-col rounded-[inherit] bg-card/95 backdrop-blur-sm p-4">
+
+          {overlayState === 'loading' && (
+            <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              Picking your squad…
+            </div>
+          )}
+
+          {overlayState === 'success' && (
+            <div className="flex flex-1 items-center justify-center gap-2 text-sm font-semibold text-primary">
+              <CheckCircle2 className="h-5 w-5" />
+              Prediction saved!
+            </div>
+          )}
+
+          {(overlayState === 'picking' || overlayState === 'error') && (
+            <div className="flex flex-col flex-1 justify-center gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Auto Pick Strategy</span>
+                <button
+                  onClick={closeOverlay}
+                  className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {overlayError && (
+                <p className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                  {overlayError}
+                </p>
+              )}
+
+              <div className="flex gap-2">
+                {STRATEGIES.map(({ key, label, description }) => (
+                  <button
+                    key={key}
+                    onClick={() => handleStrategyPick(key)}
+                    className="flex flex-col items-center justify-center flex-1 rounded-2xl border border-border bg-background py-3 px-2 text-center hover:border-primary/60 hover:bg-primary/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    <span className="text-xs font-semibold leading-tight">{label}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">{description}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   );
 }

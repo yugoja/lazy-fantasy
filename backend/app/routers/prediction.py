@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Match, User, Team
 from app.schemas.prediction import (
+    FootballAutoPickRequest,
     FootballPlayerPickDetail,
     FootballPredictionCreate,
     FootballPredictionDetailResponse,
@@ -12,6 +13,8 @@ from app.schemas.prediction import (
     PredictionResponse,
     PredictionDetailResponse,
 )
+from app.services.autopick import Identity, auto_pick
+from app.services.fallback_job import build_prediction_inputs_from_db
 from app.schemas.match import TeamResponse, PlayerResponse
 from app.services.auth import get_current_user
 from app.services.prediction import (
@@ -204,6 +207,85 @@ async def submit_football_prediction(
             db, current_user.id, prediction_data.match_id,
             prediction_data.team1_goals, prediction_data.team2_goals,
             advance_winner_id, picks,
+        )
+
+    fp = prediction.football
+    return FootballPredictionResponse(
+        id=prediction.id,
+        user_id=prediction.user_id,
+        match_id=prediction.match_id,
+        team1_goals=fp.team1_goals,
+        team2_goals=fp.team2_goals,
+        advance_winner_id=fp.advance_winner_id,
+        player_pick_1_id=fp.player_pick_1_id,
+        player_pick_2_id=fp.player_pick_2_id,
+        player_pick_3_id=fp.player_pick_3_id,
+        points_earned=prediction.points_earned,
+        is_processed=prediction.is_processed,
+    )
+
+
+@router.post(
+    "/football/autopick",
+    response_model=FootballPredictionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def auto_pick_football(
+    body: FootballAutoPickRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Auto-pick a football prediction using the seeded engine and immediately persist it.
+
+    Upserts: updates an existing prediction if one exists; creates a new one otherwise.
+    `source` is always stamped as 'autopick'. `advance_winner_id` is always None —
+    auto-pick does not handle knockout penalty shootout overrides.
+    """
+    can_submit, reason = can_submit_prediction(db, body.match_id)
+    if not can_submit:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=reason)
+
+    match = db.query(Match).filter(Match.id == body.match_id).first()
+    if not match:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+    if not match.tournament or match.tournament.sport != "football":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This endpoint is only for football matches",
+        )
+
+    inputs = build_prediction_inputs_from_db(db, match)
+    active_players = [p for p in inputs.players if p.availability != "out"]
+    if len(active_players) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Not enough players available for auto-pick",
+        )
+
+    identity = Identity(user_id=str(current_user.id), match_id=str(body.match_id))
+    result = auto_pick(inputs, body.strategy, identity)
+    player_ids: tuple[int, int, int] = (
+        int(result.player_ids[0]),
+        int(result.player_ids[1]),
+        int(result.player_ids[2]),
+    )
+
+    existing = get_prediction_by_user_and_match(db, current_user.id, body.match_id)
+    if existing:
+        prediction = update_football_prediction(
+            db, existing,
+            result.scoreline_home, result.scoreline_away,
+            None, player_ids,
+        )
+        prediction.football.source = "autopick"
+        db.commit()
+        db.refresh(prediction)
+    else:
+        prediction = create_football_prediction(
+            db, current_user.id, body.match_id,
+            result.scoreline_home, result.scoreline_away,
+            None, player_ids, source="autopick",
         )
 
     fp = prediction.football

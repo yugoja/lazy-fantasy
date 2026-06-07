@@ -32,6 +32,11 @@ class FootballPredictionCreate(BaseModel):
     player_pick_3_id: int
 
 
+class FootballAutoPickRequest(BaseModel):
+    match_id: int
+    strategy: Literal["safe", "balanced", "bold"]
+
+
 class PredictionResponse(BaseModel):
     """Schema for prediction response (cricket fields are null for football)."""
     id: int
