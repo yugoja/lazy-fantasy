@@ -199,7 +199,7 @@ export function MatchCard({
         {/* Teams */}
         <div className="flex items-center justify-between gap-2">
           {/* Team 1 */}
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
             {flagUrl1 && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -207,12 +207,12 @@ export function MatchCard({
                 alt={team1.name}
                 width={32}
                 height={32}
-                className="h-8 w-8 object-contain"
+                className="h-8 w-8 shrink-0 object-contain"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-lg truncate leading-tight">{team1.name}</span>
+              <span className="font-bold text-base truncate leading-tight">{team1.name}</span>
               {team1.fifa_ranking && (
                 <span className="font-heading text-[9px] text-muted-foreground/50">FIFA #{team1.fifa_ranking}</span>
               )}
@@ -220,12 +220,12 @@ export function MatchCard({
           </div>
 
           {/* VS */}
-          <span className="text-xs text-muted-foreground font-medium px-2">vs</span>
+          <span className="text-xs text-muted-foreground font-medium shrink-0 px-1">vs</span>
 
           {/* Team 2 */}
-          <div className="flex items-center gap-2 flex-1 justify-end">
+          <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
             <div className="flex flex-col items-end min-w-0">
-              <span className="font-bold text-lg truncate leading-tight text-right">{team2.name}</span>
+              <span className="font-bold text-base truncate leading-tight text-right">{team2.name}</span>
               {team2.fifa_ranking && (
                 <span className="font-heading text-[9px] text-muted-foreground/50">FIFA #{team2.fifa_ranking}</span>
               )}
@@ -237,7 +237,7 @@ export function MatchCard({
                 alt={team2.name}
                 width={32}
                 height={32}
-                className="h-8 w-8 object-contain"
+                className="h-8 w-8 shrink-0 object-contain"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
