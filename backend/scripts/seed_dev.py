@@ -480,6 +480,12 @@ def seed_football_history(db: Session, users: list[User]) -> None:
     teams = _ensure_football_teams(db)
     players_by_team = _ensure_football_players(db, teams)
 
+    now = datetime.now(timezone.utc)
+    # League was created 40 days ago; all matches fall after that so the
+    # leaderboard query (Match.start_time >= league.created_at) includes them.
+    league_created_at = now - timedelta(days=40)
+    base_time = league_created_at + timedelta(days=1)  # first match 39 days ago
+
     # --- League ---
     league = db.query(League).filter(League.name == WC_LEAGUE_NAME).first()
     if not league:
@@ -488,6 +494,7 @@ def seed_football_history(db: Session, users: list[User]) -> None:
             invite_code=_random_invite_code(db),
             owner_id=users[0].id,
             sport="football",
+            created_at=league_created_at,
         )
         db.add(league)
         db.flush()
@@ -497,8 +504,6 @@ def seed_football_history(db: Session, users: list[User]) -> None:
         if u.id not in existing_members:
             db.add(LeagueMember(league_id=league.id, user_id=u.id))
     db.flush()
-
-    base_time = league.created_at - timedelta(days=30)
 
     # --- Group stage matches ---
     completed_matches = []
