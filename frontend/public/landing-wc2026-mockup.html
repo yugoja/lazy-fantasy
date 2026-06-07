@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lazy Fantasy — World Cup 2026 Predictions</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Predict every World Cup 2026 match. Pick scorelines and players. Play in a private league with your friends. Free to play." />
+  <meta name="theme-color" content="#080c18" />
+  <link rel="canonical" href="https://lazyfantasy.app" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Lazy Fantasy — World Cup 2026 Predictions" />
+  <meta property="og:description" content="Predict every match, pick the stars, settle the group chat. Free to play." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lazyfantasy.app" />
+  <meta property="og:image" content="https://lazyfantasy.app/logo.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Lazy Fantasy — World Cup 2026" />
+  <meta name="twitter:description" content="Predict every match, pick the stars, settle the group chat." />
+  <meta name="twitter:image" content="https://lazyfantasy.app/logo.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:     #080c18;
+      --navy-2:   #0f1628;
+      --navy-3:   #162035;
+      --green:    #26d666;
+      --green-bg: rgba(38, 214, 102, 0.10);
+      --green-border: rgba(38, 214, 102, 0.25);
+      --gold:     #f39c3a;
+      --gold-bg:  rgba(243, 156, 58, 0.10);
+      --gold-border: rgba(243, 156, 58, 0.30);
+      --text:     #eef2ff;
+      --muted:    #7888b8;
+      --border:   rgba(120, 136, 184, 0.18);
+      --content-max: 860px;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─── NAV ─────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8, 12, 24, 0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      max-width: var(--content-max);
+      margin: 0 auto;
+    }
+    .nav-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.4px;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--green); }
+    .nav-actions { display: flex; gap: 8px; align-items: center; }
+
+    .btn {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      padding: 7px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-primary { background: var(--green); color: #050912; }
+
+    /* ─── HERO ────────────────────────────────────── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 52px 24px 56px;
+      min-height: 92svh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Pitch diagonal lines */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        -52deg,
+        transparent,
+        transparent 56px,
+        rgba(255, 255, 255, 0.022) 56px,
+        rgba(255, 255, 255, 0.022) 57px
+      );
+      pointer-events: none;
+    }
+
+    /* Green bloom — top right */
+    .hero-bloom {
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(38, 214, 102, 0.09) 0%, transparent 68%);
+      pointer-events: none;
+    }
+
+    /* Gold bloom — bottom left */
+    .hero-bloom-2 {
+      position: absolute;
+      bottom: -60px;
+      left: -60px;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(243, 156, 58, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── WC2026 Stamp ── */
+    .wc-stamp {
+      position: absolute;
+      top: 48px;
+      right: 20px;
+      width: 96px;
+      height: 96px;
+      border: 2px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(14deg);
+      transform-origin: center;
+    }
+    .wc-stamp::before {
+      content: '';
+      position: absolute;
+      inset: 5px;
+      border-radius: 50%;
+      border: 1px dashed rgba(243, 156, 58, 0.38);
+    }
+    .wc-stamp-content {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      line-height: 1;
+    }
+    .wc-stamp-ball { font-size: 1.3rem; display: block; margin-bottom: 1px; }
+    .wc-stamp-year {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: var(--gold);
+      display: block;
+      letter-spacing: -1px;
+    }
+    .wc-stamp-text {
+      font-size: 0.42rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+      margin-top: 1px;
+    }
+
+    /* ── Hero content ── */
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 560px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--gold-bg);
+      border: 1px solid var(--gold-border);
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 22px;
+    }
+    .eyebrow-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .hero-headline {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(2.8rem, 10vw, 3.6rem);
+      line-height: 1.0;
+      letter-spacing: -2.5px;
+      color: var(--text);
+      margin-bottom: 18px;
+      max-width: 320px;
+    }
+    .hero-headline .dot { color: var(--green); }
+
+    .hero-tagline {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .hero-body {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 290px;
+      margin-bottom: 32px;
+    }
+
+    .hero-ctas { display: flex; flex-direction: column; gap: 10px; }
+    .hero-cta-main {
+      background: var(--green);
+      color: #050912;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 15px 24px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      transition: opacity 0.15s;
+    }
+    .hero-cta-main:hover { opacity: 0.88; }
+    .hero-cta-sec {
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      padding: 14px 24px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      transition: all 0.15s;
+    }
+    .hero-cta-sec:hover { color: var(--text); border-color: rgba(120,136,184,0.4); }
+
+    /* ─── TICKER ──────────────────────────────────── */
+    .ticker-wrap {
+      background: var(--navy-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+    }
+    .ticker-tag {
+      background: var(--green);
+      color: #050912;
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+    .ticker-overflow { overflow: hidden; flex: 1; }
+    .ticker-track {
+      display: flex;
+      animation: scrollTicker 50s linear infinite;
+      width: max-content;
+    }
+    @keyframes scrollTicker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-nation {
+      padding: 10px 18px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-right: 1px solid var(--border);
+    }
+
+    /* ─── STATS STRIP ─────────────────────────────── */
+    .stats-strip {
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-inner {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr 1px 1fr;
+      padding: 28px 24px;
+      max-width: var(--content-max);
+      margin: 0 auto;
+    }
+    .stats-divider {
+      background: var(--border);
+      height: 100%;
+    }
+    .stat {
+      text-align: center;
+      padding: 0 8px;
+    }
+    .stat-val {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 2.25rem;
+      letter-spacing: -2px;
+      color: var(--text);
+      line-height: 1;
+    }
+    .stat-val .g { color: var(--green); }
+    .stat-val .go { color: var(--gold); }
+    .stat-lbl {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* ─── SECTION SHELL ───────────────────────────── */
+    .section {
+      padding: 44px 24px;
+      max-width: var(--content-max);
+      margin: 0 auto;
+    }
+    .section + .section { padding-top: 0; }
+
+    .eyebrow {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 6px;
+    }
+    .section-h {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.55rem;
+      letter-spacing: -0.6px;
+      line-height: 1.15;
+      margin-bottom: 4px;
+    }
+    .section-sub {
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    /* ─── MATCH CARD ──────────────────────────────── */
+    .match-card {
+      background: var(--navy-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .mc-header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+
+    .mc-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .mc-tournament {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .mc-lock {
+      font-size: 0.65rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mc-teams {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+    .mc-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      text-align: center;
+    }
+    .mc-flag { font-size: 2.8rem; line-height: 1; }
+    .mc-team-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .mc-score-block { text-align: center; }
+    .mc-score-nums {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .mc-score-digit {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 2.8rem;
+      color: var(--text);
+      line-height: 1;
+      width: 38px;
+      text-align: center;
+    }
+    .mc-score-dash {
+      font-size: 1.4rem;
+      color: var(--border);
+      font-weight: 300;
+      padding: 0 2px;
+      align-self: center;
+    }
+    .mc-score-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-top: 3px;
+      text-align: center;
+    }
+
+    /* Predictions rows */
+    .mc-preds { padding: 0 20px; }
+    .pred-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pred-row:last-child { border-bottom: none; }
+
+    .pred-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+    }
+    .pred-circle.done {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      color: var(--green);
+    }
+    .pred-circle.empty {
+      background: var(--navy-3);
+      border: 1px solid var(--border);
+      color: var(--border);
+    }
+
+    .pred-info { flex: 1; min-width: 0; }
+    .pred-cat {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-weight: 500;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .pred-pick {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pred-pick.dim { color: rgba(120,136,184,0.4); }
+
+    .pred-pts {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+    .pred-pts.dim { color: rgba(120,136,184,0.35); }
+
+    .mc-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--navy-3);
+      border-top: 1px solid var(--border);
+    }
+    .mc-total-lbl { font-size: 0.75rem; color: var(--muted); }
+    .mc-total-pts {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--green);
+    }
+    .mc-total-bonus {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0;
+    }
+
+    .match-hint {
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    /* ─── HOW IT WORKS ────────────────────────────── */
+    .steps { display: flex; flex-direction: column; }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 3.5rem;
+      line-height: 1;
+      letter-spacing: -3px;
+      color: transparent;
+      -webkit-text-stroke: 1.5px rgba(120, 136, 184, 0.25);
+      flex-shrink: 0;
+      width: 52px;
+      text-align: center;
+      user-select: none;
+    }
+    .step-content { flex: 1; padding-top: 6px; }
+    .step-title {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+    .step-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ─── BANTER STRIP ────────────────────────────── */
+    .banter-strip {
+      background: var(--navy-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .banter-inner {
+      padding: 40px 24px;
+      max-width: var(--content-max);
+      margin: 0 auto;
+    }
+
+    .banter-q {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.7rem;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+    .banter-q .hi { color: var(--gold); }
+
+    .banter-body {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 24px;
+      max-width: 300px;
+    }
+
+    /* ── Fake Chat ── */
+    .chat { display: flex; flex-direction: column; gap: 9px; }
+    .chat-row { display: flex; align-items: flex-end; gap: 8px; }
+    .chat-row.me { flex-direction: row-reverse; }
+    .chat-av {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--navy-3);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+    .chat-col { display: flex; flex-direction: column; gap: 2px; max-width: 72%; }
+    .chat-row.me .chat-col { align-items: flex-end; }
+    .bubble {
+      padding: 9px 13px;
+      border-radius: 14px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      line-height: 1.4;
+      width: fit-content;
+    }
+    .bubble.them {
+      background: var(--navy-3);
+      border-bottom-left-radius: 4px;
+      color: var(--text);
+    }
+    .bubble.me {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      border-bottom-right-radius: 4px;
+      color: var(--text);
+    }
+    .chat-ts { font-size: 0.6rem; color: var(--muted); padding: 0 4px; }
+
+    /* ─── SPORTS SHELF ────────────────────────────── */
+    .shelf {
+      display: flex;
+      gap: 10px;
+      padding: 0 0 8px;
+    }
+    .shelf-card {
+      flex: 1;
+      background: var(--navy-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0.55;
+    }
+    .shelf-icon { font-size: 1.5rem; line-height: 1; }
+    .shelf-name { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
+    .shelf-sub { font-size: 0.65rem; color: var(--muted); margin-top: 1px; }
+
+    .shelf-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ─── CTA CARD ────────────────────────────────── */
+    .cta-wrap {
+      padding: 44px 24px 64px;
+      max-width: var(--content-max);
+      margin: 0 auto;
+    }
+    .cta-card {
+      background: var(--navy-2);
+      border: 1px solid var(--green-border);
+      border-radius: 16px;
+      padding: 36px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(38, 214, 102, 0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-ball { font-size: 2.8rem; margin-bottom: 14px; display: block; }
+    .cta-h {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.45rem;
+      letter-spacing: -0.8px;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .cta-sub {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 22px;
+      max-width: 280px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cta-btn {
+      display: block;
+      background: var(--green);
+      color: #050912;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 15px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .cta-btn:hover { opacity: 0.86; }
+    .cta-free { font-size: 0.7rem; color: var(--muted); margin-top: 10px; }
+
+    /* ─── FOOTER ──────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      max-width: var(--content-max);
+      margin: 0 auto;
+    }
+    .footer-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .footer-logo span { color: var(--green); }
+    .footer-note { font-size: 0.68rem; color: var(--muted); }
+
+    /* ─── ANIMATE IN ──────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .au { animation: fadeUp 0.55s ease-out both; }
+    .d1 { animation-delay: 0.08s; }
+    .d2 { animation-delay: 0.18s; }
+    .d3 { animation-delay: 0.28s; }
+    .d4 { animation-delay: 0.40s; }
+    .d5 { animation-delay: 0.52s; }
+
+    /* ─── RESPONSIVE ──────────────────────────────── */
+    @media (min-width: 600px) {
+      .hero { padding: 72px 48px 80px; }
+      .wc-stamp { right: 48px; }
+      .hero-headline { font-size: clamp(2.8rem, 7vw, 4rem); max-width: 420px; }
+      .hero-body { max-width: 360px; }
+      .hero-ctas { flex-direction: row; }
+      .hero-cta-main { flex: 1; }
+      .hero-cta-sec { flex: 1; }
+      .section { padding: 56px 48px; }
+      .banter-inner { padding: 52px 48px; }
+      .cta-wrap { padding: 56px 48px 80px; }
+    }
+
+    @media (min-width: 900px) {
+      .hero { padding: 100px 48px 120px; min-height: 80svh; }
+      .hero-headline { font-size: clamp(3rem, 5vw, 4.4rem); max-width: 480px; }
+      .stats-inner { padding: 36px 48px; }
+      .section { padding: 72px 48px; }
+      .banter-inner { padding: 64px 48px; }
+      .cta-wrap { padding: 72px 48px 96px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAV ── -->
+  <nav>
+    <div class="nav-inner">
+      <div class="nav-logo">Lazy<span>Fantasy</span></div>
+      <div class="nav-actions">
+        <a href="/login" class="btn btn-ghost">Sign In</a>
+        <a href="/signup" class="btn btn-primary">Play Free</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-bloom"></div>
+    <div class="hero-bloom-2"></div>
+
+    <div class="wc-stamp">
+      <div class="wc-stamp-content">
+        <span class="wc-stamp-ball">⚽</span>
+        <span class="wc-stamp-year">2026</span>
+        <span class="wc-stamp-text">World Cup</span>
+      </div>
+    </div>
+
+    <div class="hero-inner">
+      <div class="hero-eyebrow au">
+        <span class="eyebrow-dot"></span>
+        World Cup 2026 · Predictions Open
+      </div>
+
+      <h1 class="hero-headline au d1">
+        Your mates think they know football<span class="dot">.</span>
+      </h1>
+
+      <p class="hero-tagline au d2">Prove them wrong.</p>
+      <p class="hero-body au d3">
+        Predict every match. Play in a private league with your crew.
+        Let the World Cup settle the group chat once and for all.
+      </p>
+
+      <div class="hero-ctas au d4">
+        <a href="/signup" class="hero-cta-main">Start Playing Free</a>
+        <a href="/login" class="hero-cta-sec">Sign In</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TICKER ── -->
+  <div class="ticker-wrap">
+    <div class="ticker-tag">48 Nations</div>
+    <div class="ticker-overflow">
+      <div class="ticker-track" id="ticker"></div>
+    </div>
+  </div>
+
+  <!-- ── STATS STRIP ── -->
+  <div class="stats-strip">
+    <div class="stats-inner">
+      <div class="stat">
+        <div class="stat-val">48</div>
+        <div class="stat-lbl">Nations</div>
+      </div>
+      <div class="stats-divider"></div>
+      <div class="stat">
+        <div class="stat-val">104</div>
+        <div class="stat-lbl">Matches</div>
+      </div>
+      <div class="stats-divider"></div>
+      <div class="stat">
+        <div class="stat-val">1<span class="go">★</span></div>
+        <div class="stat-lbl">Champion</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── WHAT YOU PREDICT ── -->
+  <div class="section">
+    <div class="eyebrow">How you predict</div>
+    <div class="section-h">Score it. Pick the stars.</div>
+    <p class="section-sub">Scoreline + 3 player picks. Player points vary by position — more for defenders and keepers. Knockout rounds score double.</p>
+
+    <div class="match-card">
+      <div class="mc-header">
+        <div class="mc-meta">
+          <div class="mc-tournament">⚽ FIFA WC 2026 · Group C</div>
+          <div class="mc-lock">🔒 Locks 14 Jun 18:00</div>
+        </div>
+
+        <div class="mc-teams">
+          <div class="mc-team">
+            <span class="mc-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+            <span class="mc-team-name">England</span>
+          </div>
+
+          <div class="mc-score-block">
+            <div class="mc-score-nums">
+              <span class="mc-score-digit">2</span>
+              <span class="mc-score-dash">—</span>
+              <span class="mc-score-digit">1</span>
+            </div>
+            <div class="mc-score-label">Your pick</div>
+          </div>
+
+          <div class="mc-team">
+            <span class="mc-flag">🇫🇷</span>
+            <span class="mc-team-name">France</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mc-preds">
+        <div class="pred-row">
+          <div class="pred-circle done">✓</div>
+          <div class="pred-info">
+            <div class="pred-cat">Match Result</div>
+            <div class="pred-pick">England win</div>
+          </div>
+          <div class="pred-pts">+5 pts</div>
+        </div>
+
+        <div class="pred-row">
+          <div class="pred-circle done">✓</div>
+          <div class="pred-info">
+            <div class="pred-cat">Exact Scoreline</div>
+            <div class="pred-pick">2 — 1</div>
+          </div>
+          <div class="pred-pts">+10 pts</div>
+        </div>
+
+        <div class="pred-row">
+          <div class="pred-circle done">✓</div>
+          <div class="pred-info">
+            <div class="pred-cat">Player Pick 1 · FWD</div>
+            <div class="pred-pick">Harry Kane (scored)</div>
+          </div>
+          <div class="pred-pts">+13 pts</div>
+        </div>
+
+        <div class="pred-row">
+          <div class="pred-circle empty">—</div>
+          <div class="pred-info">
+            <div class="pred-cat">Player Pick 2</div>
+            <div class="pred-pick dim">Pick a player</div>
+          </div>
+          <div class="pred-pts dim">— pts</div>
+        </div>
+
+        <div class="pred-row">
+          <div class="pred-circle empty">—</div>
+          <div class="pred-info">
+            <div class="pred-cat">Player Pick 3</div>
+            <div class="pred-pick dim">Pick a player</div>
+          </div>
+          <div class="pred-pts dim">— pts</div>
+        </div>
+      </div>
+
+      <div class="mc-total">
+        <span class="mc-total-lbl">This example · group stage</span>
+        <span class="mc-total-pts">28 pts <span class="mc-total-bonus">· 56 in knockouts</span></span>
+      </div>
+    </div>
+
+    <p class="match-hint">Predictions lock at kickoff. Player points vary by position and events.</p>
+  </div>
+
+  <!-- ── HOW IT WORKS ── -->
+  <div class="section" style="padding-top: 0;">
+    <div class="eyebrow">How it works</div>
+    <div class="section-h">Ready before kickoff.</div>
+    <p class="section-sub">Under 2 minutes. Guaranteed.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Create a league & invite your crew</div>
+          <div class="step-desc">
+            Sign up, name your league, share a 6-digit code. Your mates join —
+            no app install needed. WhatsApp the code. Done.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Predict before every match</div>
+          <div class="step-desc">
+            Pick the scoreline and three players you fancy, then let 104 matches
+            do the talking. One shot per match. No going back.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Watch the leaderboard heat up</div>
+          <div class="step-desc">
+            Points drop after each result. The real World Cup drama is on
+            the pitch — the real punishment is in your group chat.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BANTER STRIP ── -->
+  <div class="banter-strip">
+    <div class="banter-inner">
+      <div class="banter-q">
+        The real final happens in your <span class="hi">group chat.</span>
+      </div>
+      <p class="banter-body">
+        No money. No stakes. Just the eternal burden of being confidently wrong
+        in front of 11 friends for six weeks.
+      </p>
+
+      <div class="chat">
+        <div class="chat-row">
+          <div class="chat-av">🔥</div>
+          <div class="chat-col">
+            <div class="bubble them">England are NOT winning this wtf</div>
+            <div class="chat-ts">Raj · 14 Jun · Match Day 1</div>
+          </div>
+        </div>
+        <div class="chat-row me">
+          <div class="chat-av">👑</div>
+          <div class="chat-col">
+            <div class="bubble me">+28 pts. Kane scorer caller. Said what I said.</div>
+            <div class="chat-ts">You · 14 Jun</div>
+          </div>
+        </div>
+        <div class="chat-row">
+          <div class="chat-av">😤</div>
+          <div class="chat-col">
+            <div class="bubble them">That was clearly lucky bro</div>
+            <div class="chat-ts">Raj · 14 Jun</div>
+          </div>
+        </div>
+        <div class="chat-row me">
+          <div class="chat-av">👑</div>
+          <div class="chat-col">
+            <div class="bubble me">Leaderboard doesn't care about luck 🏆</div>
+            <div class="chat-ts">You · 14 Jun</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OTHER SPORTS ── -->
+  <div class="section" style="padding-bottom: 16px;">
+    <div class="shelf-label">Also available on Lazy Fantasy</div>
+    <div class="shelf">
+      <div class="shelf-card">
+        <div class="shelf-icon">🏏</div>
+        <div>
+          <div class="shelf-name">IPL 2026</div>
+          <div class="shelf-sub">Cricket · Season complete</div>
+        </div>
+      </div>
+      <div class="shelf-card">
+        <div class="shelf-icon">🏎️</div>
+        <div>
+          <div class="shelf-name">Formula 1</div>
+          <div class="shelf-sub">2026 · Coming soon</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM CTA ── -->
+  <div class="cta-wrap">
+    <div class="cta-card">
+      <span class="cta-ball">⚽</span>
+      <div class="cta-h">World Cup 2026 kicks off 11 June.</div>
+      <p class="cta-sub">
+        Your group chat already thinks they've called the champion.
+        Time to make them prove it.
+      </p>
+      <a href="/signup" class="cta-btn">Challenge Your Mates</a>
+      <p class="cta-free">Free to play. Always.</p>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">Lazy<span>Fantasy</span></div>
+      <div class="footer-note">© 2026 · Free to play</div>
+    </div>
+  </footer>
+
+  <script>
+    // ── Ticker: 48 WC 2026 nations ──
+    const nations = [
+      { f: '🇧🇷', n: 'Brazil' },       { f: '🇦🇷', n: 'Argentina' },
+      { f: '🇫🇷', n: 'France' },        { f: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', n: 'England' },
+      { f: '🇪🇸', n: 'Spain' },         { f: '🇩🇪', n: 'Germany' },
+      { f: '🇵🇹', n: 'Portugal' },      { f: '🇳🇱', n: 'Netherlands' },
+      { f: '🇧🇪', n: 'Belgium' },       { f: '🇲🇽', n: 'Mexico' },
+      { f: '🇺🇸', n: 'USA' },           { f: '🇨🇦', n: 'Canada' },
+      { f: '🇯🇵', n: 'Japan' },         { f: '🇰🇷', n: 'South Korea' },
+      { f: '🇲🇦', n: 'Morocco' },       { f: '🇸🇳', n: 'Senegal' },
+      { f: '🇳🇬', n: 'Nigeria' },       { f: '🇨🇴', n: 'Colombia' },
+      { f: '🇺🇾', n: 'Uruguay' },       { f: '🇨🇭', n: 'Switzerland' },
+      { f: '🇭🇷', n: 'Croatia' },       { f: '🇩🇰', n: 'Denmark' },
+      { f: '🇵🇱', n: 'Poland' },        { f: '🇸🇦', n: 'Saudi Arabia' },
+      { f: '🇮🇷', n: 'Iran' },          { f: '🇦🇺', n: 'Australia' },
+      { f: '🇪🇨', n: 'Ecuador' },       { f: '🇬🇭', n: 'Ghana' },
+      { f: '🇨🇲', n: 'Cameroon' },      { f: '🇷🇸', n: 'Serbia' },
+      { f: '🇹🇷', n: 'Türkiye' },       { f: '🇦🇹', n: 'Austria' },
+      { f: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', n: 'Scotland' },    { f: '🇨🇿', n: 'Czechia' },
+      { f: '🇮🇹', n: 'Italy' },         { f: '🇨🇱', n: 'Chile' },
+      { f: '🇵🇦', n: 'Panama' },        { f: '🇯🇲', n: 'Jamaica' },
+      { f: '🇿🇦', n: 'South Africa' },  { f: '🇻🇪', n: 'Venezuela' },
+      { f: '🇵🇾', n: 'Paraguay' },      { f: '🇳🇿', n: 'New Zealand' },
+      { f: '🇷🇴', n: 'Romania' },       { f: '🇺🇦', n: 'Ukraine' },
+      { f: '🇬🇷', n: 'Greece' },        { f: '🇸🇰', n: 'Slovakia' },
+      { f: '🇨🇳', n: 'China' },         { f: '🇹🇳', n: 'Tunisia' },
+    ];
+
+    const track = document.getElementById('ticker');
+    // Duplicate for seamless CSS scroll loop
+    [...nations, ...nations].forEach(({ f, n }) => {
+      const el = document.createElement('div');
+      el.className = 'ticker-nation';
+      el.innerHTML = `<span>${f}</span><span>${n}</span>`;
+      track.appendChild(el);
+    });
+  </script>
+</body>
+</html>
