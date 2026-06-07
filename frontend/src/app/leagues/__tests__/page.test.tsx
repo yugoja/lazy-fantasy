@@ -97,7 +97,7 @@ describe('LeaguesPage', () => {
     render(<LeaguesPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/haven't joined any leagues/i)).toBeInTheDocument();
+      expect(screen.getByText(/No leagues yet/i)).toBeInTheDocument();
     });
   });
 

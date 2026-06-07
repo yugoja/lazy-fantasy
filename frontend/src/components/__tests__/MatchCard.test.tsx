@@ -20,10 +20,10 @@ describe('MatchCard', () => {
     vi.useRealTimers();
   });
 
-  it('renders team short_names and "vs"', () => {
+  it('renders team names and "vs"', () => {
     render(<MatchCard {...baseProps} />);
-    expect(screen.getByText('IND')).toBeInTheDocument();
-    expect(screen.getByText('AUS')).toBeInTheDocument();
+    expect(screen.getByText('India')).toBeInTheDocument();
+    expect(screen.getByText('Australia')).toBeInTheDocument();
     expect(screen.getByText('vs')).toBeInTheDocument();
   });
 
