@@ -4,10 +4,63 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trophy, Users, Target, BarChart3, CheckCircle2, Swords } from 'lucide-react';
+import s from './landing.module.css';
+
+const NATIONS = [
+  { f: '🇧🇷', n: 'Brazil' },       { f: '🇦🇷', n: 'Argentina' },
+  { f: '🇫🇷', n: 'France' },        { f: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', n: 'England' },
+  { f: '🇪🇸', n: 'Spain' },         { f: '🇩🇪', n: 'Germany' },
+  { f: '🇵🇹', n: 'Portugal' },      { f: '🇳🇱', n: 'Netherlands' },
+  { f: '🇧🇪', n: 'Belgium' },       { f: '🇲🇽', n: 'Mexico' },
+  { f: '🇺🇸', n: 'USA' },           { f: '🇨🇦', n: 'Canada' },
+  { f: '🇯🇵', n: 'Japan' },         { f: '🇰🇷', n: 'South Korea' },
+  { f: '🇲🇦', n: 'Morocco' },       { f: '🇸🇳', n: 'Senegal' },
+  { f: '🇳🇬', n: 'Nigeria' },       { f: '🇨🇴', n: 'Colombia' },
+  { f: '🇺🇾', n: 'Uruguay' },       { f: '🇨🇭', n: 'Switzerland' },
+  { f: '🇭🇷', n: 'Croatia' },       { f: '🇩🇰', n: 'Denmark' },
+  { f: '🇵🇱', n: 'Poland' },        { f: '🇸🇦', n: 'Saudi Arabia' },
+  { f: '🇮🇷', n: 'Iran' },          { f: '🇦🇺', n: 'Australia' },
+  { f: '🇪🇨', n: 'Ecuador' },       { f: '🇬🇭', n: 'Ghana' },
+  { f: '🇨🇲', n: 'Cameroon' },      { f: '🇷🇸', n: 'Serbia' },
+  { f: '🇹🇷', n: 'Türkiye' },       { f: '🇦🇹', n: 'Austria' },
+  { f: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', n: 'Scotland' },    { f: '🇨🇿', n: 'Czechia' },
+  { f: '🇮🇹', n: 'Italy' },         { f: '🇨🇱', n: 'Chile' },
+  { f: '🇵🇦', n: 'Panama' },        { f: '🇯🇲', n: 'Jamaica' },
+  { f: '🇿🇦', n: 'South Africa' },  { f: '🇻🇪', n: 'Venezuela' },
+  { f: '🇵🇾', n: 'Paraguay' },      { f: '🇳🇿', n: 'New Zealand' },
+  { f: '🇷🇴', n: 'Romania' },       { f: '🇺🇦', n: 'Ukraine' },
+  { f: '🇬🇷', n: 'Greece' },        { f: '🇸🇰', n: 'Slovakia' },
+  { f: '🇨🇳', n: 'China' },         { f: '🇹🇳', n: 'Tunisia' },
+];
+
+const TICKER_NATIONS = [...NATIONS, ...NATIONS];
+
+const PRED_ROWS = [
+  { done: true,  cat: 'Match Result',        pick: 'England win',          pts: '+5 pts'  },
+  { done: true,  cat: 'Exact Scoreline',     pick: '2 — 1',                pts: '+10 pts' },
+  { done: true,  cat: 'Player Pick 1 · FWD', pick: 'Harry Kane (scored)',  pts: '+13 pts' },
+  { done: false, cat: 'Player Pick 2',        pick: 'Pick a player',        pts: '— pts'   },
+  { done: false, cat: 'Player Pick 3',        pick: 'Pick a player',        pts: '— pts'   },
+];
+
+const STEPS = [
+  {
+    n: '1',
+    title: 'Create a league & invite your crew',
+    desc: 'Sign up, name your league, share a 6-digit code. Your mates join — no app install needed. WhatsApp the code. Done.',
+  },
+  {
+    n: '2',
+    title: 'Predict before every match',
+    desc: 'Pick the scoreline and three players you fancy, then let 104 matches do the talking. One shot per match. No going back.',
+  },
+  {
+    n: '3',
+    title: 'Watch the leaderboard heat up',
+    desc: "Points drop after each result. The real World Cup drama is on the pitch — the real punishment is in your group chat.",
+  },
+];
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -21,7 +74,7 @@ export default function Home() {
 
   if (isLoading || isAuthenticated) {
     return (
-      <div className="container-mobile py-10 space-y-6">
+      <div className="py-10 px-6 space-y-6 max-w-sm mx-auto">
         <Skeleton className="h-8 w-48 mx-auto" />
         <Skeleton className="h-12 w-full" />
         <Skeleton className="h-4 w-3/4 mx-auto" />
@@ -31,185 +84,251 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background">
+    <div className={s.page}>
 
-      {/* Hero */}
-      <section className="container-mobile pt-14 pb-10 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-xs text-primary-foreground font-bold mb-6 uppercase tracking-wide">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse-dot"></span>
-          Live Now
+      {/* ── Nav ── */}
+      <nav className={s.nav}>
+        <div className={s.navInner}>
+          <span className={s.navLogo}>Lazy<span>Fantasy</span></span>
+          <div className={s.navActions}>
+            <Link href="/login"  className={`${s.btn} ${s.btnGhost}`}>Sign In</Link>
+            <Link href="/signup" className={`${s.btn} ${s.btnPrimary}`}>Play Free</Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Hero ── */}
+      <section className={s.hero}>
+        <div className={s.heroBloom} />
+        <div className={s.heroBloom2} />
+
+        <div className={s.wcStamp}>
+          <div className={s.wcStampContent}>
+            <span className={s.wcStampBall}>⚽</span>
+            <span className={s.wcStampYear}>2026</span>
+            <span className={s.wcStampText}>World Cup</span>
+          </div>
         </div>
 
-        <h1 className="text-4xl font-extrabold tracking-tight mb-3 leading-[1.1]">
-          Your mates think they
-          <br />
-          know cricket<span className="text-primary">.</span>
-        </h1>
+        <div className={s.heroInner}>
+          <div className={`${s.heroEyebrow} ${s.au}`}>
+            <span className={s.eyebrowDot} />
+            World Cup 2026 · Predictions Open
+          </div>
 
-        <p className="text-lg font-semibold text-foreground max-w-sm mx-auto mb-1">
-          Prove them wrong.
-        </p>
-        <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-8 leading-relaxed">
-          Predict every match. Play in a private league with your crew.
-          Settle the group chat debate once and for all.
-        </p>
+          <h1 className={`${s.heroHeadline} ${s.au} ${s.d1}`}>
+            Your mates think they know football<span className={s.dot}>.</span>
+          </h1>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/signup">
-            <Button size="lg" className="w-full sm:w-auto font-bold text-base px-8">
-              Start Playing Free
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto font-semibold">
-              Sign In
-            </Button>
-          </Link>
+          <p className={`${s.heroTagline} ${s.au} ${s.d2}`}>Prove them wrong.</p>
+          <p className={`${s.heroBody} ${s.au} ${s.d3}`}>
+            Predict every match. Play in a private league with your crew.
+            Let the World Cup settle the group chat once and for all.
+          </p>
+
+          <div className={`${s.heroCtas} ${s.au} ${s.d4}`}>
+            <Link href="/signup" className={s.heroCtaMain}>Start Playing Free</Link>
+            <Link href="/login"  className={s.heroCtaSec}>Sign In</Link>
+          </div>
         </div>
       </section>
 
-      {/* What You Predict — mock prediction card */}
-      <section className="container-mobile py-10">
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-bold mb-1">What you predict</h2>
-          <p className="text-sm text-muted-foreground">Six picks per match. Up to 140 pts.</p>
+      {/* ── Ticker ── */}
+      <div className={s.tickerWrap}>
+        <div className={s.tickerTag}>48 Nations</div>
+        <div className={s.tickerOverflow}>
+          <div className={s.tickerTrack}>
+            {TICKER_NATIONS.map((nation, i) => (
+              <div key={i} className={s.tickerNation}>
+                <span>{nation.f}</span>
+                <span>{nation.n}</span>
+              </div>
+            ))}
+          </div>
         </div>
+      </div>
 
-        <Card className="border-border bg-card overflow-hidden">
-          {/* Match header */}
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">Mumbai Indians</span>
+      {/* ── Stats strip ── */}
+      <div className={s.statsStrip}>
+        <div className={s.statsInner}>
+          <div className={s.stat}>
+            <div className={s.statVal}>48</div>
+            <div className={s.statLbl}>Nations</div>
+          </div>
+          <div className={s.statsDivider} />
+          <div className={s.stat}>
+            <div className={s.statVal}>104</div>
+            <div className={s.statLbl}>Matches</div>
+          </div>
+          <div className={s.statsDivider} />
+          <div className={s.stat}>
+            <div className={s.statVal}>1<span className={s.gold}>★</span></div>
+            <div className={s.statLbl}>Champion</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── What you predict ── */}
+      <div className={s.section}>
+        <div className={s.eyebrow}>How you predict</div>
+        <div className={s.sectionH}>Score it. Pick the stars.</div>
+        <p className={s.sectionSub}>
+          Scoreline + 3 player picks. Player points vary by position — more for defenders and keepers. Knockout rounds score double.
+        </p>
+
+        <div className={s.matchCard}>
+          <div className={s.mcHeader}>
+            <div className={s.mcMeta}>
+              <div className={s.mcTournament}>⚽ FIFA WC 2026 · Group C</div>
+              <div className={s.mcLock}>🔒 Locks 14 Jun 18:00</div>
             </div>
-            <span className="text-xs text-muted-foreground font-medium">vs</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">Chennai Super Kings</span>
+            <div className={s.mcTeams}>
+              <div className={s.mcTeam}>
+                <span className={s.mcFlag}>🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                <span className={s.mcTeamName}>England</span>
+              </div>
+              <div className={s.mcScoreBlock}>
+                <div className={s.mcScoreNums}>
+                  <span className={s.mcScoreDigit}>2</span>
+                  <span className={s.mcScoreDash}>—</span>
+                  <span className={s.mcScoreDigit}>1</span>
+                </div>
+                <div className={s.mcScoreLabel}>Your pick</div>
+              </div>
+              <div className={s.mcTeam}>
+                <span className={s.mcFlag}>🇫🇷</span>
+                <span className={s.mcTeamName}>France</span>
+              </div>
             </div>
           </div>
 
-          <CardContent className="p-4 space-y-3">
-            {[
-              { label: 'Match Winner', example: 'Mumbai Indians', pts: 10, done: true },
-              { label: 'Top Batter · MI', example: 'Rohit Sharma', pts: 20, done: true },
-              { label: 'Top Batter · CSK', example: 'Ruturaj Gaikwad', pts: 20, done: true },
-              { label: 'Top Bowler · MI', example: 'Jasprit Bumrah', pts: 20, done: false },
-              { label: 'Top Bowler · CSK', example: 'Deepak Chahar', pts: 20, done: false },
-              { label: 'Player of the Match', example: 'MS Dhoni', pts: 50, done: false },
-            ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <CheckCircle2
-                    className={`h-4 w-4 shrink-0 ${row.done ? 'text-primary' : 'text-muted-foreground/30'}`}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">{row.label}</p>
-                    <p className={`text-sm font-medium truncate ${row.done ? 'text-foreground' : 'text-muted-foreground/50'}`}>
-                      {row.done ? row.example : '—'}
-                    </p>
-                  </div>
+          <div className={s.mcPreds}>
+            {PRED_ROWS.map((row) => (
+              <div key={row.cat} className={s.predRow}>
+                <div className={`${s.predCircle} ${row.done ? s.predCircleDone : s.predCircleEmpty}`}>
+                  {row.done ? '✓' : '—'}
                 </div>
-                <span className="text-xs text-primary font-semibold shrink-0">+{row.pts} pts</span>
+                <div className={s.predInfo}>
+                  <div className={s.predCat}>{row.cat}</div>
+                  <div className={`${s.predPick} ${row.done ? '' : s.predPickDim}`}>{row.pick}</div>
+                </div>
+                <div className={`${s.predPts} ${row.done ? '' : s.predPtsDim}`}>{row.pts}</div>
               </div>
             ))}
+          </div>
 
-            <div className="pt-2 border-t border-border flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Max this match</span>
-              <span className="text-sm font-bold text-primary">140 pts</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-xs text-muted-foreground mt-3">
-          Predictions lock when the match starts. No cheeky last-minute changes. 😏
-        </p>
-      </section>
-
-      {/* How It Works */}
-      <section className="container-mobile py-10">
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-bold mb-1">How It Works</h2>
-          <p className="text-sm text-muted-foreground">Ready in under 2 minutes</p>
+          <div className={s.mcTotal}>
+            <span className={s.mcTotalLbl}>This example · group stage</span>
+            <span className={s.mcTotalPts}>28 pts <span className={s.mcTotalBonus}>· 56 in knockouts</span></span>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          {[
-            {
-              step: '1',
-              icon: Users,
-              title: 'Create a league & invite your crew',
-              desc: 'Sign up, name your league, and share a code. Your mates join — no app installs needed.',
-            },
-            {
-              step: '2',
-              icon: Target,
-              title: 'Predict before every match',
-              desc: 'Pick the winner, top batter and top bowler from each team, and the player of the match. Six picks. One shot at glory.',
-            },
-            {
-              step: '3',
-              icon: BarChart3,
-              title: 'Watch the leaderboard heat up',
-              desc: 'Points update after every match. Trash talk freely. The real World Cup is in your group chat.',
-            },
-          ].map((item) => (
-            <Card key={item.step} className="border-border bg-card">
-              <CardContent className="flex items-start gap-4 p-4">
-                <div className="h-10 w-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <item.icon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold mb-0.5">{item.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-                </div>
-              </CardContent>
-            </Card>
+        <p className={s.matchHint}>Predictions lock at kickoff. Player points vary by position and events.</p>
+      </div>
+
+      {/* ── How it works ── */}
+      <div className={s.section} style={{ paddingTop: 0 }}>
+        <div className={s.eyebrow}>How it works</div>
+        <div className={s.sectionH}>Ready before kickoff.</div>
+        <p className={s.sectionSub}>Under 2 minutes. Guaranteed.</p>
+        <div className={s.steps}>
+          {STEPS.map((step) => (
+            <div key={step.n} className={s.step}>
+              <div className={s.stepNum}>{step.n}</div>
+              <div className={s.stepContent}>
+                <div className={s.stepTitle}>{step.title}</div>
+                <div className={s.stepDesc}>{step.desc}</div>
+              </div>
+            </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* More sports coming */}
-      <section className="container-mobile py-6">
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground text-center mb-3 font-medium uppercase tracking-wider">More sports coming soon</p>
-            <div className="flex items-center justify-center gap-6">
-              <div className="flex items-center gap-2 opacity-50">
-                <span className="text-2xl">🏎️</span>
-                <div>
-                  <p className="text-sm font-semibold">Formula 1</p>
-                  <p className="text-xs text-muted-foreground">2026 Season</p>
-                </div>
-              </div>
-              <div className="h-8 w-px bg-border" />
-              <div className="flex items-center gap-2 opacity-50">
-                <span className="text-2xl">⚽</span>
-                <div>
-                  <p className="text-sm font-semibold">Football</p>
-                  <p className="text-xs text-muted-foreground">World Cup 2026</p>
-                </div>
+      {/* ── Banter strip ── */}
+      <div className={s.banterStrip}>
+        <div className={s.banterInner}>
+          <div className={s.banterQ}>
+            The real final happens in your <span className={s.hi}>group chat.</span>
+          </div>
+          <p className={s.banterBody}>
+            No money. No stakes. Just the eternal burden of being confidently wrong
+            in front of 11 friends for six weeks.
+          </p>
+          <div className={s.chat}>
+            <div className={s.chatRow}>
+              <div className={s.chatAv}>🔥</div>
+              <div className={s.chatCol}>
+                <div className={`${s.bubble} ${s.bubbleThem}`}>England are NOT winning this wtf</div>
+                <div className={s.chatTs}>Raj · 14 Jun · Match Day 1</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </section>
+            <div className={`${s.chatRow} ${s.chatRowMe}`}>
+              <div className={s.chatAv}>👑</div>
+              <div className={`${s.chatCol} ${s.chatColMe}`}>
+                <div className={`${s.bubble} ${s.bubbleMe}`}>+28 pts. Kane scorer caller. Said what I said.</div>
+                <div className={s.chatTs}>You · 14 Jun</div>
+              </div>
+            </div>
+            <div className={s.chatRow}>
+              <div className={s.chatAv}>😤</div>
+              <div className={s.chatCol}>
+                <div className={`${s.bubble} ${s.bubbleThem}`}>That was clearly lucky bro</div>
+                <div className={s.chatTs}>Raj · 14 Jun</div>
+              </div>
+            </div>
+            <div className={`${s.chatRow} ${s.chatRowMe}`}>
+              <div className={s.chatAv}>👑</div>
+              <div className={`${s.chatCol} ${s.chatColMe}`}>
+                <div className={`${s.bubble} ${s.bubbleMe}`}>Leaderboard doesn't care about luck 🏆</div>
+                <div className={s.chatTs}>You · 14 Jun</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Bottom CTA */}
-      <section className="container-mobile py-10 pb-16 text-center">
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-6 space-y-3">
-            <Swords className="h-8 w-8 text-primary mx-auto" />
-            <h2 className="text-lg font-bold">IPL 2026 is live.</h2>
-            <p className="text-sm text-muted-foreground">
-              Your group chat needs settling. Create a league, share the code, and let the
-              banter begin.
-            </p>
-            <Link href="/signup">
-              <Button size="lg" className="font-semibold">Challenge Your Mates</Button>
-            </Link>
-            <p className="text-xs text-muted-foreground">Free to play. Always.</p>
-          </CardContent>
-        </Card>
-      </section>
+      {/* ── Other sports ── */}
+      <div className={s.section} style={{ paddingBottom: 16 }}>
+        <div className={s.shelfLabel}>Also available on Lazy Fantasy</div>
+        <div className={s.shelf}>
+          <div className={s.shelfCard}>
+            <div className={s.shelfIcon}>🏏</div>
+            <div>
+              <div className={s.shelfName}>IPL 2026</div>
+              <div className={s.shelfSub}>Cricket · Season complete</div>
+            </div>
+          </div>
+          <div className={s.shelfCard}>
+            <div className={s.shelfIcon}>🏎️</div>
+            <div>
+              <div className={s.shelfName}>Formula 1</div>
+              <div className={s.shelfSub}>2026 · Coming soon</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Bottom CTA ── */}
+      <div className={s.ctaWrap}>
+        <div className={s.ctaCard}>
+          <span className={s.ctaBall}>⚽</span>
+          <div className={s.ctaH}>World Cup 2026 kicks off 11 June.</div>
+          <p className={s.ctaSub}>
+            Your group chat already thinks they've called the champion.
+            Time to make them prove it.
+          </p>
+          <Link href="/signup" className={s.ctaBtn}>Challenge Your Mates</Link>
+          <p className={s.ctaFree}>Free to play. Always.</p>
+        </div>
+      </div>
+
+      {/* ── Footer ── */}
+      <footer className={s.footer}>
+        <div className={s.footerInner}>
+          <div className={s.footerLogo}>Lazy<span>Fantasy</span></div>
+          <div className={s.footerNote}>© 2026 · Free to play</div>
+        </div>
+      </footer>
 
     </div>
   );

@@ -23,8 +23,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Lazy Fantasy - Cricket Predictions",
-  description: "Predict match outcomes, compete with friends, and climb the leaderboard",
+  title: "Lazy Fantasy — World Cup 2026 Predictions",
+  description: "Predict every World Cup 2026 match. Pick scorelines and players. Play in a private league with your friends. Free to play.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
