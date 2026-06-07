@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Target, Users, Medal, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { mediaUrl } from '@/lib/api';
 
 const navItems = [
   { href: '/dashboard', label: 'Home', icon: Flame },
@@ -15,7 +16,7 @@ const navItems = [
 ];
 
 export default function Header() {
-  const { isAuthenticated, username } = useAuth();
+  const { isAuthenticated, username, avatarUrl } = useAuth();
   const pathname = usePathname();
 
   // Don't show header on landing page if not authenticated
@@ -34,7 +35,8 @@ export default function Header() {
 
         {isAuthenticated && username && (
           <Link href="/profile">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+              {avatarUrl && <AvatarImage src={mediaUrl(avatarUrl)!} alt={username} />}
               <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
                 {username.substring(0, 2).toUpperCase()}
               </AvatarFallback>

@@ -38,7 +38,7 @@ interface League {
 }
 
 export default function ProfilePage() {
-  const { isAuthenticated, isLoading: authLoading, username, displayName, logout, setDisplayName } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, username, displayName, logout, setDisplayName, setAvatarUrl: setAuthAvatarUrl } = useAuth();
   const router = useRouter();
   const [leagues, setLeagues] = useState<League[]>([]);
   const [predictions, setPredictions] = useState<Array<PredictionDetail | FootballPredictionDetail>>([]);
@@ -76,7 +76,10 @@ export default function ProfilePage() {
         getMyLeagues(),
         getMyPredictionsDetailed(),
       ]);
-      if (meData.status === 'fulfilled') setAvatarUrl(meData.value.avatar_url);
+      if (meData.status === 'fulfilled') {
+        setAvatarUrl(meData.value.avatar_url);
+        setAuthAvatarUrl(meData.value.avatar_url);
+      }
       if (leaguesData.status === 'fulfilled') setLeagues(leaguesData.value);
       if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
     } catch {
@@ -98,6 +101,7 @@ export default function ProfilePage() {
     try {
       const updated = await uploadAvatar(file);
       setAvatarUrl(updated.avatar_url);
+      setAuthAvatarUrl(updated.avatar_url);
       setAvatarVersion(v => v + 1);
     } catch {
       setAvatarError('Failed to upload. Try again.');
