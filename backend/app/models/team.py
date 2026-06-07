@@ -13,6 +13,8 @@ class Team(Base):
     short_name: Mapped[str] = mapped_column(String(10))
     logo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     sport: Mapped[str] = mapped_column(String(20), default="cricket", server_default="cricket")
+    api_football_team_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    fifa_ranking: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     # Relationships
     players = relationship("Player", back_populates="team")

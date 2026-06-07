@@ -13,6 +13,7 @@ interface Team {
   name: string;
   short_name: string;
   flag_code?: string;
+  fifa_ranking?: number | null;
 }
 
 interface MatchCardProps {
@@ -210,7 +211,12 @@ export function MatchCard({
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
-            <span className="font-bold text-lg truncate leading-tight">{team1.name}</span>
+            <div className="flex flex-col min-w-0">
+              <span className="font-bold text-lg truncate leading-tight">{team1.name}</span>
+              {team1.fifa_ranking && (
+                <span className="font-heading text-[9px] text-muted-foreground/50">FIFA #{team1.fifa_ranking}</span>
+              )}
+            </div>
           </div>
 
           {/* VS */}
@@ -218,7 +224,12 @@ export function MatchCard({
 
           {/* Team 2 */}
           <div className="flex items-center gap-2 flex-1 justify-end">
-            <span className="font-bold text-lg truncate leading-tight text-right">{team2.name}</span>
+            <div className="flex flex-col items-end min-w-0">
+              <span className="font-bold text-lg truncate leading-tight text-right">{team2.name}</span>
+              {team2.fifa_ranking && (
+                <span className="font-heading text-[9px] text-muted-foreground/50">FIFA #{team2.fifa_ranking}</span>
+              )}
+            </div>
             {flagUrl2 && (
               // eslint-disable-next-line @next/next/no-img-element
               <img

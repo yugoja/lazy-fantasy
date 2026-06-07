@@ -505,7 +505,13 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
           <div className="flex items-center gap-1.5 leading-none min-w-0 flex-1">
             <TeamFlag shortName={team_1.short_name} name={team_1.name} className="h-3.5 w-5 shrink-0 rounded-[2px]" />
             <span className="font-heading text-sm font-bold">{team_1.short_name}</span>
+            {team_1.fifa_ranking && (
+              <span className="font-heading text-[9px] text-muted-foreground/50">#{team_1.fifa_ranking}</span>
+            )}
             <span className="font-heading text-[10px] text-muted-foreground/40 shrink-0">vs</span>
+            {team_2.fifa_ranking && (
+              <span className="font-heading text-[9px] text-muted-foreground/50">#{team_2.fifa_ranking}</span>
+            )}
             <span className="font-heading text-sm font-bold">{team_2.short_name}</span>
             <TeamFlag shortName={team_2.short_name} name={team_2.name} className="h-3.5 w-5 shrink-0 rounded-[2px]" />
           </div>

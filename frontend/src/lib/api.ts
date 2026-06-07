@@ -251,7 +251,7 @@ export async function getMatches(tournamentId?: number) {
     }>>(`/matches/?${params}`);
 }
 
-interface TeamInfo { id: number; name: string; short_name: string; logo_url?: string | null }
+interface TeamInfo { id: number; name: string; short_name: string; logo_url?: string | null; fifa_ranking?: number | null }
 interface PlayerInfo { id: number; name: string; team_id: number; role: string }
 export interface TeamFormEntry {
     match_id: number;
@@ -359,8 +359,8 @@ export async function subscribePush(endpoint: string, auth: string, p256dh: stri
 
 export interface MatchPlayersResponse {
     match_id: number;
-    team_1: { id: number; name: string; short_name: string };
-    team_2: { id: number; name: string; short_name: string };
+    team_1: { id: number; name: string; short_name: string; fifa_ranking?: number | null };
+    team_2: { id: number; name: string; short_name: string; fifa_ranking?: number | null };
     team_1_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
     team_2_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
     team_1_form: TeamFormEntry[];

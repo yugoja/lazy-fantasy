@@ -9,6 +9,7 @@ class TeamResponse(BaseModel):
     name: str
     short_name: str
     logo_url: str | None = None
+    fifa_ranking: int | None = None
 
     model_config = {"from_attributes": True}
 

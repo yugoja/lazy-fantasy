@@ -18,8 +18,8 @@ import { generateUpcomingCard, generateResultCard } from '@/lib/share-card';
 
 interface Match {
   id: number;
-  team_1: { id: number; name: string; short_name: string; flag_code?: string };
-  team_2: { id: number; name: string; short_name: string; flag_code?: string };
+  team_1: { id: number; name: string; short_name: string; flag_code?: string; fifa_ranking?: number | null };
+  team_2: { id: number; name: string; short_name: string; flag_code?: string; fifa_ranking?: number | null };
   start_time: string;
   status: string;
   venue?: string;
