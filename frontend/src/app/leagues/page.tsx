@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, getLeaderboard, joinLeague, createLeague, ApiError } from '@/lib/api';
+import { getMyLeagues, getLeaderboard, joinLeague, createLeague, ApiError, mediaUrl } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ interface League {
   invite_code: string;
   owner_id: number;
   sport?: string;
+  image_url?: string | null;
 }
 
 interface LeagueRankInfo {
@@ -257,10 +258,19 @@ function LeaguesContent() {
               <Link key={league.id} href={`/leagues/${league.id}`}>
                 <Card className="p-4 hover:border-primary/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
-                    {/* Shield icon */}
-                    <div className={cn('h-11 w-11 rounded-full flex items-center justify-center shrink-0', colorClass)}>
-                      <Shield className="h-5 w-5" />
-                    </div>
+                    {/* League icon */}
+                    {league.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mediaUrl(league.image_url)!}
+                        alt={league.name}
+                        className="h-11 w-11 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className={cn('h-11 w-11 rounded-full flex items-center justify-center shrink-0', colorClass)}>
+                        <Shield className="h-5 w-5" />
+                      </div>
+                    )}
 
                     {/* League info */}
                     <div className="flex-1 min-w-0">
