@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { useAuth } from '@/lib/auth';
 import { getLeaderboard, getMyLeagues, uploadLeagueImage, LeaderboardEntry } from '@/lib/api';
 import { Card } from '@/components/ui/card';
@@ -200,10 +201,13 @@ export default function LeagueLeaderboardPage() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {leagueImageUrl && (
-              <img
+              <NextImage
                 src={`${leagueImageUrl}?v=${leagueImageVersion}`}
                 alt={leagueName}
-                className="h-10 w-10 rounded-lg object-cover shrink-0"
+                width={40}
+                height={40}
+                className="rounded-lg object-cover shrink-0"
+                unoptimized
               />
             )}
             <h1 className="text-2xl font-bold truncate">{leagueName || 'Leaderboard'}</h1>
@@ -240,10 +244,12 @@ export default function LeagueLeaderboardPage() {
                   onClick={() => imageInputRef.current?.click()}
                 >
                   {imagePreview || leagueImageUrl ? (
-                    <img
+                    <NextImage
                       src={imagePreview || `${leagueImageUrl}?v=${leagueImageVersion}`}
                       alt="League"
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">

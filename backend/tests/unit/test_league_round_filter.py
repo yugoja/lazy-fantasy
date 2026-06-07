@@ -134,28 +134,28 @@ class TestLeaderboardRoundFilter:
         league_id = round_scenario["league"].id
         rows = get_league_leaderboard(db_session, league_id)
         # owner: 10+10+10+20 = 50, user2: 5+5+5+10 = 25
-        pts_map = {r[0]: r[3] for r in rows}
+        pts_map = {r[0]: r[4] for r in rows}
         assert pts_map[round_scenario["owner"].id] == 50
         assert pts_map[round_scenario["user2"].id] == 25
 
     def test_group_1_filter_only_counts_round_1(self, db_session, round_scenario):
         league_id = round_scenario["league"].id
         rows = get_league_leaderboard(db_session, league_id, round_key="GROUP_1")
-        pts_map = {r[0]: r[3] for r in rows}
+        pts_map = {r[0]: r[4] for r in rows}
         assert pts_map[round_scenario["owner"].id] == 10
         assert pts_map[round_scenario["user2"].id] == 5
 
     def test_group_2_filter_only_counts_round_2(self, db_session, round_scenario):
         league_id = round_scenario["league"].id
         rows = get_league_leaderboard(db_session, league_id, round_key="GROUP_2")
-        pts_map = {r[0]: r[3] for r in rows}
+        pts_map = {r[0]: r[4] for r in rows}
         assert pts_map[round_scenario["owner"].id] == 10
         assert pts_map[round_scenario["user2"].id] == 5
 
     def test_qf_filter_only_counts_qf(self, db_session, round_scenario):
         league_id = round_scenario["league"].id
         rows = get_league_leaderboard(db_session, league_id, round_key="QF")
-        pts_map = {r[0]: r[3] for r in rows}
+        pts_map = {r[0]: r[4] for r in rows}
         assert pts_map[round_scenario["owner"].id] == 20
         assert pts_map[round_scenario["user2"].id] == 10
 
@@ -178,7 +178,7 @@ class TestLeaderboardRoundFilter:
 
         # With round_key: tp_points should NOT be included
         rows = get_league_leaderboard(db_session, league_id, round_key="GROUP_1")
-        pts_map = {r[0]: r[3] for r in rows}
+        pts_map = {r[0]: r[4] for r in rows}
         assert pts_map[owner_id] == 10  # not 110
 
     def test_round_key_sets_prev_rank_none(self, db_session, round_scenario):
@@ -195,7 +195,7 @@ class TestLeaderboardRoundFilter:
         rows = get_league_leaderboard(db_session, league_id, round_key="GROUP_1")
         # All prev_ranks should be None when round_key is active
         for row in rows:
-            prev_rank = row[4]
+            prev_rank = row[5]
             assert prev_rank is None, f"Expected prev_rank=None, got {prev_rank}"
 
     def test_unknown_round_key_not_handled_by_service(self, db_session, round_scenario):

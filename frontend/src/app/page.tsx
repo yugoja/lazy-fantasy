@@ -279,7 +279,7 @@ export default function Home() {
             <div className={`${s.chatRow} ${s.chatRowMe}`}>
               <div className={s.chatAv}>👑</div>
               <div className={`${s.chatCol} ${s.chatColMe}`}>
-                <div className={`${s.bubble} ${s.bubbleMe}`}>Leaderboard doesn't care about luck 🏆</div>
+                <div className={`${s.bubble} ${s.bubbleMe}`}>Leaderboard doesn&apos;t care about luck 🏆</div>
                 <div className={s.chatTs}>You · 14 Jun</div>
               </div>
             </div>
@@ -314,7 +314,7 @@ export default function Home() {
           <span className={s.ctaBall}>⚽</span>
           <div className={s.ctaH}>World Cup 2026 kicks off 11 June.</div>
           <p className={s.ctaSub}>
-            Your group chat already thinks they've called the champion.
+            Your group chat already thinks they&apos;ve called the champion.
             Time to make them prove it.
           </p>
           <Link href="/signup" className={s.ctaBtn}>Challenge Your Mates</Link>
