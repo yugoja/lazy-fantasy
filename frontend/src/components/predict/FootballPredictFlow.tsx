@@ -339,6 +339,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
   const [scorers, setScorers] = useState<number[]>([]);
   const [score, setScore] = useState<{ a: number; b: number }>({ a: 1, b: 0 });
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoadingPick, setIsLoadingPick] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
@@ -365,7 +366,8 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
         }
         setIsEditing(true);
       })
-      .catch(() => {/* no existing prediction is fine */});
+      .catch(() => {/* no existing prediction is fine */})
+      .finally(() => { if (active) setIsLoadingPick(false); });
     return () => { active = false; };
   }, [matchId, team_1.id]);
 
@@ -550,7 +552,12 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
       >
 
         {/* ── Step 0: Scoreline ── */}
-        {step === 0 && (
+        {step === 0 && isLoadingPick && (
+          <div className="flex-1 flex items-center justify-center py-16">
+            <div className="h-5 w-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        )}
+        {step === 0 && !isLoadingPick && (
           <div className="space-y-4">
             <WinnerChip
               score={score}
