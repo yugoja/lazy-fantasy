@@ -17,6 +17,7 @@ class Player(Base):
 
     # Relationships
     team = relationship("Team", back_populates="players")
+    form = relationship("PlayerForm", back_populates="player", uselist=False)
 
     def __repr__(self) -> str:
         return f"<Player(id={self.id}, name='{self.name}', role='{self.role}')>"

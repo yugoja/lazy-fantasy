@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.models.league import League, LeagueMember
 from app.models.match import Match
 from app.models.player import Player
+from app.models.player_form import PlayerForm
 from app.models.prediction import Prediction
 from app.services.autopick import (
     DEFAULT_STRATEGY,
@@ -95,14 +96,30 @@ def build_prediction_inputs_from_db(db: Session, match: Match) -> PredictionInpu
         .all()
     )
 
+    forms = {
+        pf.player_id: pf
+        for pf in db.query(PlayerForm)
+        .filter(PlayerForm.player_id.in_([p.id for p in players]))
+        .all()
+    }
+
     scored = tuple(
         ScoredPlayer(
             player_id=str(p.id),
             team_id=str(p.team_id),
             position=_role_to_position(p.role),  # type: ignore[arg-type]
-            expected_points=_POSITION_XP.get(_role_to_position(p.role), 6.0),
-            floor="high" if _role_to_position(p.role) in _HIGH_FLOOR_POSITIONS else "mid",  # type: ignore[arg-type]
-            availability="starter",
+            expected_points=(
+                forms[p.id].expected_points if p.id in forms
+                else _POSITION_XP.get(_role_to_position(p.role), 6.0)
+            ),
+            floor=(
+                forms[p.id].floor if p.id in forms  # type: ignore[arg-type]
+                else ("high" if _role_to_position(p.role) in _HIGH_FLOOR_POSITIONS else "mid")
+            ),
+            availability=(
+                forms[p.id].availability if p.id in forms  # type: ignore[arg-type]
+                else "starter"
+            ),
         )
         for p in players
     )

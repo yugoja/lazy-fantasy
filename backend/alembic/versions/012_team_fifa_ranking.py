@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "012_team_fifa_ranking"
-down_revision = "010_images_and_urls"
+down_revision = "011_player_form"
 branch_labels = None
 depends_on = None
 

@@ -1,6 +1,6 @@
 """APScheduler background jobs: match reminders + cricket data sync."""
 import logging
-from datetime import datetime, timedelta  # timedelta used by reminder window
+from datetime import datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
@@ -128,13 +128,40 @@ def _run_football_fallback_for_match(match_id: int) -> None:
         db.close()
 
 
+def _run_lineup_sync(match_id: int) -> None:
+    """One-shot job: update player availability from confirmed lineup ~1h before kickoff."""
+    from app.models.match import Match
+    from app.services.football_sync import get_provider
+    from app.services.player_form_service import update_availability_from_lineup
+
+    provider = get_provider()
+    if not provider:
+        return
+
+    db: Session = SessionLocal()
+    try:
+        match = db.query(Match).get(match_id)
+        if match is None or not match.external_match_id:
+            return
+        lineup = provider.get_fixture_lineup(int(match.external_match_id))
+        if lineup is None:
+            logger.info(f"Lineup not yet announced for match {match_id}")
+            return
+        update_availability_from_lineup(db, match, lineup)
+        logger.info(f"Lineup sync done for match {match_id}")
+    except Exception as e:
+        logger.error(f"Lineup sync job for match {match_id} failed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 def schedule_football_fallback(match) -> None:
     """Register a one-shot fallback job to fire at match.start_time.
 
     Safe to call for any match — silently skips non-football or past matches.
     Called at startup (for all upcoming matches) and from create_match.
     """
-    from datetime import timezone as tz
     from app.models.tournament import Tournament
 
     if not scheduler.running:
@@ -158,9 +185,9 @@ def schedule_football_fallback(match) -> None:
 
     start = match.start_time
     if start.tzinfo is None:
-        start = start.replace(tzinfo=tz.utc)
+        start = start.replace(tzinfo=timezone.utc)
 
-    now = datetime.now(tz.utc)
+    now = datetime.now(timezone.utc)
     if start <= now:
         return  # already past — skip (startup handles this separately)
 
@@ -174,6 +201,17 @@ def schedule_football_fallback(match) -> None:
         replace_existing=True,
     )
     logger.info(f"Scheduled fallback for match {match.id} at {start.isoformat()}")
+
+    lineup_time = start - timedelta(hours=1)
+    if lineup_time > datetime.now(timezone.utc):
+        scheduler.add_job(
+            _run_lineup_sync,
+            trigger="date",
+            run_date=lineup_time,
+            args=[match.id],
+            id=f"lineup_sync_{match.id}",
+            replace_existing=True,
+        )
 
 
 def _sync_football_results() -> None:
@@ -214,13 +252,12 @@ def _sync_football_results() -> None:
 
 def _schedule_upcoming_football_fallbacks() -> None:
     """At startup, register date-triggered fallback jobs for all upcoming football matches."""
-    from datetime import timezone as tz
     from app.models.match import Match, MatchStatus
     from app.models.tournament import Tournament
 
     db: Session = SessionLocal()
     try:
-        now = datetime.now(tz.utc)
+        now = datetime.now(timezone.utc)
         upcoming = (
             db.query(Match)
             .join(Tournament, Match.tournament_id == Tournament.id)

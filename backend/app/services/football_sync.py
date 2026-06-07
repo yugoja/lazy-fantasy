@@ -114,6 +114,12 @@ def sync_match_result(db: Session, match_id: int) -> dict:
     match.sync_error = sync_error[:500] if sync_error else None
     db.commit()
 
+    try:
+        from app.services.player_form_service import update_player_form_after_match
+        update_player_form_after_match(db, match, player_stats, result)
+    except Exception as e:
+        logger.warning(f"player_form update failed for match {match.id}: {e}")
+
     return {
         "status": "synced",
         "predictions_processed": predictions_processed,

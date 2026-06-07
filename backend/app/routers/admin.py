@@ -10,6 +10,7 @@ from app.schemas.admin import (
     MatchCreate, MatchResultCreate, FootballMatchResultCreate, SetLineupRequest,
     LinkMatchRequest, BulkPlayerMappingRequest, SyncStatusResponse,
     LinkFootballRequest, FootballSyncResponse,
+    SeedPlayerFormRequest, SeedSummaryResponse,
 )
 from app.schemas.match import MatchResponse, TeamResponse, PlayerResponse
 from app.schemas.tournament_picks import SetPicksWindowRequest, SetPicksResultRequest
@@ -959,4 +960,31 @@ async def set_picks_result(
 
     scored = score_tournament_picks(db, tournament_id)
     return {"tournament_id": tournament_id, "picks_scored": scored}
+
+
+@router.post("/wc/seed-player-form", response_model=SeedSummaryResponse)
+async def seed_player_form_endpoint(
+    data: SeedPlayerFormRequest,
+    current_user: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db),
+):
+    """Seed player_form rows from API-Football season stats (idempotent upserts)."""
+    from app.services.football_sync import get_provider
+    from app.services.player_form_service import seed_player_form
+
+    provider = get_provider()
+    if not provider:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Football API provider not configured (FOOTBALL_API_KEY missing)",
+        )
+
+    summary = seed_player_form(db, provider, data.wc_league_id, data.season)
+    return SeedSummaryResponse(
+        teams_matched=summary.teams_matched,
+        teams_unmatched=summary.teams_unmatched,
+        players_matched=summary.players_matched,
+        players_unmatched=summary.players_unmatched,
+        forms_created=summary.forms_created,
+    )
 

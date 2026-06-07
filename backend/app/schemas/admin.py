@@ -90,3 +90,16 @@ class FootballSyncResponse(BaseModel):
     sync_error: str | None
     sync_state: str
     last_synced_at: datetime | None
+
+
+class SeedPlayerFormRequest(BaseModel):
+    wc_league_id: int
+    season: int = 2026
+
+
+class SeedSummaryResponse(BaseModel):
+    teams_matched: int
+    teams_unmatched: int
+    players_matched: int
+    players_unmatched: int
+    forms_created: int

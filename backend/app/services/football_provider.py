@@ -1,6 +1,7 @@
 """api-football.com data provider for football match results."""
 import logging
 from dataclasses import dataclass, field
+from typing import Optional
 
 import requests
 
@@ -19,6 +20,26 @@ class FootballFixtureResult:
     team2_goals_et: int | None
     penalty_team1: int | None
     penalty_team2: int | None
+
+
+@dataclass
+class WCSquadPlayer:
+    api_player_id: int
+    name: str
+    position: str          # "Goalkeeper" | "Defender" | "Midfielder" | "Attacker"
+    appearances: int
+    minutes: int
+    goals: int
+    assists: int
+    clean_sheets: int      # GK/DEF relevant; saves for GK, 0 for others
+
+
+@dataclass
+class FixtureLineup:
+    home_starters: list[int]   # api_player_ids
+    away_starters: list[int]
+    home_subs: list[int]
+    away_subs: list[int]
 
 
 @dataclass
@@ -104,6 +125,83 @@ class ApiFootballProvider:
             team2_goals_et=t2_et,
             penalty_team1=p1,
             penalty_team2=p2,
+        )
+
+    def get_wc_teams(self, league_id: int, season: int) -> list[dict]:
+        """Return list of {id, name} dicts for all teams in the WC league."""
+        data = self._get("teams", league=league_id, season=season)
+        if not data:
+            return []
+        return [
+            {"id": entry["team"]["id"], "name": entry["team"]["name"]}
+            for entry in data.get("response", [])
+        ]
+
+    def get_wc_squad(self, team_id: int, season: int, league_id: Optional[int] = None) -> list[WCSquadPlayer]:
+        """Fetch all squad players for a team with their season stats (handles pagination).
+
+        Pass league_id to restrict to a specific competition (e.g. WC in-progress);
+        omit it to get full club-season stats (used for pre-tournament seeding).
+        """
+        players: list[WCSquadPlayer] = []
+        page = 1
+        while True:
+            params: dict = {"team": team_id, "season": season, "page": page}
+            if league_id is not None:
+                params["league"] = league_id
+            data = self._get("players", **params)
+            if not data:
+                break
+            response = data.get("response", [])
+            if not response:
+                break
+            for entry in response:
+                p = entry.get("player", {})
+                stats = (entry.get("statistics") or [{}])[0]
+                games = stats.get("games", {})
+                goals_block = stats.get("goals", {})
+                position = games.get("position") or "Attacker"
+                appearances = int(games.get("appearences") or 0)
+                minutes = int(games.get("minutes") or 0)
+                goals = int(goals_block.get("total") or 0)
+                assists = int(goals_block.get("assists") or 0)
+                # For GK, use saves as clean_sheets proxy; for others use conceded=0 indicator
+                clean_sheets = int(goals_block.get("saves") or 0)
+                players.append(WCSquadPlayer(
+                    api_player_id=int(p.get("id", 0)),
+                    name=p.get("name", ""),
+                    position=position,
+                    appearances=appearances,
+                    minutes=minutes,
+                    goals=goals,
+                    assists=assists,
+                    clean_sheets=clean_sheets,
+                ))
+            paging = data.get("paging", {})
+            if paging.get("current", 1) >= paging.get("total", 1):
+                break
+            page += 1
+        return players
+
+    def get_fixture_lineup(self, fixture_id: int) -> Optional[FixtureLineup]:
+        """Fetch confirmed lineups for a fixture. Returns None if not yet announced."""
+        data = self._get("fixtures/lineups", fixture=fixture_id)
+        if not data:
+            return None
+        response = data.get("response", [])
+        if len(response) < 2:
+            return None
+
+        def _extract_ids(team_obj: dict, key: str) -> list[int]:
+            return [int(e["player"]["id"]) for e in team_obj.get(key, []) if e.get("player", {}).get("id")]
+
+        home = response[0]
+        away = response[1]
+        return FixtureLineup(
+            home_starters=_extract_ids(home, "startXI"),
+            away_starters=_extract_ids(away, "startXI"),
+            home_subs=_extract_ids(home, "substitutes"),
+            away_subs=_extract_ids(away, "substitutes"),
         )
 
     def get_player_stats(self, fixture_id: int) -> list[FootballPlayerStat]:
