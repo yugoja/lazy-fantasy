@@ -440,7 +440,7 @@ export default function LeagueLeaderboardPage() {
                             <Badge variant="outline" className="text-[10px]">You</Badge>
                           )}
                           {entry.is_owner && (
-                            <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500">Owner</Badge>
+                            <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500">Admin</Badge>
                           )}
                         </div>
                       </div>
