@@ -65,15 +65,15 @@ export const mockExistingPrediction = {
 };
 
 export const mockLeagues = [
-  { id: 10, name: 'Test League', invite_code: 'ABC123', owner_id: 1, sport: 'cricket' },
-  { id: 20, name: 'Another League', invite_code: 'DEF456', owner_id: 2, sport: 'cricket' },
+  { id: 10, name: 'Test League', invite_code: 'ABC123', owner_id: 1, sport: 'cricket', image_url: null },
+  { id: 20, name: 'Another League', invite_code: 'DEF456', owner_id: 2, sport: 'cricket', image_url: null },
 ];
 
 export const mockLeaderboardEntries = [
-  { user_id: 1, username: 'alice', total_points: 150, rank: 1, rank_delta: null },
-  { user_id: 2, username: 'bob', total_points: 120, rank: 2, rank_delta: 1 },
-  { user_id: 3, username: 'testuser', total_points: 100, rank: 3, rank_delta: -1 },
-  { user_id: 4, username: 'dave', total_points: 80, rank: 4, rank_delta: null },
+  { user_id: 1, username: 'alice', total_points: 150, rank: 1, rank_delta: null, is_owner: true, avatar_url: null },
+  { user_id: 2, username: 'bob', total_points: 120, rank: 2, rank_delta: 1, is_owner: false, avatar_url: null },
+  { user_id: 3, username: 'testuser', total_points: 100, rank: 3, rank_delta: -1, is_owner: false, avatar_url: null },
+  { user_id: 4, username: 'dave', total_points: 80, rank: 4, rank_delta: null, is_owner: false, avatar_url: null },
 ];
 
 export const mockLeaderboardResponse = {

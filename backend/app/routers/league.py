@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -10,10 +10,12 @@ from app.models import User, Match, Prediction, Player, Team
 from app.schemas.league import (
     LeagueCreate,
     LeagueResponse,
+    LeagueUpdate,
     LeagueJoin,
     LeaderboardEntry,
     LeaderboardResponse,
 )
+from app.utils.images import LEAGUES_DIR, save_upload
 from app.schemas.prediction import FriendPrediction
 from app.schemas.match import TeamResponse, PlayerResponse
 from app.schemas.dugout import DugoutEvent
@@ -146,14 +148,16 @@ async def get_leaderboard(
     # Use standard competition ranking: tied points share the same rank (1,2,2,4).
     entries = []
     current_rank = 0
-    for idx, (user_id, username, display_name, total_points, prev_rank) in enumerate(leaderboard_data):
-        if idx == 0 or total_points != leaderboard_data[idx - 1][3]:
+    for idx, (user_id, username, display_name, avatar_url, total_points, prev_rank) in enumerate(leaderboard_data):
+        if idx == 0 or total_points != leaderboard_data[idx - 1][4]:
             current_rank = idx + 1
         rank_delta = (prev_rank - current_rank) if prev_rank is not None else None
         entries.append(LeaderboardEntry(
             user_id=user_id,
             username=username,
             display_name=display_name,
+            avatar_url=avatar_url,
+            is_owner=(user_id == league.owner_id),
             total_points=int(total_points),
             rank=current_rank,
             rank_delta=rank_delta,
@@ -165,6 +169,51 @@ async def get_leaderboard(
         entries=entries,
         available_rounds=_get_available_rounds(db, league.created_at),
     )
+
+
+@router.post("/{league_id}/image", response_model=LeagueResponse)
+async def upload_league_image(
+    league_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Upload or replace the league's cover image. Owner only."""
+    league = get_league_by_id(db, league_id)
+    if not league:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+    if league.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the league owner can update this")
+    file_bytes = await file.read()
+    dest = LEAGUES_DIR / f"{league_id}.jpg"
+    save_upload(file_bytes, file.content_type or "", dest, (512, 512))
+    league.image_url = f"/uploads/leagues/{league_id}.jpg"
+    db.commit()
+    db.refresh(league)
+    return league
+
+
+@router.patch("/{league_id}", response_model=LeagueResponse)
+async def update_league(
+    league_id: int,
+    data: LeagueUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update league settings. Owner only."""
+    league = get_league_by_id(db, league_id)
+    if not league:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+    if league.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the league owner can update this")
+    if data.name is not None:
+        name = data.name.strip()
+        if not name:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="League name cannot be empty")
+        league.name = name
+    db.commit()
+    db.refresh(league)
+    return league
 
 
 @router.get("/{league_id}/matches/{match_id}/predictions", response_model=list[FriendPrediction])

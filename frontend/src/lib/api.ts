@@ -88,15 +88,39 @@ export async function googleLogin(credential: string) {
     });
 }
 
+export interface UserProfile {
+    id: number;
+    username: string;
+    email: string;
+    display_name: string | null;
+    avatar_url: string | null;
+}
+
 export async function getMe() {
-    return request<{ id: number; username: string; email: string; display_name: string | null }>('/auth/me');
+    return request<UserProfile>('/auth/me');
 }
 
 export async function updateProfile(displayName: string) {
-    return request<{ id: number; username: string; email: string; display_name: string | null }>('/auth/me', {
+    return request<UserProfile>('/auth/me', {
         method: 'PUT',
         body: JSON.stringify({ display_name: displayName }),
     });
+}
+
+export async function uploadAvatar(file: File): Promise<UserProfile> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_BASE}/auth/me/avatar`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData,
+    });
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
+        throw new ApiError(response.status, error.detail || 'Upload failed');
+    }
+    return response.json();
 }
 
 // Leagues
@@ -106,22 +130,54 @@ export async function getLeaguePreview(inviteCode: string) {
     );
 }
 
+export interface LeagueInfo {
+    id: number;
+    name: string;
+    invite_code: string;
+    owner_id: number;
+    sport: string;
+    image_url: string | null;
+}
+
 export async function getMyLeagues() {
-    return request<Array<{ id: number; name: string; invite_code: string; owner_id: number; sport: string }>>('/leagues/my');
+    return request<LeagueInfo[]>('/leagues/my');
 }
 
 export async function createLeague(name: string, sport: string = 'cricket') {
-    return request<{ id: number; name: string; invite_code: string; owner_id: number; sport: string }>('/leagues/', {
+    return request<LeagueInfo>('/leagues/', {
         method: 'POST',
         body: JSON.stringify({ name, sport }),
     });
 }
 
 export async function joinLeague(inviteCode: string) {
-    return request<{ id: number; name: string; invite_code: string; owner_id: number }>('/leagues/join', {
+    return request<LeagueInfo>('/leagues/join', {
         method: 'POST',
         body: JSON.stringify({ invite_code: inviteCode }),
     });
+}
+
+export async function updateLeague(leagueId: number, data: { name?: string }) {
+    return request<LeagueInfo>(`/leagues/${leagueId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+    });
+}
+
+export async function uploadLeagueImage(leagueId: number, file: File): Promise<LeagueInfo> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_BASE}/leagues/${leagueId}/image`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData,
+    });
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
+        throw new ApiError(response.status, error.detail || 'Upload failed');
+    }
+    return response.json();
 }
 
 export interface FriendPrediction {
@@ -148,6 +204,17 @@ export async function getLeagueMatchPredictions(leagueId: number, matchId: numbe
     return request<FriendPrediction[]>(`/leagues/${leagueId}/matches/${matchId}/predictions`);
 }
 
+export interface LeaderboardEntry {
+    user_id: number;
+    username: string;
+    display_name?: string | null;
+    avatar_url?: string | null;
+    is_owner: boolean;
+    total_points: number;
+    rank: number;
+    rank_delta: number | null;
+}
+
 export async function getLeaderboard(leagueId: number, round?: string) {
     const url = round
         ? `/leagues/${leagueId}/leaderboard?round=${encodeURIComponent(round)}`
@@ -155,7 +222,7 @@ export async function getLeaderboard(leagueId: number, round?: string) {
     return request<{
         league_id: number;
         league_name: string;
-        entries: Array<{ user_id: number; username: string; display_name?: string | null; total_points: number; rank: number; rank_delta: number | null }>;
+        entries: LeaderboardEntry[];
         available_rounds: string[];
     }>(url);
 }

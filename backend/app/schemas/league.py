@@ -15,8 +15,14 @@ class LeagueResponse(BaseModel):
     invite_code: str
     owner_id: int
     sport: str = "cricket"
+    image_url: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class LeagueUpdate(BaseModel):
+    """Schema for owner-only league updates."""
+    name: Optional[str] = None
 
 
 class LeagueJoin(BaseModel):
@@ -29,6 +35,8 @@ class LeaderboardEntry(BaseModel):
     user_id: int
     username: str
     display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    is_owner: bool = False
     total_points: int
     rank: int
     rank_delta: Optional[int] = None

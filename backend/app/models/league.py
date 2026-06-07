@@ -18,6 +18,7 @@ class League(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
     )
+    image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Relationships
     owner = relationship("User", back_populates="owned_leagues")

@@ -35,8 +35,8 @@ const mockLeaderboardLeague20 = {
   league_id: 20,
   league_name: 'Another League',
   entries: [
-    { user_id: 3, username: 'testuser', total_points: 200, rank: 1, rank_delta: 2 },
-    { user_id: 2, username: 'bob', total_points: 180, rank: 2, rank_delta: null },
+    { user_id: 3, username: 'testuser', total_points: 200, rank: 1, rank_delta: 2, is_owner: false, avatar_url: null },
+    { user_id: 2, username: 'bob', total_points: 180, rank: 2, rank_delta: null, is_owner: false, avatar_url: null },
   ],
   available_rounds: ['GROUP_1', 'GROUP_2', 'GROUP_3'],
 };
@@ -202,7 +202,7 @@ describe('LeaguesPage', () => {
 
   it('opens join dialog and calls joinLeague on submit', async () => {
     const user = userEvent.setup();
-    const newLeague = { id: 30, name: 'New League', invite_code: 'XYZ999', owner_id: 1, sport: 'cricket' };
+    const newLeague = { id: 30, name: 'New League', invite_code: 'XYZ999', owner_id: 1, sport: 'cricket', image_url: null };
     mockJoinLeague.mockResolvedValue(newLeague);
 
     render(<LeaguesPage />);
@@ -238,7 +238,7 @@ describe('LeaguesPage', () => {
 
   it('opens create dialog, submits, and shows invite code in confirmation', async () => {
     const user = userEvent.setup();
-    const created = { id: 99, name: 'My Squad', invite_code: 'MYS-2026-QQ1', owner_id: 3, sport: 'cricket' };
+    const created = { id: 99, name: 'My Squad', invite_code: 'MYS-2026-QQ1', owner_id: 3, sport: 'cricket', image_url: null };
     mockCreateLeague.mockResolvedValue(created);
 
     render(<LeaguesPage />);

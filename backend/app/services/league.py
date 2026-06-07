@@ -249,6 +249,7 @@ def get_league_leaderboard(
             User.id,
             User.username,
             User.display_name,
+            User.avatar_url,
             func.coalesce(func.sum(eligible_predictions.c.points_earned), 0).label(
                 "total_points"
             ),
@@ -258,7 +259,7 @@ def get_league_leaderboard(
             eligible_predictions,
             User.id == eligible_predictions.c.user_id,
         )
-        .group_by(User.id, User.username, User.display_name)
+        .group_by(User.id, User.username, User.display_name, User.avatar_url)
         .order_by(
             func.coalesce(func.sum(eligible_predictions.c.points_earned), 0).desc()
         )
@@ -268,21 +269,21 @@ def get_league_leaderboard(
     if round_key:
         # Tournament picks have no per-round granularity; rank deltas are meaningless
         augmented = [
-            (user_id, username, display_name, total_points)
-            for user_id, username, display_name, total_points in results
+            (user_id, username, display_name, avatar_url, total_points)
+            for user_id, username, display_name, avatar_url, total_points in results
         ]
-        augmented.sort(key=lambda x: x[3], reverse=True)
-        return [(user_id, username, display_name, total_points, None)
-                for user_id, username, display_name, total_points in augmented]
+        augmented.sort(key=lambda x: x[4], reverse=True)
+        return [(user_id, username, display_name, avatar_url, total_points, None)
+                for user_id, username, display_name, avatar_url, total_points in augmented]
 
     # Add tournament pick points and re-sort
     tp_points = _get_tournament_pick_points(db, league.created_at)
     augmented = [
-        (user_id, username, display_name, total_points + tp_points.get(user_id, 0))
-        for user_id, username, display_name, total_points in results
+        (user_id, username, display_name, avatar_url, total_points + tp_points.get(user_id, 0))
+        for user_id, username, display_name, avatar_url, total_points in results
     ]
-    augmented.sort(key=lambda x: x[3], reverse=True)
+    augmented.sort(key=lambda x: x[4], reverse=True)
 
     # Attach prev_rank to each result row
-    return [(user_id, username, display_name, total_points, prev_rank_map.get(user_id))
-            for user_id, username, display_name, total_points in augmented]
+    return [(user_id, username, display_name, avatar_url, total_points, prev_rank_map.get(user_id))
+            for user_id, username, display_name, avatar_url, total_points in augmented]

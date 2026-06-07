@@ -1,15 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getLeaderboard, getMyLeagues } from '@/lib/api';
+import { getLeaderboard, getMyLeagues, uploadLeagueImage, LeaderboardEntry } from '@/lib/api';
 import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -17,18 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trophy, TrendingUp, TrendingDown, Minus, ArrowLeft, Share2 } from 'lucide-react';
+import { Trophy, TrendingUp, TrendingDown, Minus, ArrowLeft, Share2, Settings, Camera, Loader2, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { shareWithCard } from '@/lib/share';
-
-interface LeaderboardEntry {
-  user_id: number;
-  username: string;
-  display_name?: string | null;
-  total_points: number;
-  rank: number;
-  rank_delta: number | null;
-}
 
 type RoundKey = 'ALL' | string;
 
@@ -55,11 +52,23 @@ export default function LeagueLeaderboardPage() {
   const leagueId = Number(params.leagueId);
 
   const [leagueName, setLeagueName] = useState('');
+  const [leagueImageUrl, setLeagueImageUrl] = useState<string | null>(null);
+  const [leagueImageVersion, setLeagueImageVersion] = useState(0);
+  const [leagueOwnerId, setLeagueOwnerId] = useState<number | null>(null);
   const [inviteCode, setInviteCode] = useState('');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [availableRounds, setAvailableRounds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRound, setSelectedRound] = useState<RoundKey>('ALL');
+
+  // Settings dialog
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState('');
+  const [codeCopied, setCodeCopied] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -73,6 +82,13 @@ export default function LeagueLeaderboardPage() {
     }
   }, [isAuthenticated, leagueId]);
 
+  // Revoke preview object URL on cleanup
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
   const loadBoard = async (round: RoundKey) => {
     setIsLoading(true);
     try {
@@ -85,7 +101,11 @@ export default function LeagueLeaderboardPage() {
       setEntries(data.entries);
       setAvailableRounds(data.available_rounds ?? []);
       const league = leagues.find((l) => l.id === leagueId);
-      if (league) setInviteCode(league.invite_code);
+      if (league) {
+        setInviteCode(league.invite_code);
+        setLeagueImageUrl(league.image_url);
+        setLeagueOwnerId(league.owner_id);
+      }
     } catch {
       // empty state
     } finally {
@@ -105,7 +125,49 @@ export default function LeagueLeaderboardPage() {
     await shareWithCard({ text, title: 'Lazy Fantasy — Join League' });
   };
 
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError('Image must be under 2MB');
+      return;
+    }
+    setImageError('');
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    e.target.value = '';
+  };
+
+  const handleImageUpload = async () => {
+    if (!imageFile) return;
+    setImageUploading(true);
+    setImageError('');
+    try {
+      const updated = await uploadLeagueImage(leagueId, imageFile);
+      setLeagueImageUrl(updated.image_url);
+      setLeagueImageVersion(v => v + 1);
+      setImageFile(null);
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+        setImagePreview(null);
+      }
+    } catch {
+      setImageError('Failed to upload. Try again.');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleCopyCode = async () => {
+    if (!inviteCode) return;
+    await navigator.clipboard.writeText(inviteCode).catch(() => {});
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
   const currentUserEntry = entries.find(e => e.username === username);
+  const isOwner = leagueOwnerId !== null && currentUserEntry?.is_owner === true;
   const isRoundActive = selectedRound !== 'ALL';
   const ptsLabel = isRoundActive ? 'rnd pts' : 'pts';
 
@@ -136,17 +198,109 @@ export default function LeagueLeaderboardPage() {
           </Button>
         </Link>
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">{leagueName || 'Leaderboard'}</h1>
-          {inviteCode && (
-            <Button variant="outline" size="sm" onClick={handleShare} className="shrink-0 gap-2">
-              <Share2 className="h-4 w-4" />
-              Invite
-            </Button>
-          )}
+          <div className="flex items-center gap-3 min-w-0">
+            {leagueImageUrl && (
+              <img
+                src={`${leagueImageUrl}?v=${leagueImageVersion}`}
+                alt={leagueName}
+                className="h-10 w-10 rounded-lg object-cover shrink-0"
+              />
+            )}
+            <h1 className="text-2xl font-bold truncate">{leagueName || 'Leaderboard'}</h1>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            {isOwner && (
+              <Button variant="ghost" size="sm" onClick={() => setSettingsOpen(true)}>
+                <Settings className="h-4 w-4" />
+              </Button>
+            )}
+            {inviteCode && (
+              <Button variant="outline" size="sm" onClick={handleShare} className="gap-2">
+                <Share2 className="h-4 w-4" />
+                Invite
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Round selector — only shown when at least one completed round exists */}
+      {/* League Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>League Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            {/* League image */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium">League Image</p>
+              <div className="flex items-center gap-4">
+                <div
+                  className="relative h-20 w-20 rounded-lg overflow-hidden bg-secondary cursor-pointer border border-border group flex-shrink-0"
+                  onClick={() => imageInputRef.current?.click()}
+                >
+                  {imagePreview || leagueImageUrl ? (
+                    <img
+                      src={imagePreview || `${leagueImageUrl}?v=${leagueImageVersion}`}
+                      alt="League"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <Camera className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <Camera className="h-5 w-5 text-white" />
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  JPEG, PNG or WebP · Max 2MB · Best size: 512×512
+                </div>
+              </div>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleImageFileChange}
+              />
+              {imageError && <p className="text-xs text-destructive">{imageError}</p>}
+              {imageFile && (
+                <Button
+                  size="sm"
+                  onClick={handleImageUpload}
+                  disabled={imageUploading}
+                  className="w-full"
+                >
+                  {imageUploading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading…</>
+                  ) : (
+                    'Save Image'
+                  )}
+                </Button>
+              )}
+            </div>
+
+            {/* Invite code */}
+            {inviteCode && (
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium">Invite Code</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-md border border-border bg-secondary px-3 py-2 text-sm font-mono tracking-widest">
+                    {inviteCode}
+                  </div>
+                  <Button variant="outline" size="sm" className="shrink-0" onClick={handleCopyCode}>
+                    {codeCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Round selector */}
       {availableRounds.length > 0 && (
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground shrink-0">Round:</span>
@@ -199,6 +353,7 @@ export default function LeagueLeaderboardPage() {
                 <div className="flex flex-col items-center">
                   <div className="text-3xl mb-2">🥈</div>
                   <Avatar className="h-12 w-12 mb-2 border-2 border-slate-400">
+                    {second.avatar_url && <AvatarImage src={second.avatar_url} alt={entryLabel(second)} />}
                     <AvatarFallback className="bg-slate-500 text-white font-bold">
                       {entryLabel(second).substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -214,6 +369,7 @@ export default function LeagueLeaderboardPage() {
                 <div className="flex flex-col items-center">
                   <Trophy className="h-8 w-8 text-amber-500 mb-2" />
                   <Avatar className="h-16 w-16 mb-2 border-2 border-amber-500">
+                    {first.avatar_url && <AvatarImage src={first.avatar_url} alt={entryLabel(first)} />}
                     <AvatarFallback className="bg-amber-600 text-white font-bold text-lg">
                       {entryLabel(first).substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -229,6 +385,7 @@ export default function LeagueLeaderboardPage() {
                 <div className="flex flex-col items-center">
                   <div className="text-3xl mb-2">🥉</div>
                   <Avatar className="h-12 w-12 mb-2 border-2 border-orange-600">
+                    {third.avatar_url && <AvatarImage src={third.avatar_url} alt={entryLabel(third)} />}
                     <AvatarFallback className="bg-orange-700 text-white font-bold">
                       {entryLabel(third).substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -264,15 +421,22 @@ export default function LeagueLeaderboardPage() {
 
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <Avatar className="h-10 w-10">
+                        {entry.avatar_url && <AvatarImage src={entry.avatar_url} alt={entryLabel(entry)} />}
                         <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                           {entryLabel(entry).substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold text-sm truncate">{entryLabel(entry)}</div>
-                        {isCurrentUser && (
-                          <Badge variant="outline" className="text-[10px] mt-0.5">You</Badge>
-                        )}
+                        <div className="text-xs text-muted-foreground">@{entry.username}</div>
+                        <div className="flex gap-1 mt-0.5 flex-wrap">
+                          {isCurrentUser && (
+                            <Badge variant="outline" className="text-[10px]">You</Badge>
+                          )}
+                          {entry.is_owner && (
+                            <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-500">Owner</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 

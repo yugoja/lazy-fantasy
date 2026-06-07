@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMyLeagues, getMyPredictionsDetailed, PredictionDetail, FootballPredictionDetail, updateProfile } from '@/lib/api';
+import { getMe, getMyLeagues, getMyPredictionsDetailed, PredictionDetail, FootballPredictionDetail, updateProfile, uploadAvatar } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +25,8 @@ import {
   Pencil,
   Check,
   X,
+  Camera,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +43,13 @@ export default function ProfilePage() {
   const [leagues, setLeagues] = useState<League[]>([]);
   const [predictions, setPredictions] = useState<Array<PredictionDetail | FootballPredictionDetail>>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Avatar
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarVersion, setAvatarVersion] = useState(0);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Display name editing
   const [isEditing, setIsEditing] = useState(false);
@@ -62,16 +71,39 @@ export default function ProfilePage() {
 
   const loadData = async () => {
     try {
-      const [leaguesData, predictionsData] = await Promise.allSettled([
+      const [meData, leaguesData, predictionsData] = await Promise.allSettled([
+        getMe(),
         getMyLeagues(),
         getMyPredictionsDetailed(),
       ]);
+      if (meData.status === 'fulfilled') setAvatarUrl(meData.value.avatar_url);
       if (leaguesData.status === 'fulfilled') setLeagues(leaguesData.value);
       if (predictionsData.status === 'fulfilled') setPredictions(predictionsData.value);
     } catch {
       // silently fail - non-critical
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError('Image must be under 2MB');
+      return;
+    }
+    setAvatarUploading(true);
+    setAvatarError('');
+    try {
+      const updated = await uploadAvatar(file);
+      setAvatarUrl(updated.avatar_url);
+      setAvatarVersion(v => v + 1);
+    } catch {
+      setAvatarError('Failed to upload. Try again.');
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -150,15 +182,45 @@ export default function ProfilePage() {
       {/* Profile Avatar */}
       <div className="flex flex-col items-center">
         <div className="relative">
-          <Avatar className="h-20 w-20 border-2 border-primary">
-            <AvatarFallback className="bg-primary/15 text-2xl font-bold text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-accent">
+          <button
+            className="relative cursor-pointer group focus:outline-none"
+            onClick={() => avatarInputRef.current?.click()}
+            aria-label="Change profile picture"
+          >
+            <Avatar className="h-20 w-20 border-2 border-primary">
+              {avatarUrl && (
+                <AvatarImage
+                  src={`${avatarUrl}?v=${avatarVersion}`}
+                  alt={visibleName}
+                />
+              )}
+              <AvatarFallback className="bg-primary/15 text-2xl font-bold text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              <Camera className="h-5 w-5 text-white" />
+            </div>
+            {avatarUploading && (
+              <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                <Loader2 className="h-5 w-5 text-white animate-spin" />
+              </div>
+            )}
+          </button>
+          <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-accent pointer-events-none">
             <Trophy className="h-3.5 w-3.5 text-accent-foreground" />
           </div>
         </div>
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleAvatarChange}
+        />
+        {avatarError && (
+          <p className="mt-1 text-xs text-destructive">{avatarError}</p>
+        )}
         <h1 className="mt-3 text-lg font-bold text-foreground">{visibleName}</h1>
         <p className="text-xs text-muted-foreground">@{username}</p>
       </div>

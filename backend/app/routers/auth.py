@@ -1,7 +1,7 @@
 import logging
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.security import OAuth2PasswordRequestForm
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
@@ -28,6 +28,7 @@ from app.services.auth import (
     get_user_by_username,
 )
 from app.models import User
+from app.utils.images import AVATARS_DIR, save_upload
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,22 @@ async def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
     """Get current user's profile."""
+    return current_user
+
+
+@router.post("/me/avatar", response_model=UserResponse)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Upload or replace the current user's profile picture."""
+    file_bytes = await file.read()
+    dest = AVATARS_DIR / f"{current_user.id}.jpg"
+    save_upload(file_bytes, file.content_type or "", dest, (256, 256))
+    current_user.avatar_url = f"/uploads/avatars/{current_user.id}.jpg"
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 
