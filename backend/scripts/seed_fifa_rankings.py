@@ -7,7 +7,12 @@ Updates the fifa_ranking column on football teams. Matches by team name
 Usage (from backend/, or in the compose backend container):
   python -m scripts.seed_fifa_rankings
 """
-from app.db import SessionLocal
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.database import SessionLocal
 from app.models.team import Team
 
 RANKINGS: dict[str, int] = {
