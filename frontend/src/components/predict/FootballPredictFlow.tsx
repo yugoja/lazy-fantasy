@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   Clock,
+  Info,
   Minus,
   Plus,
 } from 'lucide-react';
@@ -132,8 +133,8 @@ function buildTokenPositions(players: Player[], side: 'top' | 'bottom'): Array<{
 }
 
 const STEP_META = [
-  { title: 'Call the score.', sub: 'Exact final score. Nail it on the nose for the big points.' },
-  { title: 'Who shows up?', sub: 'Pick three players. Goals, assists, clean sheets — they all score.' },
+  { title: 'Call the score.' },
+  { title: 'Who shows up?' },
 ];
 
 function TeamCrest({ team, size = 'md' }: { team: { short_name: string; name: string }; size?: 'sm' | 'md' | 'lg' }) {
@@ -260,6 +261,72 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ScorePointsHint({ isKnockout }: { isKnockout: boolean }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+      <span className="rounded bg-primary/10 px-2 py-0.5 font-heading text-[10px] font-semibold text-primary">Result +5</span>
+      <span className="text-[9px] text-muted-foreground/40">·</span>
+      <span className="rounded bg-primary/10 px-2 py-0.5 font-heading text-[10px] font-semibold text-primary">One score +5</span>
+      <span className="text-[9px] text-muted-foreground/40">·</span>
+      <span className="rounded bg-primary/10 px-2 py-0.5 font-heading text-[10px] font-semibold text-primary">Both +10</span>
+      {isKnockout && (
+        <>
+          <span className="text-[9px] text-muted-foreground/40">·</span>
+          <span className="rounded bg-amber-500/15 px-2 py-0.5 font-heading text-[10px] font-bold text-amber-500">⚡ 2× knockout</span>
+        </>
+      )}
+    </div>
+  );
+}
+
+const PLAYER_POINTS_ROWS = [
+  { pos: 'FWD', goal: '+10', assist: '+5',  cs: '—' },
+  { pos: 'MID', goal: '+15', assist: '+10', cs: '+3' },
+  { pos: 'DEF', goal: '+25', assist: '+12', cs: '+6' },
+  { pos: 'GK',  goal: '+25', assist: '+12', cs: '+6' },
+];
+
+function PlayerPointsHint({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  return (
+    <div className="mb-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+        aria-expanded={open}
+      >
+        <Info className="h-3.5 w-3.5 shrink-0" />
+        <span className="font-heading text-[10px] font-semibold uppercase tracking-[0.15em]">
+          {open ? 'Hide scoring' : 'How picks score'}
+        </span>
+      </button>
+      {open && (
+        <div className="mt-2 rounded-xl border border-border bg-card/60 px-3 py-2.5 space-y-2">
+          <div className="grid grid-cols-4 gap-x-2 gap-y-1">
+            <span className="font-heading text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60">Pos</span>
+            <span className="font-heading text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 text-right">Goal</span>
+            <span className="font-heading text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 text-right">Assist</span>
+            <span className="font-heading text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 text-right">CS</span>
+            {PLAYER_POINTS_ROWS.map(row => (
+              <>
+                <span key={`${row.pos}-pos`} className="font-heading text-[11px] font-bold text-foreground">{row.pos}</span>
+                <span key={`${row.pos}-goal`} className="font-heading text-[11px] tabular-nums text-primary text-right">{row.goal}</span>
+                <span key={`${row.pos}-assist`} className="font-heading text-[11px] tabular-nums text-primary text-right">{row.assist}</span>
+                <span key={`${row.pos}-cs`} className={cn('font-heading text-[11px] tabular-nums text-right', row.cs === '—' ? 'text-muted-foreground/40' : 'text-primary')}>{row.cs}</span>
+              </>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 pt-1 border-t border-border">
+            <span className="font-heading text-[9px] text-muted-foreground">+3 appearance (30+ min)</span>
+            <span className="font-heading text-[9px] text-muted-foreground">−3 red card / own goal</span>
+            <span className="font-heading text-[9px] text-muted-foreground">GK: +5 pen save</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FootballPredictFlow({ matchId, matchData }: { matchId: number; matchData: MatchPlayersResponse }) {
   const router = useRouter();
   const { team_1, team_2, stage } = matchData;
@@ -275,6 +342,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPointsHint, setShowPointsHint] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   const touchStartX = useRef(0);
@@ -461,6 +529,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
           </span>
         </div>
         <h2 className="mt-2 font-heading text-2xl font-bold tracking-tight">{STEP_META[step].title}</h2>
+        {step === 0 && <ScorePointsHint isKnockout={isKnockout} />}
       </div>
 
       {/* ── Panels ── */}
@@ -552,6 +621,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
         {/* ── Step 1: Pitch map ── */}
         {step === 1 && (
           <div>
+            <PlayerPointsHint open={showPointsHint} onToggle={() => setShowPointsHint(v => !v)} />
             {/* Tray */}
             <div className="flex gap-2 mb-3">
               {[0, 1, 2].map(i => {
