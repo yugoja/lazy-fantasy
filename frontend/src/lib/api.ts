@@ -1,5 +1,12 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+/** Resolve a backend-relative path (e.g. /uploads/avatars/1.jpg) to a full URL. */
+export function mediaUrl(path: string | null | undefined): string | null {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `${API_BASE}${path}`;
+}
+
 class ApiError extends Error {
     constructor(public status: number, message: string) {
         super(message);

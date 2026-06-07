@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getMe, getMyLeagues, getMyPredictionsDetailed, PredictionDetail, FootballPredictionDetail, updateProfile, uploadAvatar } from '@/lib/api';
+import { getMe, getMyLeagues, getMyPredictionsDetailed, PredictionDetail, FootballPredictionDetail, updateProfile, uploadAvatar, mediaUrl } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -190,7 +190,7 @@ export default function ProfilePage() {
             <Avatar className="h-20 w-20 border-2 border-primary">
               {avatarUrl && (
                 <AvatarImage
-                  src={`${avatarUrl}?v=${avatarVersion}`}
+                  src={`${mediaUrl(avatarUrl)}?v=${avatarVersion}`}
                   alt={visibleName}
                 />
               )}

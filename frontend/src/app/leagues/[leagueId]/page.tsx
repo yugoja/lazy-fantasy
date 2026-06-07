@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { useAuth } from '@/lib/auth';
-import { getLeaderboard, getMyLeagues, uploadLeagueImage, LeaderboardEntry } from '@/lib/api';
+import { getLeaderboard, getMyLeagues, uploadLeagueImage, LeaderboardEntry, mediaUrl } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -202,7 +202,7 @@ export default function LeagueLeaderboardPage() {
           <div className="flex items-center gap-3 min-w-0">
             {leagueImageUrl && (
               <NextImage
-                src={`${leagueImageUrl}?v=${leagueImageVersion}`}
+                src={`${mediaUrl(leagueImageUrl)}?v=${leagueImageVersion}`}
                 alt={leagueName}
                 width={40}
                 height={40}
@@ -245,7 +245,7 @@ export default function LeagueLeaderboardPage() {
                 >
                   {imagePreview || leagueImageUrl ? (
                     <NextImage
-                      src={imagePreview || `${leagueImageUrl}?v=${leagueImageVersion}`}
+                      src={imagePreview || `${mediaUrl(leagueImageUrl)}?v=${leagueImageVersion}`}
                       alt="League"
                       fill
                       className="object-cover"
@@ -359,7 +359,7 @@ export default function LeagueLeaderboardPage() {
                 <div className="flex flex-col items-center">
                   <div className="text-3xl mb-2">🥈</div>
                   <Avatar className="h-12 w-12 mb-2 border-2 border-slate-400">
-                    {second.avatar_url && <AvatarImage src={second.avatar_url} alt={entryLabel(second)} />}
+                    {second.avatar_url && <AvatarImage src={mediaUrl(second.avatar_url)!} alt={entryLabel(second)} />}
                     <AvatarFallback className="bg-slate-500 text-white font-bold">
                       {entryLabel(second).substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -375,7 +375,7 @@ export default function LeagueLeaderboardPage() {
                 <div className="flex flex-col items-center">
                   <Trophy className="h-8 w-8 text-amber-500 mb-2" />
                   <Avatar className="h-16 w-16 mb-2 border-2 border-amber-500">
-                    {first.avatar_url && <AvatarImage src={first.avatar_url} alt={entryLabel(first)} />}
+                    {first.avatar_url && <AvatarImage src={mediaUrl(first.avatar_url)!} alt={entryLabel(first)} />}
                     <AvatarFallback className="bg-amber-600 text-white font-bold text-lg">
                       {entryLabel(first).substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -391,7 +391,7 @@ export default function LeagueLeaderboardPage() {
                 <div className="flex flex-col items-center">
                   <div className="text-3xl mb-2">🥉</div>
                   <Avatar className="h-12 w-12 mb-2 border-2 border-orange-600">
-                    {third.avatar_url && <AvatarImage src={third.avatar_url} alt={entryLabel(third)} />}
+                    {third.avatar_url && <AvatarImage src={mediaUrl(third.avatar_url)!} alt={entryLabel(third)} />}
                     <AvatarFallback className="bg-orange-700 text-white font-bold">
                       {entryLabel(third).substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -427,7 +427,7 @@ export default function LeagueLeaderboardPage() {
 
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <Avatar className="h-10 w-10">
-                        {entry.avatar_url && <AvatarImage src={entry.avatar_url} alt={entryLabel(entry)} />}
+                        {entry.avatar_url && <AvatarImage src={mediaUrl(entry.avatar_url)!} alt={entryLabel(entry)} />}
                         <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                           {entryLabel(entry).substring(0, 2).toUpperCase()}
                         </AvatarFallback>
