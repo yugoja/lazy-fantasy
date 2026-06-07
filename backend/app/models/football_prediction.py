@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import Integer, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -35,6 +35,9 @@ class FootballPrediction(Base):
     player_pick_1_id: Mapped[int] = mapped_column(Integer, ForeignKey("players.id"))
     player_pick_2_id: Mapped[int] = mapped_column(Integer, ForeignKey("players.id"))
     player_pick_3_id: Mapped[int] = mapped_column(Integer, ForeignKey("players.id"))
+
+    # How this prediction was created: 'user' (manual submit) or 'autopick' (fallback job).
+    source: Mapped[str] = mapped_column(String(20), default="user", server_default="user")
 
     # Relationships
     prediction = relationship("Prediction", back_populates="football")

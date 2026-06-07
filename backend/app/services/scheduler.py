@@ -103,6 +103,79 @@ def _run_sync(fn) -> None:
         db.close()
 
 
+def _run_football_fallback_for_match(match_id: int) -> None:
+    """One-shot job: auto-fill predictions for a single match at kickoff."""
+    from app.models.match import Match
+    from app.services.fallback_job import build_prediction_inputs_from_db, run_football_fallback
+
+    db: Session = SessionLocal()
+    try:
+        match = db.query(Match).get(match_id)
+        if match is None:
+            logger.warning(f"Football fallback: match {match_id} not found")
+            return
+        inputs = build_prediction_inputs_from_db(db, match)
+        summary = run_football_fallback(db, match, inputs)
+        logger.info(
+            f"Football fallback: match {match_id} "
+            f"({match.team_1.short_name} vs {match.team_2.short_name}) — "
+            f"filled {summary.filled}, skipped {summary.skipped}"
+        )
+    except Exception as e:
+        logger.error(f"Football fallback job for match {match_id} failed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+def schedule_football_fallback(match) -> None:
+    """Register a one-shot fallback job to fire at match.start_time.
+
+    Safe to call for any match — silently skips non-football or past matches.
+    Called at startup (for all upcoming matches) and from create_match.
+    """
+    from datetime import timezone as tz
+    from app.models.tournament import Tournament
+
+    if not scheduler.running:
+        return
+
+    # Resolve sport — match.tournament may not be loaded yet if called pre-commit
+    # so we re-query via the scheduler's own session only if needed.
+    sport = None
+    if match.tournament:
+        sport = match.tournament.sport
+    else:
+        db: Session = SessionLocal()
+        try:
+            t = db.query(Tournament).get(match.tournament_id)
+            sport = t.sport if t else None
+        finally:
+            db.close()
+
+    if sport != "football":
+        return
+
+    start = match.start_time
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=tz.utc)
+
+    now = datetime.now(tz.utc)
+    if start <= now:
+        return  # already past — skip (startup handles this separately)
+
+    job_id = f"football_fallback_{match.id}"
+    scheduler.add_job(
+        _run_football_fallback_for_match,
+        trigger="date",
+        run_date=start,
+        args=[match.id],
+        id=job_id,
+        replace_existing=True,
+    )
+    logger.info(f"Scheduled fallback for match {match.id} at {start.isoformat()}")
+
+
 def _sync_football_results() -> None:
     """Poll football matches that should be finished and auto-score them."""
     from datetime import timedelta
@@ -135,6 +208,43 @@ def _sync_football_results() -> None:
     except Exception as e:
         logger.error(f"Football sync job failed: {e}")
         db.rollback()
+    finally:
+        db.close()
+
+
+def _schedule_upcoming_football_fallbacks() -> None:
+    """At startup, register date-triggered fallback jobs for all upcoming football matches."""
+    from datetime import timezone as tz
+    from app.models.match import Match, MatchStatus
+    from app.models.tournament import Tournament
+
+    db: Session = SessionLocal()
+    try:
+        now = datetime.now(tz.utc)
+        upcoming = (
+            db.query(Match)
+            .join(Tournament, Match.tournament_id == Tournament.id)
+            .filter(
+                Match.status == MatchStatus.SCHEDULED,
+                Match.start_time > now,
+                Tournament.sport == "football",
+            )
+            .all()
+        )
+        for match in upcoming:
+            job_id = f"football_fallback_{match.id}"
+            scheduler.add_job(
+                _run_football_fallback_for_match,
+                trigger="date",
+                run_date=match.start_time,
+                args=[match.id],
+                id=job_id,
+                replace_existing=True,
+            )
+        if upcoming:
+            logger.info(f"Scheduled fallback jobs for {len(upcoming)} upcoming football matches")
+    except Exception as e:
+        logger.error(f"Failed to schedule football fallbacks at startup: {e}")
     finally:
         db.close()
 
@@ -188,6 +298,10 @@ def start_scheduler() -> None:
 
     scheduler.start()
     logger.info("Scheduler started")
+
+    # Schedule one-shot fallback jobs for all upcoming football matches.
+    # Must run after scheduler.start() so add_job is accepted.
+    _schedule_upcoming_football_fallbacks()
 
 
 def stop_scheduler() -> None:

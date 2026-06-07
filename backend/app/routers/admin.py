@@ -102,6 +102,10 @@ async def create_match(
     db.commit()
     db.refresh(match)
 
+    # Register a one-shot fallback job to fire at kickoff for football matches
+    from app.services.scheduler import schedule_football_fallback
+    schedule_football_fallback(match)
+
     return MatchResponse(
         id=match.id,
         tournament_id=match.tournament_id,

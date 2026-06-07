@@ -160,6 +160,7 @@ def create_football_prediction(
     team2_goals: int,
     advance_winner_id: int | None,
     player_pick_ids: tuple[int, int, int],
+    source: str = "user",
 ) -> Prediction:
     """Create a football prediction (shared row + 1:1 football child)."""
     prediction = Prediction(
@@ -175,6 +176,7 @@ def create_football_prediction(
         player_pick_1_id=player_pick_ids[0],
         player_pick_2_id=player_pick_ids[1],
         player_pick_3_id=player_pick_ids[2],
+        source=source,
     )
     db.add(prediction)
     db.commit()
