@@ -334,6 +334,10 @@ async def link_football_fixture(
     match.sync_state = "linked"
     match.sync_error = None
     db.commit()
+    db.refresh(match)
+
+    from app.services.scheduler import schedule_football_result_sync
+    schedule_football_result_sync(match)
 
     return FootballSyncResponse(
         match_id=match.id,

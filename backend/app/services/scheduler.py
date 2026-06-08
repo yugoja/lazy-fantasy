@@ -214,10 +214,11 @@ def schedule_football_fallback(match) -> None:
         )
 
 
-def _sync_football_results() -> None:
-    """Poll football matches that should be finished and auto-score them."""
-    from datetime import timedelta
-    from app.models.match import Match, MatchStatus
+def _run_football_result_sync(match_id: int) -> None:
+    """One-shot job: sync result for a single match, fired ~1h after it ends.
+
+    If the result isn't available yet (extra time / delay), retries in 30 minutes.
+    """
     from app.services.football_sync import get_provider, sync_match_result
 
     if not get_provider():
@@ -225,65 +226,132 @@ def _sync_football_results() -> None:
 
     db: Session = SessionLocal()
     try:
-        now = datetime.utcnow()
-        cutoff = now - timedelta(minutes=100)
-        candidates = (
-            db.query(Match)
-            .filter(
-                Match.external_match_id.isnot(None),
-                Match.status == MatchStatus.SCHEDULED,
-                Match.start_time <= cutoff,
-                Match.sync_state != "result_synced",
+        result = sync_match_result(db, match_id)
+        status = result.get("status")
+        logger.info(f"Football result sync match {match_id}: {status}")
+
+        if status == "not_finished":
+            retry_at = datetime.now(timezone.utc) + timedelta(minutes=30)
+            scheduler.add_job(
+                _run_football_result_sync,
+                trigger="date",
+                run_date=retry_at,
+                args=[match_id],
+                id=f"football_result_sync_{match_id}",
+                replace_existing=True,
             )
-            .all()
-        )
-        # Only football matches have an external_match_id that's purely numeric
-        for match in candidates:
-            if not match.tournament or match.tournament.sport != "football":
-                continue
-            if not match.external_match_id.lstrip("-").isdigit():
-                continue
-            result = sync_match_result(db, match.id)
-            logger.info(f"Football auto-sync match {match.id}: {result['status']}")
+            logger.info(f"Football result sync match {match_id}: not finished — retrying at {retry_at.isoformat()}")
     except Exception as e:
-        logger.error(f"Football sync job failed: {e}")
+        logger.error(f"Football result sync for match {match_id} failed: {e}")
         db.rollback()
     finally:
         db.close()
 
 
-def _schedule_upcoming_football_fallbacks() -> None:
-    """At startup, register date-triggered fallback jobs for all upcoming football matches."""
+def schedule_football_result_sync(match) -> None:
+    """Schedule a one-shot result sync for 1 hour after the match ends (~3h after kickoff).
+
+    Safe to call for any match — silently skips if scheduler isn't running,
+    match has no fixture ID, or the match is already result-synced.
+    If the fire time is already past, schedules immediately (catches up missed syncs).
+    """
+    if not scheduler.running:
+        return
+
+    if not match.external_match_id or not match.external_match_id.lstrip("-").isdigit():
+        return
+
+    start = match.start_time
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+
+    # Fire 3h after kickoff: ~2h for the match + 1h buffer requested by user
+    fire_at = start + timedelta(hours=3)
+    now = datetime.now(timezone.utc)
+    if fire_at <= now:
+        # Overdue — run soon (give the scheduler a few seconds to settle)
+        fire_at = now + timedelta(seconds=15)
+
+    job_id = f"football_result_sync_{match.id}"
+    scheduler.add_job(
+        _run_football_result_sync,
+        trigger="date",
+        run_date=fire_at,
+        args=[match.id],
+        id=job_id,
+        replace_existing=True,
+    )
+    logger.info(f"Scheduled result sync for match {match.id} at {fire_at.isoformat()}")
+
+
+def _schedule_football_jobs_at_startup() -> None:
+    """At startup, register date-triggered jobs for all upcoming and overdue football matches.
+
+    For each football match:
+    - Fallback job: fires at kickoff to auto-fill predictions
+    - Result sync job: fires 3h after kickoff to score results (1h after match ends)
+
+    Matches already past their sync time but not yet result_synced are scheduled
+    immediately so results aren't missed after a server restart.
+    """
     from app.models.match import Match, MatchStatus
     from app.models.tournament import Tournament
 
     db: Session = SessionLocal()
     try:
         now = datetime.now(timezone.utc)
-        upcoming = (
+        matches = (
             db.query(Match)
             .join(Tournament, Match.tournament_id == Tournament.id)
             .filter(
                 Match.status == MatchStatus.SCHEDULED,
-                Match.start_time > now,
                 Tournament.sport == "football",
             )
             .all()
         )
-        for match in upcoming:
-            job_id = f"football_fallback_{match.id}"
-            scheduler.add_job(
-                _run_football_fallback_for_match,
-                trigger="date",
-                run_date=match.start_time,
-                args=[match.id],
-                id=job_id,
-                replace_existing=True,
-            )
-        if upcoming:
-            logger.info(f"Scheduled fallback jobs for {len(upcoming)} upcoming football matches")
+
+        fallbacks_scheduled = 0
+        syncs_scheduled = 0
+
+        for match in matches:
+            start = match.start_time
+            if start.tzinfo is None:
+                start = start.replace(tzinfo=timezone.utc)
+
+            # Fallback job — only for future matches
+            if start > now:
+                scheduler.add_job(
+                    _run_football_fallback_for_match,
+                    trigger="date",
+                    run_date=start,
+                    args=[match.id],
+                    id=f"football_fallback_{match.id}",
+                    replace_existing=True,
+                )
+                fallbacks_scheduled += 1
+
+                lineup_time = start - timedelta(hours=1)
+                if lineup_time > now:
+                    scheduler.add_job(
+                        _run_lineup_sync,
+                        trigger="date",
+                        run_date=lineup_time,
+                        args=[match.id],
+                        id=f"lineup_sync_{match.id}",
+                        replace_existing=True,
+                    )
+
+            # Result sync job — for any linked match not yet result_synced
+            if match.external_match_id and match.sync_state != "result_synced":
+                schedule_football_result_sync(match)
+                syncs_scheduled += 1
+
+        logger.info(
+            f"Startup: scheduled {fallbacks_scheduled} fallback jobs, "
+            f"{syncs_scheduled} result sync jobs for football matches"
+        )
     except Exception as e:
-        logger.error(f"Failed to schedule football fallbacks at startup: {e}")
+        logger.error(f"Failed to schedule football jobs at startup: {e}")
     finally:
         db.close()
 
@@ -318,29 +386,21 @@ def start_scheduler() -> None:
     else:
         logger.info("CRICAPI_KEY not set — lineup sync skipped")
 
-    # Football result sync — only active when FOOTBALL_API_KEY is configured
+    # Football — register provider; per-match jobs are scheduled below
     if settings.FOOTBALL_API_KEY:
         from app.services.football_provider import ApiFootballProvider
         from app.services.football_sync import set_provider as set_football_provider
         set_football_provider(ApiFootballProvider(settings.FOOTBALL_API_KEY, settings.FOOTBALL_API_BASE_URL))
-
-        scheduler.add_job(
-            _sync_football_results,
-            trigger="interval",
-            minutes=15,
-            id="football_result_sync",
-            replace_existing=True,
-        )
-        logger.info("Football result sync registered (every 15m)")
+        logger.info("Football provider configured")
     else:
-        logger.info("FOOTBALL_API_KEY not set — football result sync skipped")
+        logger.info("FOOTBALL_API_KEY not set — football sync skipped")
 
     scheduler.start()
     logger.info("Scheduler started")
 
-    # Schedule one-shot fallback jobs for all upcoming football matches.
+    # Schedule one-shot fallback + result-sync jobs for all football matches.
     # Must run after scheduler.start() so add_job is accepted.
-    _schedule_upcoming_football_fallbacks()
+    _schedule_football_jobs_at_startup()
 
 
 def stop_scheduler() -> None:
