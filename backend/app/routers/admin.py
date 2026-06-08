@@ -990,9 +990,12 @@ async def seed_player_form_endpoint(
 
     _logger = logging.getLogger(__name__)
 
-    # Resolve days_ahead → team_ids so the background task has a fixed list
+    # Resolve team_ids: explicit list > days_ahead > None (seed all)
     team_ids = None
-    if data.days_ahead is not None:
+    if data.team_ids is not None:
+        team_ids = data.team_ids
+        _logger.info(f"seed-player-form: explicit team_ids={team_ids}")
+    elif data.days_ahead is not None:
         cutoff = datetime.now(timezone.utc) + timedelta(days=data.days_ahead)
         upcoming = (
             db.query(Match)

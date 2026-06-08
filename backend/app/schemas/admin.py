@@ -96,6 +96,7 @@ class SeedPlayerFormRequest(BaseModel):
     wc_league_id: int
     season: int = 2026
     days_ahead: Optional[int] = None  # if set, only seed teams with matches in next N days
+    team_ids: Optional[list[int]] = None  # if set, seed only these specific team IDs
 
 
 class SeedSummaryResponse(BaseModel):
