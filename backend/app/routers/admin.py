@@ -1,5 +1,5 @@
-from datetime import timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime, timezone
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -962,13 +962,18 @@ async def set_picks_result(
     return {"tournament_id": tournament_id, "picks_scored": scored}
 
 
-@router.post("/wc/seed-player-form", response_model=SeedSummaryResponse)
+@router.post("/wc/seed-player-form", status_code=status.HTTP_202_ACCEPTED)
 async def seed_player_form_endpoint(
     data: SeedPlayerFormRequest,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db),
 ):
-    """Seed player_form rows from API-Football season stats (idempotent upserts)."""
+    """Kick off player_form seeding in the background.
+
+    Returns 202 immediately. Seeding takes ~12 minutes (rate-limited API calls
+    per player). Check server logs for progress and final summary.
+    """
     from app.services.football_sync import get_provider
     from app.services.player_form_service import seed_player_form
 
@@ -979,12 +984,52 @@ async def seed_player_form_endpoint(
             detail="Football API provider not configured (FOOTBALL_API_KEY missing)",
         )
 
-    summary = seed_player_form(db, provider, data.wc_league_id, data.season)
-    return SeedSummaryResponse(
-        teams_matched=summary.teams_matched,
-        teams_unmatched=summary.teams_unmatched,
-        players_matched=summary.players_matched,
-        players_unmatched=summary.players_unmatched,
-        forms_created=summary.forms_created,
-    )
+    import logging
+    from datetime import timedelta
+    from app.models import Match, MatchStatus
+
+    _logger = logging.getLogger(__name__)
+
+    # Resolve days_ahead → team_ids so the background task has a fixed list
+    team_ids = None
+    if data.days_ahead is not None:
+        cutoff = datetime.now(timezone.utc) + timedelta(days=data.days_ahead)
+        upcoming = (
+            db.query(Match)
+            .filter(
+                Match.start_time <= cutoff,
+                Match.start_time >= datetime.now(timezone.utc),
+                Match.status == MatchStatus.SCHEDULED,
+            )
+            .all()
+        )
+        team_ids = list({m.team_1_id for m in upcoming} | {m.team_2_id for m in upcoming})
+        _logger.info(f"seed-player-form: filtering to {len(team_ids)} teams with matches in next {data.days_ahead} days")
+
+    def _run_seed():
+        from app.database import SessionLocal
+        seed_db = SessionLocal()
+        try:
+            summary = seed_player_form(seed_db, provider, data.wc_league_id, data.season, team_ids=team_ids)
+            # Count how many football teams still have no form data
+            from app.models.team import Team as _Team
+            total_teams = seed_db.query(_Team).filter(_Team.sport == "football").count()
+            from app.models.player_form import PlayerForm as _PF
+            from app.models.player import Player as _Pl
+            seeded_teams = seed_db.query(_Pl.team_id).join(
+                _PF, _PF.player_id == _Pl.id
+            ).filter(_Pl.team_id.isnot(None)).distinct().count()
+            all_covered = seeded_teams >= total_teams
+            _logger.info(
+                f"seed-player-form complete: teams={summary.teams_matched}/{summary.teams_matched + summary.teams_unmatched} "
+                f"skipped={summary.teams_skipped} players={summary.players_matched} forms_created={summary.forms_created} "
+                f"coverage={seeded_teams}/{total_teams} all_covered={all_covered}"
+            )
+        except Exception as e:
+            _logger.error(f"seed-player-form failed: {e}")
+        finally:
+            seed_db.close()
+
+    background_tasks.add_task(_run_seed)
+    return {"status": "seeding started — check server logs for progress"}
 

@@ -53,31 +53,27 @@ class TestPreXp:
     def test_fwd_with_goals(self):
         sp = _SquadPlayer(1, "Striker", "Attacker", appearances=10, minutes=900, goals=8, assists=2, clean_sheets=0)
         xp = _pre_xp(sp)
-        # goals_per90 = 8 / (900/90) = 8/10 = 0.8  → *6 = 4.8
-        # assists_per90 = 2/10 = 0.2 → *3 = 0.6
-        # expected ≈ 5.4
-        assert 5.0 < xp < 6.0
+        # per90_base=1.0 + goals_per90=0.8*6=4.8 + assists_per90=0.2*3=0.6 → 6.4
+        assert 6.0 < xp < 7.0
 
     def test_mid_with_assists(self):
         sp = _SquadPlayer(2, "Midfielder", "Midfielder", appearances=10, minutes=900, goals=3, assists=6, clean_sheets=0)
         xp = _pre_xp(sp)
-        # goals_per90 = 0.3 → *5 = 1.5; assists_per90 = 0.6 → *4 = 2.4 → 3.9
-        assert 3.5 < xp < 4.5
+        # per90_base=1.0 + goals_per90=0.3*5=1.5 + assists_per90=0.6*4=2.4 → 4.9
+        assert 4.5 < xp < 5.5
 
-    def test_def_with_clean_sheets(self):
-        sp = _SquadPlayer(3, "Defender", "Defender", appearances=10, minutes=900, goals=1, assists=2, clean_sheets=5)
+    def test_def_with_contributions(self):
+        sp = _SquadPlayer(3, "Defender", "Defender", appearances=10, minutes=900, goals=1, assists=2, clean_sheets=0)
         xp = _pre_xp(sp)
-        # cs_rate = 5/10 = 0.5 → *5 = 2.5
-        # assists_per90 = 0.2 → *3 = 0.6
-        # goals_per90 = 0.1 → *4 = 0.4
-        # expected ≈ 3.5
-        assert 3.0 < xp < 4.5
+        # per90_base*1.5=1.5 + assists_per90=0.2*3=0.6 + goals_per90=0.1*4=0.4 → 2.5
+        assert 2.0 < xp < 3.0
 
-    def test_gk_with_clean_sheets(self):
-        sp = _SquadPlayer(4, "Keeper", "Goalkeeper", appearances=10, minutes=900, goals=0, assists=0, clean_sheets=6)
+    def test_gk_with_saves(self):
+        # clean_sheets field = total saves in season; 40 saves in 10 games = 4/game
+        sp = _SquadPlayer(4, "Keeper", "Goalkeeper", appearances=10, minutes=900, goals=0, assists=0, clean_sheets=40)
         xp = _pre_xp(sp)
-        # cs_rate = 0.6 → *8 = 4.8; minutes/90/appearances = 1.0 → *2 = 2.0 → 6.8
-        assert 6.0 < xp < 8.0
+        # saves_per_game=4.0 → (4/6)*8=5.33; per90_base*2=2.0 → 7.33
+        assert 6.5 < xp < 8.5
 
     def test_zero_appearances_returns_stub(self):
         sp = _SquadPlayer(5, "Unknown", "Attacker", appearances=0, minutes=0, goals=0, assists=0, clean_sheets=0)

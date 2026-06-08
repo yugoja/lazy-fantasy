@@ -183,6 +183,44 @@ class ApiFootballProvider:
             page += 1
         return players
 
+    def get_player_club_stats(self, player_id: int, season: int) -> Optional[WCSquadPlayer]:
+        """Get a player's primary club stats for the season.
+
+        Queries by player ID (not team), returns the stats entry with the most
+        appearances — which is almost always the club, not the national team.
+        Returns None if no data or zero appearances found.
+        """
+        data = self._get("players", id=player_id, season=season)
+        if not data:
+            return None
+        response = data.get("response", [])
+        if not response:
+            return None
+
+        player_entry = response[0]
+        p = player_entry.get("player", {})
+        statistics = player_entry.get("statistics") or []
+        if not statistics:
+            return None
+
+        best = max(statistics, key=lambda s: int(s.get("games", {}).get("appearences") or 0))
+        games = best.get("games", {})
+        goals_block = best.get("goals", {})
+        appearances = int(games.get("appearences") or 0)
+        if appearances == 0:
+            return None
+
+        return WCSquadPlayer(
+            api_player_id=int(p.get("id", player_id)),
+            name=p.get("name", ""),
+            position=games.get("position") or "Attacker",
+            appearances=appearances,
+            minutes=int(games.get("minutes") or 0),
+            goals=int(goals_block.get("total") or 0),
+            assists=int(goals_block.get("assists") or 0),
+            clean_sheets=int(goals_block.get("saves") or 0),
+        )
+
     def get_fixture_lineup(self, fixture_id: int) -> Optional[FixtureLineup]:
         """Fetch confirmed lineups for a fixture. Returns None if not yet announced."""
         data = self._get("fixtures/lineups", fixture=fixture_id)

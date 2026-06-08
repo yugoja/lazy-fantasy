@@ -95,11 +95,13 @@ class FootballSyncResponse(BaseModel):
 class SeedPlayerFormRequest(BaseModel):
     wc_league_id: int
     season: int = 2026
+    days_ahead: Optional[int] = None  # if set, only seed teams with matches in next N days
 
 
 class SeedSummaryResponse(BaseModel):
     teams_matched: int
     teams_unmatched: int
+    teams_skipped: int
     players_matched: int
     players_unmatched: int
     forms_created: int

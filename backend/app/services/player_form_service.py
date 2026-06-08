@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -55,13 +56,17 @@ def _pre_xp(squad_player: WCSquadPlayer) -> float:
     cs_rate = squad_player.clean_sheets / apps if apps else 0.0
 
     if pos == "Goalkeeper":
-        return round(cs_rate * 8 + per90_base * 2, 2)
+        # clean_sheets = total saves in season; normalize to 0–1 scale (6 saves/game = max)
+        saves_per_game = squad_player.clean_sheets / apps if apps else 0.0
+        cs_component = min(saves_per_game / 6.0, 1.0) * 8
+        return round(cs_component + per90_base * 2, 2)
     elif pos == "Defender":
-        return round(cs_rate * 5 + assists_per90 * 3 + goals_per90 * 4, 2)
+        # per90_base floor prevents 0 for defenders with no attacking contribution
+        return round(per90_base * 1.5 + assists_per90 * 3 + goals_per90 * 4, 2)
     elif pos == "Midfielder":
-        return round(goals_per90 * 5 + assists_per90 * 4, 2)
+        return round(per90_base * 1.0 + goals_per90 * 5 + assists_per90 * 4, 2)
     else:  # Attacker
-        return round(goals_per90 * 6 + assists_per90 * 3, 2)
+        return round(per90_base * 1.0 + goals_per90 * 6 + assists_per90 * 3, 2)
 
 
 def _wc_xp(form: PlayerForm, position: str) -> float:
@@ -182,6 +187,7 @@ def _match_player(
 class SeedSummary:
     teams_matched: int = 0
     teams_unmatched: int = 0
+    teams_skipped: int = 0
     players_matched: int = 0
     players_unmatched: int = 0
     forms_created: int = 0
@@ -227,29 +233,56 @@ def _match_teams(db: Session, api_teams: list[dict]) -> tuple[int, int]:
     return matched, unmatched
 
 
+def _team_is_seeded(db: Session, team_id: int) -> bool:
+    """Return True if the majority of a team's players already have form rows."""
+    total = db.query(Player).filter(Player.team_id == team_id).count()
+    if total == 0:
+        return False
+    seeded = (
+        db.query(PlayerForm)
+        .join(Player, PlayerForm.player_id == Player.id)
+        .filter(Player.team_id == team_id)
+        .count()
+    )
+    return seeded >= (total * 0.5)
+
+
 def seed_player_form(
     db: Session,
     provider: ApiFootballProvider,
     wc_league_id: int,
     season: int,
+    team_ids: Optional[list[int]] = None,
+    skip_seeded: bool = True,
 ) -> SeedSummary:
-    """One-time seeding of player_form rows from API-Football season stats.
+    """Seed player_form rows from API-Football season stats.
 
     Step 1: match API-Football teams to DB teams (sets api_football_team_id).
-    Step 2: for each matched team, fetch squad and upsert PlayerForm rows.
+    Step 2: for each matched team (or only those in team_ids), fetch squad and
+            upsert PlayerForm rows using club stats where available.
+
+    team_ids: restrict to specific DB team IDs (e.g. teams playing today).
+    skip_seeded: if True (default), skip teams that already have form data for
+                 ≥50% of their players — avoids wasting API calls on re-runs.
     """
     summary = SeedSummary()
 
-    # Step 1: match teams
+    # Step 1: match teams (always runs for all teams to keep api_football_team_id fresh)
     api_teams = provider.get_wc_teams(wc_league_id, season)
     summary.teams_matched, summary.teams_unmatched = _match_teams(db, api_teams)
     logger.info(f"Team matching: {summary.teams_matched} matched, {summary.teams_unmatched} unmatched")
 
-    wc_teams = (
-        db.query(Team)
-        .filter(Team.api_football_team_id.isnot(None), Team.sport == "football")
-        .all()
-    )
+    team_filter = [Team.api_football_team_id.isnot(None), Team.sport == "football"]
+    if team_ids:
+        team_filter.append(Team.id.in_(team_ids))
+    wc_teams = db.query(Team).filter(*team_filter).all()
+
+    if skip_seeded:
+        unseeded = [t for t in wc_teams if not _team_is_seeded(db, t.id)]
+        summary.teams_skipped = len(wc_teams) - len(unseeded)
+        if summary.teams_skipped:
+            logger.info(f"Skipping {summary.teams_skipped} already-seeded team(s), processing {len(unseeded)}")
+        wc_teams = unseeded
 
     # For pre-tournament seeding use prior club season (no WC league filter).
     # Once the WC is underway, WC stats accumulate via update_player_form_after_match.
@@ -263,6 +296,10 @@ def seed_player_form(
     for team in wc_teams:
         api_team_id = int(team.api_football_team_id)
         squad = provider.get_wc_squad(api_team_id, pre_season)
+        if not squad:
+            squad = provider.get_wc_squad(api_team_id, pre_season - 1)
+            if squad:
+                logger.info(f"{team.name}: no {pre_season} data, fell back to {pre_season - 1}")
         db_players = db.query(Player).filter(Player.team_id == team.id).all()
 
         for sp in squad:
@@ -276,6 +313,18 @@ def seed_player_form(
             seen_player_ids.add(player.id)
 
             summary.players_matched += 1
+
+            # Prefer club stats — 30+ games vs 5–10 national team games per year.
+            # Sleep 0.65s between calls to respect the 100 req/min API rate limit.
+            if sp.api_player_id:
+                time.sleep(0.65)
+                club_sp = provider.get_player_club_stats(sp.api_player_id, pre_season)
+                if not club_sp:
+                    time.sleep(0.65)
+                    club_sp = provider.get_player_club_stats(sp.api_player_id, pre_season - 1)
+                if club_sp and club_sp.appearances > sp.appearances:
+                    sp = club_sp
+
             xp = _pre_xp(sp)
 
             existing = db.query(PlayerForm).filter(PlayerForm.player_id == player.id).first()

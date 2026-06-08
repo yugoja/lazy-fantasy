@@ -109,7 +109,8 @@ def build_prediction_inputs_from_db(db: Session, match: Match) -> PredictionInpu
             team_id=str(p.team_id),
             position=_role_to_position(p.role),  # type: ignore[arg-type]
             expected_points=(
-                forms[p.id].expected_points if p.id in forms
+                forms[p.id].expected_points or _POSITION_XP.get(_role_to_position(p.role), 6.0)
+                if p.id in forms
                 else _POSITION_XP.get(_role_to_position(p.role), 6.0)
             ),
             floor=(

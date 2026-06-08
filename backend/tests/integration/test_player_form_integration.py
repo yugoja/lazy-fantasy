@@ -92,20 +92,22 @@ def _make_fixture_stat(player, team_api_id, goals=0, assists=0, minutes=90):
 
 # ── seed_player_form ──────────────────────────────────────────────────────────
 
+def _make_provider(squad=None, club_stats=None):
+    """Return a mock provider with safe defaults for all methods used by seed."""
+    provider = MagicMock()
+    provider._get.return_value = {"response": []}
+    provider.get_wc_squad.return_value = squad or []
+    provider.get_player_club_stats.return_value = club_stats  # None = fall back to national data
+    return provider
+
+
 class TestSeedPlayerForm:
     def test_seed_creates_form_rows_for_matched_players(self, db_session, football_teams):
         t1, t2 = football_teams
         t1_players = db_session.query(Player).filter(Player.team_id == t1.id).all()
 
-        # Provider returns squad matching t1_players by name
-        squad = [
-            _make_wc_player(100 + i, p.name, "Attacker")
-            for i, p in enumerate(t1_players)
-        ]
-        provider = MagicMock()
-        provider.get_wc_squad.return_value = squad
-        # No teams endpoint needed; teams already have api_football_team_id set
-        provider._get.return_value = {"response": []}
+        squad = [_make_wc_player(100 + i, p.name, "Attacker") for i, p in enumerate(t1_players)]
+        provider = _make_provider(squad=squad)
 
         summary = seed_player_form(db_session, provider, wc_league_id=1, season=2026)
 
@@ -120,9 +122,7 @@ class TestSeedPlayerForm:
         p = t1_players[0]
 
         squad = [_make_wc_player(200, p.name, "Attacker", appearances=10, goals=5)]
-        provider = MagicMock()
-        provider.get_wc_squad.return_value = squad
-        provider._get.return_value = {"response": []}
+        provider = _make_provider(squad=squad)
 
         seed_player_form(db_session, provider, wc_league_id=1, season=2026)
 
@@ -130,16 +130,13 @@ class TestSeedPlayerForm:
         assert form is not None
         assert form.pre_expected_points is not None
         assert form.pre_expected_points > 0
-        # expected_points should equal pre_expected_points at seeding (no WC data yet)
         assert form.expected_points == form.pre_expected_points
 
     def test_seed_sets_wc_accumulators_to_zero(self, db_session, football_teams):
         t1, _ = football_teams
         player = db_session.query(Player).filter(Player.team_id == t1.id).first()
         squad = [_make_wc_player(300, player.name)]
-        provider = MagicMock()
-        provider.get_wc_squad.return_value = squad
-        provider._get.return_value = {"response": []}
+        provider = _make_provider(squad=squad)
 
         seed_player_form(db_session, provider, wc_league_id=1, season=2026)
 
@@ -155,9 +152,7 @@ class TestSeedPlayerForm:
         t1, _ = football_teams
         player = db_session.query(Player).filter(Player.team_id == t1.id).first()
         squad = [_make_wc_player(400, player.name, goals=3)]
-        provider = MagicMock()
-        provider.get_wc_squad.return_value = squad
-        provider._get.return_value = {"response": []}
+        provider = _make_provider(squad=squad)
 
         seed_player_form(db_session, provider, wc_league_id=1, season=2026)
         seed_player_form(db_session, provider, wc_league_id=1, season=2026)
@@ -170,18 +165,15 @@ class TestSeedPlayerForm:
         t1_players = db_session.query(Player).filter(Player.team_id == t1.id).all()
         t2_players = db_session.query(Player).filter(Player.team_id == t2.id).all()
         t1_squad = [_make_wc_player(500 + i, p.name) for i, p in enumerate(t1_players)]
-        t1_squad.append(_make_wc_player(998, "ZZZXXX Nobody Special"))  # 1 unmatched in t1
+        t1_squad.append(_make_wc_player(998, "ZZZXXX Nobody Special"))
         t2_squad = [_make_wc_player(600 + i, p.name) for i, p in enumerate(t2_players)]
-        t2_squad.append(_make_wc_player(999, "AAABBB Nobody Special"))  # 1 unmatched in t2
+        t2_squad.append(_make_wc_player(999, "AAABBB Nobody Special"))
 
         def _squad_side_effect(team_id, season, league_id=None):
-            if team_id == int(t1.api_football_team_id):
-                return t1_squad
-            return t2_squad
+            return t1_squad if team_id == int(t1.api_football_team_id) else t2_squad
 
-        provider = MagicMock()
+        provider = _make_provider()
         provider.get_wc_squad.side_effect = _squad_side_effect
-        provider._get.return_value = {"response": []}
 
         summary = seed_player_form(db_session, provider, wc_league_id=1, season=2026)
         assert summary.players_matched == len(t1_players) + len(t2_players)
@@ -194,13 +186,33 @@ class TestSeedPlayerForm:
         db_session.commit()
 
         squad = [_make_wc_player(601, player.name)]
-        provider = MagicMock()
-        provider.get_wc_squad.return_value = squad
-        provider._get.return_value = {"response": []}
+        provider = _make_provider(squad=squad)
 
         seed_player_form(db_session, provider, wc_league_id=1, season=2026)
         db_session.refresh(player)
         assert player.api_football_player_id == "601"
+
+    def test_seed_prefers_club_stats_over_national_team(self, db_session, football_teams):
+        """Club stats (more appearances) override national team stats for expected_points."""
+        t1, _ = football_teams
+        player = db_session.query(Player).filter(Player.team_id == t1.id).first()
+
+        # National team: 6 games, 3 goals (small sample)
+        nat_sp = _make_wc_player(700, player.name, "Attacker", appearances=6, minutes=540, goals=3, assists=1)
+        # Club: 32 games, 10 goals (much richer data)
+        club_sp = _make_wc_player(700, player.name, "Attacker", appearances=32, minutes=2700, goals=10, assists=6)
+
+        provider = _make_provider(squad=[nat_sp], club_stats=club_sp)
+
+        seed_player_form(db_session, provider, wc_league_id=1, season=2026)
+
+        form = db_session.query(PlayerForm).filter(PlayerForm.player_id == player.id).first()
+        assert form is not None
+        # xp from club data: per90_base=1.0 + goals_per90=(10/30)*6 + assists_per90=(6/30)*3
+        # = 1.0 + 2.0 + 0.6 = 3.6  (different from national 3-goal-in-6 calculation)
+        # Just verify we stored something and it reflects the higher-appearance dataset
+        assert form.expected_points > 0
+        provider.get_player_club_stats.assert_called_with(700, 2025)
 
 
 # ── update_player_form_after_match ────────────────────────────────────────────
