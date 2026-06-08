@@ -43,6 +43,8 @@ def sync_match_result(db: Session, match_id: int) -> dict:
     if not _provider:
         return {"status": "error", "detail": "football provider not configured"}
 
+    if not match.external_match_id.lstrip("-").isdigit():
+        return {"status": "error", "detail": f"external_match_id '{match.external_match_id}' is not a valid fixture ID"}
     fixture_id = int(match.external_match_id)
 
     result = _provider.get_fixture_result(fixture_id)

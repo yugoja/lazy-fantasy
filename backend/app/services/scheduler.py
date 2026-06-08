@@ -241,6 +241,8 @@ def _sync_football_results() -> None:
         for match in candidates:
             if not match.tournament or match.tournament.sport != "football":
                 continue
+            if not match.external_match_id.lstrip("-").isdigit():
+                continue
             result = sync_match_result(db, match.id)
             logger.info(f"Football auto-sync match {match.id}: {result['status']}")
     except Exception as e:
