@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -54,10 +54,10 @@ const QUICK_SCORES: Array<[number, number]> = [
 const ROLE_ORDER = ['goalkeeper', 'defender', 'midfielder', 'forward'];
 const ROLE_LIMITS: Record<string, number> = { goalkeeper: 1, defender: 4, midfielder: 3, forward: 3 };
 const ROLE_Y: Record<string, { top: number; bottom: number }> = {
-  goalkeeper: { top: 8, bottom: 92 },
-  defender:   { top: 21, bottom: 79 },
-  midfielder: { top: 36, bottom: 64 },
-  forward:    { top: 46, bottom: 54 },
+  goalkeeper: { top: 5, bottom: 95 },
+  defender:   { top: 18, bottom: 82 },
+  midfielder: { top: 30, bottom: 70 },
+  forward:    { top: 41, bottom: 59 },
 };
 
 function getInitials(name: string) {
@@ -66,14 +66,18 @@ function getInitials(name: string) {
 function getLastName(name: string) {
   return name.split(' ').pop() ?? name;
 }
-function abbrevName(name: string) {
-  return getLastName(name).slice(0, 4).toUpperCase();
-}
-function positionLabel(role: string) {
+function positionName(role: string) {
   const map: Record<string, string> = {
-    goalkeeper: 'GK', defender: 'DEF', midfielder: 'MID', forward: 'FWD',
+    goalkeeper: 'Keeper', defender: 'Defender', midfielder: 'Midfielder', forward: 'Attacker',
   };
-  return map[role.toLowerCase()] ?? role.slice(0, 3).toUpperCase();
+  return map[role.toLowerCase()] ?? role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+}
+// Team accent classes — green for team 1 (matches brand), amber for team 2.
+// Selection is shown with a ring + check, so colour always reads as "which team".
+function teamColors(isTeam1: boolean) {
+  return isTeam1
+    ? { fill: 'bg-primary text-primary-foreground', border: 'border-primary bg-primary/10', check: 'border-primary bg-primary text-primary-foreground' }
+    : { fill: 'bg-amber-500 text-black', border: 'border-amber-500 bg-amber-500/10', check: 'border-amber-500 bg-amber-500 text-black' };
 }
 function formatCountdown(startTime: string, now: number): string {
   const diff = new Date(startTime).getTime() - now;
@@ -111,7 +115,11 @@ function layoutPlayers(players: Player[]): { starters: Player[]; subs: Player[] 
 function getPitchPosition(role: string, idx: number, total: number, side: 'top' | 'bottom'): { x: number; y: number } {
   const ry = ROLE_Y[role.toLowerCase()];
   const y = ry ? (side === 'top' ? ry.top : ry.bottom) : 50;
-  const x = total <= 1 ? 50 : 15 + (idx / (total - 1)) * 70;
+  if (total <= 1) return { x: 50, y };
+  // Lines with fewer players sit closer together (inset from the touchline),
+  // giving the classic 4-3-3 shape: wide back four, narrower midfield & front three.
+  const margin = total >= 4 ? 12 : total === 3 ? 23 : 32;
+  const x = margin + (idx / (total - 1)) * (100 - 2 * margin);
   return { x, y };
 }
 
@@ -156,36 +164,37 @@ function TeamCrest({ team, size = 'md' }: { team: { short_name: string; name: st
 
 function PitchSVG() {
   return (
-    <svg viewBox="0 0 360 490" className="absolute inset-0 w-full h-full" aria-hidden>
+    <svg viewBox="0 0 360 560" className="absolute inset-0 w-full h-full" aria-hidden>
       {/* Base */}
-      <rect width="360" height="490" fill="#1a3a24" rx="8" />
+      <rect width="360" height="560" fill="#1a3a24" rx="8" />
       {/* Alternating grass stripes */}
       {[0, 1, 2, 3, 4, 5].map(i => (
-        <rect key={i} x="0" y={i * 82} width="360" height="41" fill="rgba(255,255,255,0.02)" />
+        <rect key={i} x="0" y={i * 94} width="360" height="47" fill="rgba(255,255,255,0.02)" />
       ))}
       {/* Boundary */}
-      <rect x="10" y="10" width="340" height="470" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" rx="3" />
-      {/* Center line */}
-      <line x1="10" y1="245" x2="350" y2="245" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+      <rect x="10" y="10" width="340" height="540" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" rx="3" />
+      {/* Halfway separator — subtle shaded band + brighter line to divide the two teams */}
+      <rect x="10" y="270" width="340" height="20" fill="rgba(0,0,0,0.18)" />
+      <line x1="10" y1="280" x2="350" y2="280" stroke="rgba(255,255,255,0.32)" strokeWidth="1.8" />
       {/* Center circle */}
-      <circle cx="180" cy="245" r="43" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
-      <circle cx="180" cy="245" r="2.5" fill="rgba(255,255,255,0.25)" />
+      <circle cx="180" cy="280" r="46" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+      <circle cx="180" cy="280" r="2.5" fill="rgba(255,255,255,0.25)" />
       {/* Top penalty area */}
-      <rect x="87" y="10" width="186" height="57" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+      <rect x="87" y="10" width="186" height="64" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
       {/* Top 6-yard box */}
-      <rect x="127" y="10" width="106" height="22" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+      <rect x="127" y="10" width="106" height="25" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
       {/* Bottom penalty area */}
-      <rect x="87" y="423" width="186" height="57" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+      <rect x="87" y="486" width="186" height="64" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
       {/* Bottom 6-yard box */}
-      <rect x="127" y="458" width="106" height="22" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
+      <rect x="127" y="525" width="106" height="25" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" />
       {/* Goal nets — top (team2 amber tint), bottom (team1 primary tint) */}
       <rect x="127" y="5" width="106" height="8" fill="rgba(251,191,36,0.3)" rx="2" />
-      <rect x="127" y="477" width="106" height="8" fill="rgba(99,102,241,0.35)" rx="2" />
+      <rect x="127" y="547" width="106" height="8" fill="rgba(99,102,241,0.35)" rx="2" />
       {/* Corner arcs */}
       <path d="M10,10 A8,8 0 0,1 18,18" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
       <path d="M350,10 A8,8 0 0,0 342,18" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
-      <path d="M10,480 A8,8 0 0,0 18,472" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
-      <path d="M350,480 A8,8 0 0,1 342,472" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+      <path d="M10,550 A8,8 0 0,0 18,542" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+      <path d="M350,550 A8,8 0 0,1 342,542" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
     </svg>
   );
 }
@@ -371,6 +380,8 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
     return () => { active = false; };
   }, [matchId, team_1.id]);
 
+  const isTeam1Player = useCallback((p: Player) => p.team_id === team_1.id, [team_1.id]);
+
   const playerById = useMemo(() => {
     const m = new Map<number, Player>();
     [...matchData.team_1_players, ...matchData.team_2_players].forEach(p => m.set(p.id, p));
@@ -469,6 +480,44 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
         : `Pick ${3 - scorers.length} more`);
 
   const countdown = formatCountdown(matchData.start_time, now);
+
+  const renderSub = (p: Player) => {
+    const selected = scorers.includes(p.id);
+    const full = scorers.length >= 3 && !selected;
+    const tc = teamColors(isTeam1Player(p));
+    return (
+      <button
+        type="button"
+        disabled={full}
+        onClick={() => toggleScorer(p.id)}
+        className={cn(
+          'flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 transition-all',
+          selected ? tc.border : 'border-transparent active:scale-[0.98]',
+          full && 'opacity-45',
+        )}
+        aria-label={p.name}
+      >
+        <div className="relative">
+          <div className={cn(
+            'grid h-12 w-12 place-items-center rounded-full text-sm font-bold transition-all',
+            selected ? tc.fill : 'bg-muted text-muted-foreground',
+            selected && 'ring-2 ring-white',
+          )}>
+            {getInitials(p.name)}
+          </div>
+          {selected && (
+            <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-white text-black shadow">
+              <Check className="h-2.5 w-2.5" strokeWidth={3} />
+            </span>
+          )}
+        </div>
+        <div className="text-center">
+          <div className="max-w-[8rem] truncate font-heading text-[13px] font-bold leading-tight">{getLastName(p.name)}</div>
+          <div className="text-[10px] text-muted-foreground">{positionName(p.role)}</div>
+        </div>
+      </button>
+    );
+  };
 
   return (
     <div
@@ -639,17 +688,18 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
             <div className="flex gap-2 mb-3">
               {[0, 1, 2].map(i => {
                 const p = scorers[i] != null ? playerById.get(scorers[i]) : undefined;
+                const tc = p ? teamColors(isTeam1Player(p)) : null;
                 return (
                   <div
                     key={i}
                     className={cn(
                       'flex-1 flex items-center gap-1.5 rounded-xl border px-2 py-2 transition-all min-w-0',
-                      p ? 'border-primary bg-primary/10' : 'border-dashed border-border bg-background/40',
+                      tc ? tc.border : 'border-dashed border-border bg-background/40',
                     )}
                   >
                     <div className={cn(
                       'grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] font-bold',
-                      p ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                      tc ? tc.fill : 'bg-muted text-muted-foreground',
                     )}>
                       {p ? getInitials(p.name) : <span className="text-[9px] font-semibold">{i + 1}</span>}
                     </div>
@@ -664,7 +714,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
             </div>
 
             {/* Pitch */}
-            <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '360/490' }}>
+            <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: '360/560' }}>
               <PitchSVG />
 
               {/* Team 2 tokens — top half, attacks down */}
@@ -679,22 +729,29 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
                     disabled={full}
                     onClick={() => toggleScorer(player.id)}
                     style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-                    className="absolute flex flex-col items-center gap-0.5 z-10"
+                    className="absolute flex flex-col items-center gap-1 z-10"
                     aria-label={player.name}
                   >
-                    <div className={cn(
-                      'w-8 h-8 rounded-full flex items-center justify-center text-[9px] font-bold transition-all',
-                      'bg-amber-500 text-black',
-                      selected && 'ring-2 ring-white scale-110 shadow-lg',
-                      (full || isGK) && 'opacity-50',
-                    )}>
-                      {abbrevName(player.name)}
+                    <div className="relative">
+                      <div className={cn(
+                        'w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-bold transition-all',
+                        'bg-amber-500 text-black',
+                        selected && 'ring-2 ring-white scale-110 shadow-lg',
+                        (full || isGK) && 'opacity-50',
+                      )}>
+                        {getInitials(player.name)}
+                      </div>
+                      {selected && (
+                        <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-white text-black shadow">
+                          <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                        </span>
+                      )}
                     </div>
                     <span className={cn(
-                      'text-[7px] font-bold uppercase tracking-wide',
-                      selected ? 'text-amber-400' : 'text-white/50',
+                      'max-w-[68px] truncate rounded px-1.5 py-0.5 text-[9px] font-bold leading-tight text-white shadow-sm',
+                      selected ? 'bg-black/85' : 'bg-black/55',
                     )}>
-                      {positionLabel(player.role)}
+                      {getLastName(player.name)}
                     </span>
                   </button>
                 );
@@ -712,81 +769,65 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
                     disabled={full}
                     onClick={() => toggleScorer(player.id)}
                     style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
-                    className="absolute flex flex-col items-center gap-0.5 z-10"
+                    className="absolute flex flex-col items-center gap-1 z-10"
                     aria-label={player.name}
                   >
-                    <div className={cn(
-                      'w-8 h-8 rounded-full flex items-center justify-center text-[9px] font-bold transition-all',
-                      'bg-primary text-primary-foreground',
-                      selected && 'ring-2 ring-white scale-110 shadow-lg',
-                      (full || isGK) && 'opacity-50',
-                    )}>
-                      {abbrevName(player.name)}
+                    <div className="relative">
+                      <div className={cn(
+                        'w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-bold transition-all',
+                        'bg-primary text-primary-foreground',
+                        selected && 'ring-2 ring-white scale-110 shadow-lg',
+                        (full || isGK) && 'opacity-50',
+                      )}>
+                        {getInitials(player.name)}
+                      </div>
+                      {selected && (
+                        <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-white text-black shadow">
+                          <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                        </span>
+                      )}
                     </div>
                     <span className={cn(
-                      'text-[7px] font-bold uppercase tracking-wide',
-                      selected ? 'text-primary' : 'text-white/50',
+                      'max-w-[68px] truncate rounded px-1.5 py-0.5 text-[9px] font-bold leading-tight text-white shadow-sm',
+                      selected ? 'bg-black/85' : 'bg-black/55',
                     )}>
-                      {positionLabel(player.role)}
+                      {getLastName(player.name)}
                     </span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Subs list */}
+            {/* Subs — paired two-column layout */}
             {(subs1.length > 0 || subs2.length > 0) && (
-              <div className="mt-4 space-y-4">
-                {[
-                  { team: team_1, players: subs1, isTeam1: true },
-                  { team: team_2, players: subs2, isTeam1: false },
-                ].filter(g => g.players.length > 0).map(({ team, players, isTeam1 }) => (
-                  <div key={team.id}>
-                    <h4 className="mb-2 flex items-center gap-2 font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                      <span className={cn('h-2 w-2 rounded-full shrink-0', isTeam1 ? 'bg-primary' : 'bg-amber-500')} />
-                      {team.name} — Subs
-                      <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
-                    </h4>
-                    <div className="grid gap-1.5">
-                      {players.map(p => {
-                        const selected = scorers.includes(p.id);
-                        const full = scorers.length >= 3 && !selected;
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={full}
-                            onClick={() => toggleScorer(p.id)}
-                            className={cn(
-                              'flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all',
-                              selected ? 'border-primary bg-primary/10' : 'border-border bg-card/60 active:scale-[0.99]',
-                              full && 'opacity-45',
-                            )}
-                          >
-                            <div className={cn(
-                              'grid h-8 w-8 shrink-0 place-items-center rounded-full text-[10px] font-bold',
-                              selected
-                                ? (isTeam1 ? 'bg-primary text-primary-foreground' : 'bg-amber-500 text-black')
-                                : 'bg-muted text-muted-foreground',
-                            )}>
-                              {getInitials(p.name)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="truncate font-heading text-sm font-bold">{p.name}</div>
-                              <div className="text-[11px] text-muted-foreground">{positionLabel(p.role)} · {team.name}</div>
-                            </div>
-                            <div className={cn(
-                              'grid h-6 w-6 shrink-0 place-items-center rounded-md border transition-colors',
-                              selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-transparent',
-                            )}>
-                              <Check className="h-3.5 w-3.5" />
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+              <div className="mt-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="h-px flex-1 bg-gradient-to-l from-border to-transparent" />
+                  <span className="font-heading text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Substitutes</span>
+                  <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+                </div>
+                <div className="mb-1.5 flex items-center justify-between px-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    <span className="font-heading text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{team_1.short_name}</span>
                   </div>
-                ))}
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-heading text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{team_2.short_name}</span>
+                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  {Array.from({ length: Math.max(subs1.length, subs2.length) }).map((_, i) => {
+                    const left = subs1[i];
+                    const right = subs2[i];
+                    return (
+                      <Fragment key={i}>
+                        {left ? renderSub(left) : <span />}
+                        {right ? renderSub(right) : <span />}
+                      </Fragment>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
