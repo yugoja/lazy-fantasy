@@ -178,6 +178,27 @@ def _match_player(
             player.api_football_player_id = str(api_player_id)
         return player
 
+    # Tier 5: abbreviated-name matching — handles "E. Martínez" → "MARTINEZ Emiliano".
+    # Splits original API name on ". " to get (initial, lastname), then finds DB
+    # players whose normalized name contains the lastname AND a token starting with
+    # the initial. _normalize strips dots so we check the raw name here.
+    if ". " in name:
+        parts = name.split(". ", 1)
+        initial = _normalize(parts[0]).strip()
+        lastname = _normalize(parts[1]).strip()
+        lastname_tokens = frozenset(lastname.split())
+        initial_matches: list[Player] = []
+        for p in candidates:
+            db_tokens = list(_normalize(p.name).split())
+            if lastname_tokens & frozenset(db_tokens):
+                if any(t.startswith(initial) for t in db_tokens):
+                    initial_matches.append(p)
+        if len(initial_matches) == 1:
+            player = initial_matches[0]
+            if api_player_id and not player.api_football_player_id:
+                player.api_football_player_id = str(api_player_id)
+            return player
+
     return None
 
 
@@ -284,9 +305,10 @@ def seed_player_form(
             logger.info(f"Skipping {summary.teams_skipped} already-seeded team(s), processing {len(unseeded)}")
         wc_teams = unseeded
 
-    # For pre-tournament seeding use prior club season (no WC league filter).
-    # Once the WC is underway, WC stats accumulate via update_player_form_after_match.
-    pre_season = season - 1
+    # Use the officially registered WC squad (/players/squads) for player discovery
+    # — this gives exactly the 26 players per team registered for the tournament.
+    # Club stats are fetched separately per-player via get_player_club_stats.
+    pre_season = season - 1  # used only for club stats lookup
 
     # Track processed player IDs across teams — the API sometimes lists the same
     # player under multiple teams (transfers), and the same player can be returned
@@ -295,21 +317,20 @@ def seed_player_form(
 
     for team in wc_teams:
         api_team_id = int(team.api_football_team_id)
-        squad = provider.get_wc_squad(api_team_id, pre_season)
+        squad = provider.get_registered_squad(api_team_id)
         if not squad:
-            squad = provider.get_wc_squad(api_team_id, pre_season - 1)
-            if squad:
-                logger.info(f"{team.name}: no {pre_season} data, fell back to {pre_season - 1}")
+            logger.warning(f"{team.name}: no registered squad found")
         db_players = db.query(Player).filter(Player.team_id == team.id).all()
 
         for sp in squad:
-            player = _match_player(sp.api_player_id, sp.name, db_players, db)
+            # Exclude already-matched players so ambiguous names (e.g. "E. Martínez"
+            # with three MARTINEZ candidates) don't land on the wrong one.
+            unseen_candidates = [p for p in db_players if p.id not in seen_player_ids]
+            player = _match_player(sp.api_player_id, sp.name, unseen_candidates, db)
             if not player:
                 summary.players_unmatched += 1
                 continue
 
-            if player.id in seen_player_ids:
-                continue
             seen_player_ids.add(player.id)
 
             summary.players_matched += 1

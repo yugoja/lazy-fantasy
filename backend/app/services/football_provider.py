@@ -137,6 +137,31 @@ class ApiFootballProvider:
             for entry in data.get("response", [])
         ]
 
+    def get_registered_squad(self, team_id: int) -> list[WCSquadPlayer]:
+        """Return the officially registered WC squad (26 players) from /players/squads.
+
+        No stats — just player IDs, names, and positions. Use get_player_club_stats
+        separately to enrich with club-season data.
+        """
+        data = self._get("players/squads", team=team_id)
+        if not data or not data.get("response"):
+            return []
+        players = []
+        for entry in data["response"]:
+            for p in entry.get("players", []):
+                pos = p.get("position") or "Attacker"
+                players.append(WCSquadPlayer(
+                    api_player_id=int(p["id"]),
+                    name=p.get("name", ""),
+                    position=pos,
+                    appearances=0,
+                    minutes=0,
+                    goals=0,
+                    assists=0,
+                    clean_sheets=0,
+                ))
+        return players
+
     def get_wc_squad(self, team_id: int, season: int, league_id: Optional[int] = None) -> list[WCSquadPlayer]:
         """Fetch all squad players for a team with their season stats (handles pagination).
 

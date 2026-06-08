@@ -96,8 +96,10 @@ def _make_provider(squad=None, club_stats=None):
     """Return a mock provider with safe defaults for all methods used by seed."""
     provider = MagicMock()
     provider._get.return_value = {"response": []}
+    provider.get_wc_teams.return_value = []  # team api_football_team_id pre-set in fixtures
+    provider.get_registered_squad.return_value = squad or []
     provider.get_wc_squad.return_value = squad or []
-    provider.get_player_club_stats.return_value = club_stats  # None = fall back to national data
+    provider.get_player_club_stats.return_value = club_stats
     return provider
 
 
@@ -169,11 +171,11 @@ class TestSeedPlayerForm:
         t2_squad = [_make_wc_player(600 + i, p.name) for i, p in enumerate(t2_players)]
         t2_squad.append(_make_wc_player(999, "AAABBB Nobody Special"))
 
-        def _squad_side_effect(team_id, season, league_id=None):
+        def _registered_squad_side_effect(team_id):
             return t1_squad if team_id == int(t1.api_football_team_id) else t2_squad
 
         provider = _make_provider()
-        provider.get_wc_squad.side_effect = _squad_side_effect
+        provider.get_registered_squad.side_effect = _registered_squad_side_effect
 
         summary = seed_player_form(db_session, provider, wc_league_id=1, season=2026)
         assert summary.players_matched == len(t1_players) + len(t2_players)
