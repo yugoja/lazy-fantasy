@@ -63,8 +63,25 @@ const ROLE_Y: Record<string, { top: number; bottom: number }> = {
 function getInitials(name: string) {
   return name.replace(/\./g, '').split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
-function getLastName(name: string) {
-  return name.split(' ').pop() ?? name;
+// Player names are stored as "SURNAME Firstname" (surname in caps), e.g.
+// "MESSI Lionel" or "HADJ MOUSSA Anis". Render as first-initial + surname → "L Messi".
+function shortName(name: string) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const title = (s: string) =>
+    s.split(/\s+/).map(w => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w)).join(' ');
+  if (words.length <= 1) return title(name);
+
+  const isUpper = (w: string) => w === w.toUpperCase() && w !== w.toLowerCase();
+  let i = 0;
+  while (i < words.length && isUpper(words[i])) i++;
+  const surnameWords = words.slice(0, i);
+  const givenWords = words.slice(i);
+
+  // Mixed case "SURNAME Firstname": leading caps = surname, rest = given name.
+  // All-caps fallback: treat as "First ... Last" order.
+  const initial = (givenWords[0] ?? words[0])[0];
+  const surname = surnameWords.length && givenWords.length ? surnameWords.join(' ') : words[words.length - 1];
+  return `${initial.toUpperCase()} ${title(surname)}`;
 }
 function positionName(role: string) {
   const map: Record<string, string> = {
@@ -512,7 +529,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
           )}
         </div>
         <div className="text-center">
-          <div className="max-w-[8rem] truncate font-heading text-[13px] font-bold leading-tight">{getLastName(p.name)}</div>
+          <div className="max-w-[8rem] truncate font-heading text-[13px] font-bold leading-tight">{shortName(p.name)}</div>
           <div className="text-[10px] text-muted-foreground">{positionName(p.role)}</div>
         </div>
       </button>
@@ -704,7 +721,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
                       {p ? getInitials(p.name) : <span className="text-[9px] font-semibold">{i + 1}</span>}
                     </div>
                     {p ? (
-                      <span className="truncate font-heading text-xs font-bold leading-tight">{getLastName(p.name)}</span>
+                      <span className="truncate font-heading text-xs font-bold leading-tight">{shortName(p.name)}</span>
                     ) : (
                       <span className="text-[10px] text-muted-foreground">{i === 0 ? 'Tap player' : `Slot ${i + 1}`}</span>
                     )}
@@ -751,7 +768,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
                       'max-w-[68px] truncate rounded px-1.5 py-0.5 text-[9px] font-bold leading-tight text-white shadow-sm',
                       selected ? 'bg-black/85' : 'bg-black/55',
                     )}>
-                      {getLastName(player.name)}
+                      {shortName(player.name)}
                     </span>
                   </button>
                 );
@@ -791,7 +808,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
                       'max-w-[68px] truncate rounded px-1.5 py-0.5 text-[9px] font-bold leading-tight text-white shadow-sm',
                       selected ? 'bg-black/85' : 'bg-black/55',
                     )}>
-                      {getLastName(player.name)}
+                      {shortName(player.name)}
                     </span>
                   </button>
                 );
@@ -878,7 +895,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
             <SummaryRow label="Result" value={`${resultText} · ${score.a}–${score.b}`} />
             <SummaryRow
               label="Players"
-              value={scorers.map(id => getLastName(playerById.get(id)?.name ?? '')).filter(Boolean).join(' · ') || '—'}
+              value={scorers.map(id => shortName(playerById.get(id)?.name ?? '')).filter(Boolean).join(' · ') || '—'}
             />
           </div>
           <div className="flex flex-col gap-3">
