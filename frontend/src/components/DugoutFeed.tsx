@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DugoutEvent, dismissDugoutEvent } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, CheckCheck, Users, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, CheckCheck, Users, X, Trophy, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MatchVerdictCard } from '@/components/MatchVerdictCard';
 import { useAuth } from '@/lib/auth';
@@ -167,6 +167,71 @@ function RankShiftRow({ event, onDismiss }: { event: DugoutEvent; onDismiss: () 
   );
 }
 
+function formatLockCountdown(iso: string, nowMs: number): string | null {
+  const diff = new Date(iso).getTime() - nowMs;
+  if (diff <= 0) return null;
+  const totalSec = Math.floor(diff / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  if (d > 0) return `${d}d ${h}h`;
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+// The marquee CTA in the dugout: claim your tournament-long picks before the
+// group stage ends. Green-tinted so it reads as an action, not a social signal.
+function TournamentPicksCard({ event, onDismiss }: { event: DugoutEvent; onDismiss: () => void }) {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!event.picks_lock_at) return;
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [event.picks_lock_at]);
+
+  const countdown = event.picks_lock_at ? formatLockCountdown(event.picks_lock_at, nowMs) : null;
+  const hasPicks = !!event.has_picks;
+
+  return (
+    <Card className="relative overflow-hidden border-primary/30 bg-primary/[0.06]">
+      {/* Trophy watermark — clipped into the corner for a tournament-prize feel */}
+      <Trophy className="pointer-events-none absolute -bottom-5 -right-4 h-28 w-28 rotate-12 text-primary/10" aria-hidden />
+      <CardContent className="relative p-4">
+        <div className="flex items-start justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+            <Trophy className="h-3 w-3" /> Mega Picks
+          </span>
+          <DismissButton onDismiss={onDismiss} />
+        </div>
+
+        <h3 className="mt-2 font-heading text-[19px] font-bold leading-tight">
+          {hasPicks ? 'Final four locked — tweak ’em anytime.' : 'Who lifts it? Call your final four.'}
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Your 4 semi-finalists plus Golden{' '}
+          <span className="font-medium text-foreground">Boot</span>,{' '}
+          <span className="font-medium text-foreground">Ball</span> &{' '}
+          <span className="font-medium text-foreground">Glove</span>.
+        </p>
+
+        <div className="mt-3 flex items-center gap-1.5 text-[11px]">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+          <span className="font-semibold text-amber-400">Open till the group stage ends</span>
+          {countdown && <span className="text-muted-foreground">· closes in {countdown}</span>}
+        </div>
+
+        <Link href={`/tournaments/${event.tournament_id}/picks`} className="mt-3.5 block">
+          <Button className="w-full font-heading font-bold">
+            {hasPicks ? 'Tweak your picks' : 'Make your picks'}
+            <ArrowRight className="ml-1.5 h-4 w-4" />
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+}
+
 function eventKey(e: DugoutEvent) {
   return `${e.type}:${e.league_id}:${e.match_id}:${e.username}`;
 }
@@ -203,6 +268,7 @@ export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] })
     );
   }
 
+  const pickEvents = events.filter(e => e.type === 'tournament_picks');
   const verdictEvents = events.filter(e => e.type === 'match_verdict');
   const cardEvents = events.filter(e => e.type === 'contrarian' || e.type === 'streak');
   const rowEvents = events.filter(e => e.type === 'agreement' || e.type === 'rank_shift');
@@ -216,6 +282,11 @@ export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] })
       </div>
 
       <div className="space-y-2">
+        {/* Tournament-picks CTA — marquee item, surfaces first */}
+        {pickEvents.map((event) => (
+          <TournamentPicksCard key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />
+        ))}
+
         {/* Verdict cards — full-width, own row */}
         {verdictEvents.map((event) => (
           <MatchVerdictCard

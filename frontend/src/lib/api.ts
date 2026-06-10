@@ -526,7 +526,7 @@ export interface VerdictRunner {
 }
 
 export interface DugoutEvent {
-    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift' | 'match_verdict';
+    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift' | 'match_verdict' | 'tournament_picks';
     league_name: string;
     league_id: number;
     match_id: number | null;
@@ -547,6 +547,11 @@ export interface DugoutEvent {
     match_label?: string | null;
     top_score?: number | null;
     runner_up_score?: number | null;
+    // Tournament-picks CTA fields
+    tournament_id?: number | null;
+    tournament_name?: string | null;
+    picks_lock_at?: string | null;
+    has_picks?: boolean | null;
 }
 
 export async function getDugoutEvents() {

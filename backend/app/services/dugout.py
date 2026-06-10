@@ -72,6 +72,7 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
     if not relevant_match_ids:
         # No locked matches with predictions → only rank shifts + match verdicts possible
         events: list[DugoutEvent] = []
+        events.extend(_tournament_picks_events(db, user_id, leagues))
         events.extend(_match_verdict_events(db, user_id, leagues))
         events.extend(_rank_shift_events(db, user_id, leagues, members_by_league))
         events = [
@@ -100,6 +101,7 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
         preds_by_match_user[p.match_id][p.user_id] = p
 
     events = []
+    events.extend(_tournament_picks_events(db, user_id, leagues))
     events.extend(_match_verdict_events(db, user_id, leagues))
     events.extend(_contrarian_events(db, user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map))
     events.extend(_agreement_events(user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map))
@@ -112,16 +114,87 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
         if (e.type, e.league_id, e.match_id if e.match_id else 0, e.username) not in dismissed_keys
     ]
 
-    # Verdicts surface first (the freshest result), then rank shifts, then social signals.
+    # Time-sensitive picks CTA surfaces first, then verdicts (freshest result),
+    # rank shifts, then social signals.
     priority = {
-        DugoutEventType.MATCH_VERDICT: 0,
-        DugoutEventType.RANK_SHIFT: 1,
-        DugoutEventType.CONTRARIAN: 2,
-        DugoutEventType.AGREEMENT: 3,
-        DugoutEventType.STREAK: 4,
+        DugoutEventType.TOURNAMENT_PICKS: 0,
+        DugoutEventType.MATCH_VERDICT: 1,
+        DugoutEventType.RANK_SHIFT: 2,
+        DugoutEventType.CONTRARIAN: 3,
+        DugoutEventType.AGREEMENT: 4,
+        DugoutEventType.STREAK: 5,
     }
     events.sort(key=lambda e: priority[e.type])
     return events[:10]
+
+
+def _tournament_picks_events(
+    db: Session,
+    user_id: int,
+    leagues: list,
+) -> list[DugoutEvent]:
+    """A single CTA to make/edit tournament-level picks while the window is open.
+
+    Football picks (semi-finalists + golden awards) stay open until the first
+    knockout match kicks off. We surface at most one card — the most urgent
+    (soonest-closing) open football tournament — anchored to the user's largest
+    football league for dismissal context.
+    """
+    from app.models import Tournament
+    from app.services.tournament_picks import get_group_stage_deadline, get_tournament_picks
+
+    football_leagues = [l for l in leagues if l.sport == "football"]
+    if not football_leagues:
+        return []
+    league = football_leagues[0]  # leagues are pre-sorted by member count desc
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return []
+
+    now = datetime.now(timezone.utc)
+    tournaments = db.query(Tournament).filter(Tournament.sport == "football").all()
+
+    # Keep only tournaments whose picks window is still open, then pick the most
+    # urgent one (a real deadline outranks an undated/not-yet-seeded window).
+    open_tournaments = []
+    for t in tournaments:
+        deadline = get_group_stage_deadline(db, t.id)
+        if deadline is not None and now >= deadline:
+            continue  # group stage over — picks already locked
+        open_tournaments.append((t, deadline))
+    if not open_tournaments:
+        return []
+
+    far_future = datetime.max.replace(tzinfo=timezone.utc)
+    target, deadline = min(open_tournaments, key=lambda td: td[1] or far_future)
+
+    pick = get_tournament_picks(db, user_id, target.id)
+    has_picks = bool(
+        pick
+        and (
+            any([pick.top4_team1_id, pick.top4_team2_id, pick.top4_team3_id, pick.top4_team4_id])
+            or pick.golden_ball_player_id
+            or pick.golden_boot_player_id
+            or pick.golden_glove_player_id
+        )
+    )
+
+    return [
+        DugoutEvent(
+            type=DugoutEventType.TOURNAMENT_PICKS,
+            league_name=league.name,
+            league_id=league.id,
+            match_id=None,
+            username=user.username,
+            display_name=user.display_name,
+            is_me=True,
+            tournament_id=target.id,
+            tournament_name=target.name,
+            picks_lock_at=deadline,
+            has_picks=has_picks,
+        )
+    ]
 
 
 def _match_verdict_events(

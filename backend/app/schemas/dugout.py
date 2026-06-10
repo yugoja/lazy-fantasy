@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel
 
@@ -8,6 +9,7 @@ class DugoutEventType(str, Enum):
     STREAK = "streak"
     RANK_SHIFT = "rank_shift"
     MATCH_VERDICT = "match_verdict"
+    TOURNAMENT_PICKS = "tournament_picks"
 
 
 class VerdictHits(BaseModel):
@@ -61,6 +63,11 @@ class DugoutEvent(BaseModel):
     match_label: str | None = None
     top_score: int | None = None
     runner_up_score: int | None = None
+    # Tournament-picks CTA fields
+    tournament_id: int | None = None
+    tournament_name: str | None = None
+    picks_lock_at: datetime | None = None
+    has_picks: bool | None = None
 
 
 class DugoutDismissRequest(BaseModel):
