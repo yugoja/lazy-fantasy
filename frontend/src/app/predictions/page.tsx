@@ -99,6 +99,9 @@ export default function PredictionsPage() {
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const ongoing = matches.filter(m => m.status !== 'COMPLETED' && new Date(m.start_time) <= now && new Date(m.start_time) >= todayStart);
   const detailedByMatchId = new Map(detailedPredictions.map(p => [p.match_id, p]));
+  // "Done" = matches that have already kicked off. Predictions for future matches
+  // stay in the Upcoming tab only.
+  const donePredictions = detailedPredictions.filter(p => new Date(p.start_time) <= now);
 
   const renderMatches = (filteredMatches: Match[]) => {
     if (filteredMatches.length === 0) {
@@ -554,7 +557,7 @@ export default function PredictionsPage() {
   };
 
   const renderPredictionHistory = () => {
-    if (detailedPredictions.length === 0) {
+    if (donePredictions.length === 0) {
       return (
         <Card className="p-8 text-center space-y-2">
           <p className="text-sm text-muted-foreground">No predictions yet</p>
@@ -674,7 +677,7 @@ export default function PredictionsPage() {
         )}
 
         {/* Prediction Cards */}
-        {detailedPredictions.map((pred) => renderDetailedCard(pred))}
+        {donePredictions.map((pred) => renderDetailedCard(pred))}
       </div>
     );
   };
@@ -691,7 +694,7 @@ export default function PredictionsPage() {
         <TabsList className="w-full">
           <TabsTrigger value="upcoming" className="flex-1">Upcoming</TabsTrigger>
           <TabsTrigger value="live" className="flex-1">Live ({ongoing.length})</TabsTrigger>
-          <TabsTrigger value="done" className="flex-1">Done ({detailedPredictions.length})</TabsTrigger>
+          <TabsTrigger value="done" className="flex-1">Done ({donePredictions.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming" className="mt-3">{renderMatches(upcoming)}</TabsContent>
         <TabsContent value="live" className="mt-3">
