@@ -53,27 +53,27 @@ class TestPreXp:
     def test_fwd_with_goals(self):
         sp = _SquadPlayer(1, "Striker", "Attacker", appearances=10, minutes=900, goals=8, assists=2, clean_sheets=0)
         xp = _pre_xp(sp)
-        # per90_base=1.0 + goals_per90=0.8*6=4.8 + assists_per90=0.2*3=0.6 → 6.4
-        assert 6.0 < xp < 7.0
+        # g90 ≈ (8+1.25)/15=0.617, a90 ≈ (2+0.6)/15=0.173, m=1, FWD: floor+goals+assists ≈ 3+6.17+0.87 ≈ 10.0
+        assert 9.0 < xp < 11.5
 
     def test_mid_with_assists(self):
         sp = _SquadPlayer(2, "Midfielder", "Midfielder", appearances=10, minutes=900, goals=3, assists=6, clean_sheets=0)
         xp = _pre_xp(sp)
-        # per90_base=1.0 + goals_per90=0.3*5=1.5 + assists_per90=0.6*4=2.4 → 4.9
-        assert 4.5 < xp < 5.5
+        # g90≈0.22, a90≈0.427; MID: floor+goals+assists+cs ≈ 3+3.3+4.27+0.82 ≈ 11.4
+        assert 10.5 < xp < 13.0
 
     def test_def_with_contributions(self):
         sp = _SquadPlayer(3, "Defender", "Defender", appearances=10, minutes=900, goals=1, assists=2, clean_sheets=0)
         xp = _pre_xp(sp)
-        # per90_base*1.5=1.5 + assists_per90=0.2*3=0.6 + goals_per90=0.1*4=0.4 → 2.5
-        assert 2.0 < xp < 3.0
+        # g90≈0.073, a90≈0.143; DEF: floor+goals+assists+cs ≈ 3+1.83+1.72+1.64 ≈ 8.2
+        assert 7.0 < xp < 10.0
 
     def test_gk_with_saves(self):
-        # clean_sheets field = total saves in season; 40 saves in 10 games = 4/game
+        # clean_sheets from squad data is not used in new formula (cs derived from lambda).
+        # GK with 40 saves in 10 games: XP ≈ floor + clean_sheet_prob*6 + pen_save ≈ 4.9
         sp = _SquadPlayer(4, "Keeper", "Goalkeeper", appearances=10, minutes=900, goals=0, assists=0, clean_sheets=40)
         xp = _pre_xp(sp)
-        # saves_per_game=4.0 → (4/6)*8=5.33; per90_base*2=2.0 → 7.33
-        assert 6.5 < xp < 8.5
+        assert 4.0 < xp < 6.0
 
     def test_zero_appearances_returns_stub(self):
         sp = _SquadPlayer(5, "Unknown", "Attacker", appearances=0, minutes=0, goals=0, assists=0, clean_sheets=0)
@@ -103,16 +103,16 @@ class TestWcXp:
     def test_fwd_two_goals_one_assist_in_two_games(self):
         form = _Form(wc_goals=2, wc_assists=1, wc_minutes=180, wc_clean_sheets=0, wc_games=2)
         xp = _wc_xp(form, "Attacker")
-        # goals_per90 = 2/(180/90) = 2/2 = 1.0 → *6 = 6.0
-        # assists_per90 = 1/2 = 0.5 → *3 = 1.5
-        # expected ≈ 7.5
-        assert 7.0 < xp < 8.5
+        # g90 ≈ (2+1.25)/7=0.464, a90 ≈ (1+0.6)/7=0.229; floor+goals+assists ≈ 3+4.64+1.14 ≈ 8.8
+        assert 8.0 < xp < 10.5
 
-    def test_gk_clean_sheet(self):
+    def test_gk_no_attacking_output(self):
+        # Clean-sheet history (wc_clean_sheets) is NOT used in new formula.
+        # GK XP depends on floor + lambda-derived cs probability + pen-save term.
         form = _Form(wc_goals=0, wc_assists=0, wc_minutes=90, wc_clean_sheets=1, wc_games=1)
         xp = _wc_xp(form, "Goalkeeper")
-        # cs_rate = 1.0 → *8 = 8.0; minutes/90/games = 1.0 → *2 = 2.0 → 10.0
-        assert 9.0 < xp <= 10.0
+        # floor(3) + p_cs*6 + pen_save = 3 + 0.2725*6 + 0.25 ≈ 4.9
+        assert 4.0 < xp < 6.0
 
     def test_def_no_wc_data_returns_zero(self):
         form = _Form(wc_games=0)
@@ -122,8 +122,8 @@ class TestWcXp:
     def test_mid_goals_dominate(self):
         form = _Form(wc_goals=3, wc_assists=0, wc_minutes=270, wc_games=3)
         xp = _wc_xp(form, "Midfielder")
-        # goals_per90 = 3/3 = 1.0 → *5 = 5.0; assists = 0 → 5.0
-        assert 4.5 < xp < 5.5
+        # g90 ≈ (3+0.3)/8=0.4125; MID: floor+goals+cs ≈ 3+6.19+0.82 ≈ 10.5
+        assert 9.5 < xp < 12.0
 
 
 # ── _derive_floor ─────────────────────────────────────────────────────────────
@@ -159,18 +159,24 @@ class TestBlend:
         # wc_weight = 0 → pure pre
         assert result == 8.5
 
-    def test_three_wc_games_returns_pure_wc(self):
-        # With 3 WC games and a goal per game, wc_weight = 1.0
+    def test_three_wc_games_weight_is_capped(self):
+        # With 3 WC games, wc_weight = min(3/3,1)*WC_WEIGHT_CAP = 0.7 (not 1.0)
+        from app.services.player_form_service import WC_WEIGHT_CAP
         form = _Form(
             wc_games=3, wc_goals=3, wc_assists=0, wc_minutes=270, wc_clean_sheets=0,
             pre_expected_points=8.0,
         )
         result = _blend(form, "Attacker")
         wc = _wc_xp(form, "Attacker")
-        assert abs(result - wc) < 0.01
+        pre = 8.0
+        expected = round((1 - WC_WEIGHT_CAP) * pre + WC_WEIGHT_CAP * wc, 2)
+        assert abs(result - expected) < 0.05
+        # Must NOT be pure WC (cap means pre is still 30% weighted)
+        assert abs(result - wc) > 0.1
 
-    def test_one_wc_game_blends_one_third(self):
-        # wc_weight = 1/3
+    def test_one_wc_game_blends_with_cap(self):
+        # wc_weight = (1/3) * WC_WEIGHT_CAP
+        from app.services.player_form_service import WC_WEIGHT_CAP
         form = _Form(
             wc_games=1, wc_goals=1, wc_assists=0, wc_minutes=90, wc_clean_sheets=0,
             pre_expected_points=9.0,
@@ -178,8 +184,9 @@ class TestBlend:
         result = _blend(form, "Attacker")
         wc = _wc_xp(form, "Attacker")
         pre = 9.0
-        expected = round((2/3) * pre + (1/3) * wc, 2)
-        assert result == expected
+        wc_weight = (1 / 3) * WC_WEIGHT_CAP
+        expected = round((1 - wc_weight) * pre + wc_weight * wc, 2)
+        assert abs(result - expected) < 0.05
 
     def test_pre_xp_none_uses_position_stub(self):
         # pre_expected_points=None → should use FWD stub=10.0
@@ -201,12 +208,17 @@ class TestBlend:
         # Check it has at most 2 decimal places
         assert result == round(result, 2)
 
-    def test_wc_weight_capped_at_one_after_three_games(self):
-        # 6 games should not make wc_weight > 1
+    def test_wc_weight_capped_at_wc_weight_cap_even_with_many_games(self):
+        # 6 WC games: wc_weight = min(6/3,1)*WC_WEIGHT_CAP = WC_WEIGHT_CAP (not 1.0)
+        from app.services.player_form_service import WC_WEIGHT_CAP
         form = _Form(
             wc_games=6, wc_goals=6, wc_assists=0, wc_minutes=540, wc_clean_sheets=0,
             pre_expected_points=5.0,
         )
         result = _blend(form, "Attacker")
         wc = _wc_xp(form, "Attacker")
-        assert abs(result - wc) < 0.01  # wc_weight == 1.0 even with 6 games
+        pre = 5.0
+        expected = round((1 - WC_WEIGHT_CAP) * pre + WC_WEIGHT_CAP * wc, 2)
+        assert abs(result - expected) < 0.05
+        # Pre form still contributes (1 - WC_WEIGHT_CAP) = 30%
+        assert abs(result - wc) > 0.1

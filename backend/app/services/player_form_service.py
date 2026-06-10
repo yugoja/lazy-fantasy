@@ -8,6 +8,7 @@ tournament progresses.
 from __future__ import annotations
 
 import logging
+import math
 import re
 import time
 import unicodedata
@@ -28,11 +29,22 @@ from app.services.football_provider import (
     FootballPlayerStat,
     WCSquadPlayer,
 )
+from app.services.scoring_football import (
+    ASSIST_POINTS,
+    CLEAN_SHEET_POINTS,
+    FLOOR_POINTS,
+    GOAL_POINTS,
+    MIN_CLEAN_SHEET_MINUTES,
+    MIN_FLOOR_MINUTES,
+    PEN_SAVE_POINTS,
+    Position,
+)
 
 logger = logging.getLogger(__name__)
 
-# ── Position stubs (fallback when no API data) ────────────────────────────────
+# ── Constants ─────────────────────────────────────────────────────────────────
 
+# Position stubs (fallback when no API data at all)
 _POSITION_XP: dict[str, float] = {
     "Attacker": 10.0,
     "Midfielder": 8.0,
@@ -40,55 +52,117 @@ _POSITION_XP: dict[str, float] = {
     "Goalkeeper": 5.0,
 }
 
+# Neutral-venue expected-goals baseline (equal for both sides; Tier 1B complement)
+BASE_LAMBDA: float = 1.3
+
+# Maximum weight for WC tournament data so a tiny sample can't erase a full season
+WC_WEIGHT_CAP: float = 0.7
+
+# Rough average: ~1 penalty per 20 matches for a GK
+EXPECTED_PEN_SAVES_PER_MATCH: float = 0.05
+
+# ── Regularisation: shrink low-sample per-90 rates toward position mean ───────
+_REGULARIZATION_90S: float = 5.0   # prior weight in 90-minute units
+
+# Rough per-90 population means (season data across top leagues)
+_POSITION_MEAN_G90: dict[str, float] = {
+    "Goalkeeper": 0.0,
+    "Defender":   0.02,
+    "Midfielder": 0.06,
+    "Attacker":   0.25,
+}
+_POSITION_MEAN_A90: dict[str, float] = {
+    "Goalkeeper": 0.0,
+    "Defender":   0.03,
+    "Midfielder": 0.08,
+    "Attacker":   0.12,
+}
+
+# ── Position string → Position enum ──────────────────────────────────────────
+_STR_TO_POSITION: dict[str, Position] = {
+    "Goalkeeper": Position.GK,
+    "Defender":   Position.DEF,
+    "Midfielder": Position.MID,
+    "Attacker":   Position.FWD,
+}
+
+
+# ── Core XP formula (pure, testable) ─────────────────────────────────────────
+
+
+def _xp_formula(
+    g90: float,
+    a90: float,
+    expected_minutes: float,
+    opponent_lambda: float,
+    position: str,
+) -> float:
+    """Compute expected fantasy points for one player in one match.
+
+    Derives all point values from scoring_football constants so any spec change
+    propagates automatically. Clean-sheet probability is poisson_pmf(0, lambda)
+    so team strength enters defensive XP through the lambda, not from data.
+    """
+    pos = _STR_TO_POSITION.get(position, Position.FWD)
+
+    m = expected_minutes / 90.0
+    p_appear = min(expected_minutes / MIN_FLOOR_MINUTES, 1.0)
+    p_cs_elig = min(expected_minutes / MIN_CLEAN_SHEET_MINUTES, 1.0)
+    # P(X=0) for Poisson(lambda) = e^(-lambda)
+    p_cs = math.exp(-opponent_lambda)
+
+    xp = FLOOR_POINTS * p_appear
+    xp += g90 * m * GOAL_POINTS[pos]
+    xp += a90 * m * ASSIST_POINTS[pos]
+    if CLEAN_SHEET_POINTS[pos] > 0:
+        xp += p_cs * p_cs_elig * CLEAN_SHEET_POINTS[pos]
+    if pos == Position.GK:
+        xp += EXPECTED_PEN_SAVES_PER_MATCH * PEN_SAVE_POINTS
+
+    return round(xp, 2)
+
+
+def _regularised_rates(
+    goals: int, assists: int, total_minutes: float, position: str
+) -> tuple[float, float]:
+    """Shrink per-90 rates toward the position mean to dampen noisy small samples."""
+    total_90s = total_minutes / 90.0
+    prior = _REGULARIZATION_90S
+    mean_g = _POSITION_MEAN_G90.get(position, 0.0)
+    mean_a = _POSITION_MEAN_A90.get(position, 0.0)
+    g90 = (goals + mean_g * prior) / (total_90s + prior)
+    a90 = (assists + mean_a * prior) / (total_90s + prior)
+    return g90, a90
+
+
 # ── Position-aware xp formulas ────────────────────────────────────────────────
 
 
-def _pre_xp(squad_player: WCSquadPlayer) -> float:
-    """Compute pre-tournament expected points from season stats (0–15 range)."""
+def _pre_xp(squad_player: WCSquadPlayer, opponent_lambda: float = BASE_LAMBDA) -> float:
+    """Compute pre-tournament expected points from season stats."""
     pos = squad_player.position
     if squad_player.appearances == 0:
         return _POSITION_XP.get(pos, 6.0)
 
-    apps = squad_player.appearances
-    per90_base = squad_player.minutes / 90.0 / apps if apps else 0.0
-    goals_per90 = squad_player.goals / (squad_player.minutes / 90.0) if squad_player.minutes else 0.0
-    assists_per90 = squad_player.assists / (squad_player.minutes / 90.0) if squad_player.minutes else 0.0
-    cs_rate = squad_player.clean_sheets / apps if apps else 0.0
-
-    if pos == "Goalkeeper":
-        # clean_sheets = total saves in season; normalize to 0–1 scale (6 saves/game = max)
-        saves_per_game = squad_player.clean_sheets / apps if apps else 0.0
-        cs_component = min(saves_per_game / 6.0, 1.0) * 8
-        return round(cs_component + per90_base * 2, 2)
-    elif pos == "Defender":
-        # per90_base floor prevents 0 for defenders with no attacking contribution
-        return round(per90_base * 1.5 + assists_per90 * 3 + goals_per90 * 4, 2)
-    elif pos == "Midfielder":
-        return round(per90_base * 1.0 + goals_per90 * 5 + assists_per90 * 4, 2)
-    else:  # Attacker
-        return round(per90_base * 1.0 + goals_per90 * 6 + assists_per90 * 3, 2)
+    expected_minutes = squad_player.minutes / squad_player.appearances
+    g90, a90 = _regularised_rates(
+        squad_player.goals, squad_player.assists, float(squad_player.minutes), pos
+    )
+    return _xp_formula(g90=g90, a90=a90, expected_minutes=expected_minutes,
+                       opponent_lambda=opponent_lambda, position=pos)
 
 
-def _wc_xp(form: PlayerForm, position: str) -> float:
+def _wc_xp(form: PlayerForm, position: str, opponent_lambda: float = BASE_LAMBDA) -> float:
     """Compute WC-derived expected points from in-tournament accumulators."""
     if form.wc_games == 0:
         return 0.0
 
-    games = form.wc_games
-    minutes = form.wc_minutes
-    per90_base = minutes / 90.0 / games if games else 0.0
-    goals_per90 = form.wc_goals / (minutes / 90.0) if minutes else 0.0
-    assists_per90 = form.wc_assists / (minutes / 90.0) if minutes else 0.0
-    cs_rate = form.wc_clean_sheets / games if games else 0.0
-
-    if position == "Goalkeeper":
-        return round(cs_rate * 8 + per90_base * 2, 2)
-    elif position == "Defender":
-        return round(cs_rate * 5 + assists_per90 * 3 + goals_per90 * 4, 2)
-    elif position == "Midfielder":
-        return round(goals_per90 * 5 + assists_per90 * 4, 2)
-    else:  # Attacker
-        return round(goals_per90 * 6 + assists_per90 * 3, 2)
+    expected_minutes = form.wc_minutes / form.wc_games
+    g90, a90 = _regularised_rates(
+        form.wc_goals, form.wc_assists, float(form.wc_minutes), position
+    )
+    return _xp_formula(g90=g90, a90=a90, expected_minutes=expected_minutes,
+                       opponent_lambda=opponent_lambda, position=position)
 
 
 def _derive_floor(form: PlayerForm) -> str:
@@ -102,11 +176,17 @@ def _derive_floor(form: PlayerForm) -> str:
     return "low"
 
 
-def _blend(form: PlayerForm, position: str) -> float:
-    """Blend pre-tournament and WC-derived expected points."""
-    wc_weight = min(form.wc_games / 3.0, 1.0)
+def _blend(form: PlayerForm, position: str, opponent_lambda: float = BASE_LAMBDA) -> float:
+    """Blend pre-tournament and WC-derived expected points.
+
+    WC weight is capped at WC_WEIGHT_CAP so a small tournament sample cannot
+    fully override a full season of club form.
+    """
+    wc_weight = min(form.wc_games / 3.0, 1.0) * WC_WEIGHT_CAP
     pre = form.pre_expected_points if form.pre_expected_points is not None else _POSITION_XP.get(position, 6.0)
-    wc = _wc_xp(form, position)
+    if form.wc_games == 0:
+        return round(pre, 2)
+    wc = _wc_xp(form, position, opponent_lambda)
     return round((1 - wc_weight) * pre + wc_weight * wc, 2)
 
 

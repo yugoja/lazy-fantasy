@@ -34,8 +34,8 @@ def wc_tournament(db_session):
 
 @pytest.fixture
 def football_match(db_session, wc_tournament):
-    fra = Team(name="France", short_name="FRA")
-    bra = Team(name="Brazil", short_name="BRA")
+    fra = Team(name="France", short_name="FRA", fifa_ranking=1)
+    bra = Team(name="Brazil", short_name="BRA", fifa_ranking=15)
     db_session.add_all([fra, bra])
     db_session.commit()
 
@@ -180,3 +180,29 @@ def test_at_least_3_eligible_players_for_safe_strategy(db_session, football_matc
     inputs = build_prediction_inputs_from_db(db_session, match)
     high_floor = [p for p in inputs.players if p.floor == "high" and p.availability != "out"]
     assert len(high_floor) >= 3
+
+
+def test_stronger_team_players_get_high_floor(db_session, football_match):
+    """France (#1) vs Brazil (#15): France players should be high, Brazil mid."""
+    match, fra, bra = football_match
+    inputs = build_prediction_inputs_from_db(db_session, match)
+    fra_floors = {p.floor for p in inputs.players if p.team_id == str(fra.id)}
+    bra_floors = {p.floor for p in inputs.players if p.team_id == str(bra.id)}
+    assert fra_floors == {"high"}
+    assert bra_floors == {"mid"}
+
+
+def test_rank_adjusted_lambdas_favour_stronger_home_team(db_session, football_match):
+    """Stronger team (#1 vs #15) should have higher lambda than the neutral base."""
+    from app.services.fallback_job import BASE_LAMBDA, _rank_adjusted_lambdas
+    home_lam, away_lam = _rank_adjusted_lambdas(home_rank=1, away_rank=15)
+    assert home_lam > BASE_LAMBDA
+    assert away_lam < BASE_LAMBDA
+
+
+def test_equal_ranked_teams_use_default_lambdas(db_session):
+    """Equal/unknown rankings fall back to equal BASE_LAMBDA on both sides (neutral venue)."""
+    from app.services.fallback_job import BASE_LAMBDA, _rank_adjusted_lambdas
+    home_lam, away_lam = _rank_adjusted_lambdas(home_rank=None, away_rank=None)
+    assert home_lam == pytest.approx(BASE_LAMBDA)
+    assert away_lam == pytest.approx(BASE_LAMBDA)
