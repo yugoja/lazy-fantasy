@@ -137,16 +137,17 @@ def _tournament_picks_events(
 
     Football picks (semi-finalists + golden awards) stay open until the first
     knockout match kicks off. We surface at most one card — the most urgent
-    (soonest-closing) open football tournament — anchored to the user's largest
-    football league for dismissal context.
+    (soonest-closing) open football tournament — to anyone with a league. A
+    football league is preferred as the dismissal anchor, but the card is not
+    league-specific (it never shows the league name), so any league works.
     """
     from app.models import Tournament
     from app.services.tournament_picks import get_group_stage_deadline, get_tournament_picks
 
-    football_leagues = [l for l in leagues if l.sport == "football"]
-    if not football_leagues:
+    if not leagues:
         return []
-    league = football_leagues[0]  # leagues are pre-sorted by member count desc
+    # leagues are pre-sorted by member count desc; prefer a football league as anchor.
+    league = next((l for l in leagues if l.sport == "football"), leagues[0])
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
