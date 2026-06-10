@@ -26,6 +26,11 @@ class Tournament(Base):
     result_best_batsman_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
     result_best_bowler_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
 
+    # Football award results (semi-finalists reuse result_top4_team* columns above)
+    result_golden_ball_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
+    result_golden_boot_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
+    result_golden_glove_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
+
     # Relationships
     matches = relationship("Match", back_populates="tournament")
     picks = relationship("TournamentPick", back_populates="tournament")

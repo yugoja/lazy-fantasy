@@ -15,11 +15,11 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
-function statusInfo(window: string): { label: string; dot: string; color: string } {
-  if (window === 'open' || window === 'open2') {
+function statusInfo(isOpen: boolean): { label: string; dot: string; color: string } {
+  if (isOpen) {
     return { label: 'PICKS OPEN', dot: 'bg-green-500', color: 'text-green-500' };
   }
-  return { label: 'FINALIZED', dot: 'bg-muted-foreground', color: 'text-muted-foreground' };
+  return { label: 'PICKS CLOSED', dot: 'bg-muted-foreground', color: 'text-muted-foreground' };
 }
 
 export default function TournamentsPage() {
@@ -88,9 +88,9 @@ export default function TournamentsPage() {
       ) : (
         <div className="space-y-6">
           {tournaments.map(tournament => {
-            const status = statusInfo(tournament.picks_window);
             const picks = picksByTournament[tournament.id];
-            const isOpen = tournament.picks_window === 'open' || tournament.picks_window === 'open2';
+            const isOpen = picks?.is_open ?? (tournament.picks_window === 'open' || tournament.picks_window === 'open2');
+            const status = statusInfo(isOpen);
 
             return (
               <Link key={tournament.id} href={`/tournaments/${tournament.id}`}>

@@ -1,12 +1,55 @@
+from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
 
 from app.models import Tournament, TournamentPick, Team, Player, Match
+from app.services.scoring_football import KNOCKOUT_STAGES
 
-# Points constants
+# Cricket points constants
 TOP4_POINTS_W1 = 25
 TOP4_POINTS_W2 = 12  # half of 25, rounded down
 PLAYER_POINTS_W1 = 50
 PLAYER_POINTS_W2 = 25  # half of 50
+
+# Football tournament-pick points
+FOOTBALL_SF_POINTS = 25  # per correct semi-finalist (max 4 -> 100)
+FOOTBALL_AWARD_POINTS = 50  # golden ball / boot / glove, each
+
+
+def get_group_stage_deadline(db: Session, tournament_id: int) -> datetime | None:
+    """Kickoff of the earliest knockout match — the moment football picks lock.
+
+    Returns None if no knockout matches are seeded yet (picks stay open).
+    """
+    first_ko = (
+        db.query(Match)
+        .filter(
+            Match.tournament_id == tournament_id,
+            Match.stage.in_(KNOCKOUT_STAGES),
+        )
+        .order_by(Match.start_time.asc())
+        .first()
+    )
+    if not first_ko or first_ko.start_time is None:
+        return None
+    deadline = first_ko.start_time
+    if deadline.tzinfo is None:
+        deadline = deadline.replace(tzinfo=timezone.utc)
+    return deadline
+
+
+def is_picks_open(db: Session, tournament: Tournament) -> tuple[bool, datetime | None]:
+    """Whether picks can currently be submitted, and (for football) when they lock.
+
+    Football: open until the first knockout kicks off (schedule-derived).
+    Cricket: gated by the admin-controlled picks_window.
+    """
+    if tournament.sport == "football":
+        deadline = get_group_stage_deadline(db, tournament.id)
+        if deadline is None:
+            return True, None
+        return datetime.now(timezone.utc) < deadline, deadline
+    return tournament.picks_window in ("open", "open2"), None
 
 
 def get_tournament_picks(db: Session, user_id: int, tournament_id: int) -> TournamentPick | None:
@@ -25,45 +68,42 @@ def upsert_tournament_picks(
     user_id: int,
     tournament_id: int,
     top4_team_ids: list[int],
-    best_batsman_player_id: int | None,
-    best_bowler_player_id: int | None,
+    best_batsman_player_id: int | None = None,
+    best_bowler_player_id: int | None = None,
+    golden_ball_player_id: int | None = None,
+    golden_boot_player_id: int | None = None,
+    golden_glove_player_id: int | None = None,
 ) -> TournamentPick:
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
     if not tournament:
         raise ValueError("Tournament not found")
 
-    if tournament.picks_window not in ("open", "open2"):
-        raise ValueError(f"Picks are not open. Current window: {tournament.picks_window}")
+    open_now, _ = is_picks_open(db, tournament)
+    if not open_now:
+        raise ValueError("Picks are closed for this tournament.")
 
-    is_window2 = tournament.picks_window == "open2"
+    # Football uses a single full-points window; cricket may reopen at half points.
+    is_window2 = tournament.sport != "football" and tournament.picks_window == "open2"
 
     # Normalize top4 list (pad to 4)
     team_ids = (top4_team_ids + [None, None, None, None])[:4]
 
     pick = get_tournament_picks(db, user_id, tournament_id)
-    if pick:
-        pick.top4_team1_id = team_ids[0]
-        pick.top4_team2_id = team_ids[1]
-        pick.top4_team3_id = team_ids[2]
-        pick.top4_team4_id = team_ids[3]
-        pick.best_batsman_player_id = best_batsman_player_id
-        pick.best_bowler_player_id = best_bowler_player_id
-        pick.is_window2 = is_window2
-        pick.is_processed = False
-    else:
-        pick = TournamentPick(
-            user_id=user_id,
-            tournament_id=tournament_id,
-            top4_team1_id=team_ids[0],
-            top4_team2_id=team_ids[1],
-            top4_team3_id=team_ids[2],
-            top4_team4_id=team_ids[3],
-            best_batsman_player_id=best_batsman_player_id,
-            best_bowler_player_id=best_bowler_player_id,
-            is_window2=is_window2,
-            is_processed=False,
-        )
+    if not pick:
+        pick = TournamentPick(user_id=user_id, tournament_id=tournament_id)
         db.add(pick)
+
+    pick.top4_team1_id = team_ids[0]
+    pick.top4_team2_id = team_ids[1]
+    pick.top4_team3_id = team_ids[2]
+    pick.top4_team4_id = team_ids[3]
+    pick.best_batsman_player_id = best_batsman_player_id
+    pick.best_bowler_player_id = best_bowler_player_id
+    pick.golden_ball_player_id = golden_ball_player_id
+    pick.golden_boot_player_id = golden_boot_player_id
+    pick.golden_glove_player_id = golden_glove_player_id
+    pick.is_window2 = is_window2
+    pick.is_processed = False
 
     db.commit()
     db.refresh(pick)
@@ -121,32 +161,40 @@ def score_tournament_picks(db: Session, tournament_id: int) -> int:
         .all()
     )
 
-    for pick in picks:
-        top4_pts = TOP4_POINTS_W2 if pick.is_window2 else TOP4_POINTS_W1
-        player_pts = PLAYER_POINTS_W2 if pick.is_window2 else PLAYER_POINTS_W1
+    is_football = tournament.sport == "football"
 
-        points = 0
+    for pick in picks:
         pick_top4_ids = {
             pick.top4_team1_id,
             pick.top4_team2_id,
             pick.top4_team3_id,
             pick.top4_team4_id,
         } - {None}
-
         correct_top4 = len(pick_top4_ids & result_top4_ids)
-        points += correct_top4 * top4_pts
 
-        if (
-            tournament.result_best_batsman_player_id
-            and pick.best_batsman_player_id == tournament.result_best_batsman_player_id
-        ):
-            points += player_pts
-
-        if (
-            tournament.result_best_bowler_player_id
-            and pick.best_bowler_player_id == tournament.result_best_bowler_player_id
-        ):
-            points += player_pts
+        if is_football:
+            points = correct_top4 * FOOTBALL_SF_POINTS
+            for pick_id, result_id in (
+                (pick.golden_ball_player_id, tournament.result_golden_ball_player_id),
+                (pick.golden_boot_player_id, tournament.result_golden_boot_player_id),
+                (pick.golden_glove_player_id, tournament.result_golden_glove_player_id),
+            ):
+                if result_id and pick_id == result_id:
+                    points += FOOTBALL_AWARD_POINTS
+        else:
+            top4_pts = TOP4_POINTS_W2 if pick.is_window2 else TOP4_POINTS_W1
+            player_pts = PLAYER_POINTS_W2 if pick.is_window2 else PLAYER_POINTS_W1
+            points = correct_top4 * top4_pts
+            if (
+                tournament.result_best_batsman_player_id
+                and pick.best_batsman_player_id == tournament.result_best_batsman_player_id
+            ):
+                points += player_pts
+            if (
+                tournament.result_best_bowler_player_id
+                and pick.best_bowler_player_id == tournament.result_best_bowler_player_id
+            ):
+                points += player_pts
 
         pick.points_earned = points
         pick.is_processed = True

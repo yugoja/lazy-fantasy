@@ -573,6 +573,7 @@ export async function getMatchVerdict(leagueId: number, matchId: number) {
 export interface TournamentSummary {
     id: number;
     name: string;
+    sport: string;
     start_date: string;
     end_date: string;
     picks_window: string;
@@ -581,13 +582,28 @@ export interface TournamentSummary {
 export interface TournamentPicksResponse {
     tournament_id: number;
     tournament_name: string;
+    sport: string;
     picks_window: string;
+    is_open: boolean;
+    locks_at: string | null;
     top4_team_ids: (number | null)[];
     best_batsman_player_id: number | null;
     best_bowler_player_id: number | null;
+    golden_ball_player_id: number | null;
+    golden_boot_player_id: number | null;
+    golden_glove_player_id: number | null;
     points_earned: number;
     is_window2: boolean;
     is_processed: boolean;
+}
+
+export interface TournamentPicksPayload {
+    top4_team_ids: number[];
+    best_batsman_player_id?: number | null;
+    best_bowler_player_id?: number | null;
+    golden_ball_player_id?: number | null;
+    golden_boot_player_id?: number | null;
+    golden_glove_player_id?: number | null;
 }
 
 export interface TeamPickOption {
@@ -615,17 +631,11 @@ export async function getTournamentPicks(tournamentId: number) {
 
 export async function submitTournamentPicks(
     tournamentId: number,
-    top4TeamIds: number[],
-    bestBatsmanPlayerId: number | null,
-    bestBowlerPlayerId: number | null,
+    payload: TournamentPicksPayload,
 ) {
     return request<TournamentPicksResponse>(`/tournaments/${tournamentId}/picks`, {
         method: 'POST',
-        body: JSON.stringify({
-            top4_team_ids: top4TeamIds,
-            best_batsman_player_id: bestBatsmanPlayerId,
-            best_bowler_player_id: bestBowlerPlayerId,
-        }),
+        body: JSON.stringify(payload),
     });
 }
 

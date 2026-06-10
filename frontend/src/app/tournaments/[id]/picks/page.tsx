@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Check, Trophy, Star, User, Search } from 'lucide-react';
 import { cn, getTeamLogoUrl } from '@/lib/utils';
+import FootballTournamentPicks from '@/components/tournament/FootballTournamentPicks';
 
 const WINDOW_LABELS: Record<string, { label: string; color: string }> = {
     open: { label: 'Picks Open', color: 'bg-green-100 text-green-800' },
@@ -94,12 +95,11 @@ export default function TournamentPicksPage() {
         setError('');
         setIsSubmitting(true);
         try {
-            const updated = await submitTournamentPicks(
-                tournamentId,
-                selectedTop4,
-                selectedBatsman,
-                selectedBowler,
-            );
+            const updated = await submitTournamentPicks(tournamentId, {
+                top4_team_ids: selectedTop4,
+                best_batsman_player_id: selectedBatsman,
+                best_bowler_player_id: selectedBowler,
+            });
             setPicks(updated);
             router.push(`/tournaments/${tournamentId}`);
         } catch (e: unknown) {
@@ -131,6 +131,17 @@ export default function TournamentPicksPage() {
                 <Skeleton className="h-32 w-full" />
                 <Skeleton className="h-32 w-full" />
             </div>
+        );
+    }
+
+    if (picks?.sport === 'football') {
+        return (
+            <FootballTournamentPicks
+                picks={picks}
+                teams={teams}
+                players={players}
+                tournamentId={tournamentId}
+            />
         );
     }
 

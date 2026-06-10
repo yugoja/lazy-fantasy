@@ -19,6 +19,11 @@ class TournamentPick(Base):
     best_batsman_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
     best_bowler_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
 
+    # Football tournament awards (semi-finalists reuse the top4_team* columns above)
+    golden_ball_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
+    golden_boot_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
+    golden_glove_player_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.id"), nullable=True)
+
     points_earned: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_window2: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_processed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -34,6 +39,9 @@ class TournamentPick(Base):
     top4_team4 = relationship("Team", foreign_keys=[top4_team4_id])
     best_batsman = relationship("Player", foreign_keys=[best_batsman_player_id])
     best_bowler = relationship("Player", foreign_keys=[best_bowler_player_id])
+    golden_ball = relationship("Player", foreign_keys=[golden_ball_player_id])
+    golden_boot = relationship("Player", foreign_keys=[golden_boot_player_id])
+    golden_glove = relationship("Player", foreign_keys=[golden_glove_player_id])
 
     def __repr__(self) -> str:
         return f"<TournamentPick(id={self.id}, user_id={self.user_id}, tournament_id={self.tournament_id})>"

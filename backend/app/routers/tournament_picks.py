@@ -15,9 +15,36 @@ from app.services.tournament_picks import (
     upsert_tournament_picks,
     get_tournament_teams,
     get_tournament_players,
+    is_picks_open,
 )
 
 router = APIRouter(prefix="/tournaments", tags=["tournament-picks"])
+
+
+def _build_picks_response(db: Session, tournament: Tournament, pick) -> TournamentPicksResponse:
+    open_now, locks_at = is_picks_open(db, tournament)
+    return TournamentPicksResponse(
+        tournament_id=tournament.id,
+        tournament_name=tournament.name,
+        sport=tournament.sport,
+        picks_window=tournament.picks_window,
+        is_open=open_now,
+        locks_at=locks_at,
+        top4_team_ids=[
+            pick.top4_team1_id,
+            pick.top4_team2_id,
+            pick.top4_team3_id,
+            pick.top4_team4_id,
+        ] if pick else [None, None, None, None],
+        best_batsman_player_id=pick.best_batsman_player_id if pick else None,
+        best_bowler_player_id=pick.best_bowler_player_id if pick else None,
+        golden_ball_player_id=pick.golden_ball_player_id if pick else None,
+        golden_boot_player_id=pick.golden_boot_player_id if pick else None,
+        golden_glove_player_id=pick.golden_glove_player_id if pick else None,
+        points_earned=pick.points_earned if pick else 0,
+        is_window2=pick.is_window2 if pick else False,
+        is_processed=pick.is_processed if pick else False,
+    )
 
 
 @router.get("/", response_model=list[dict])
@@ -31,6 +58,7 @@ async def list_tournaments(
         {
             "id": t.id,
             "name": t.name,
+            "sport": t.sport,
             "start_date": t.start_date.isoformat(),
             "end_date": t.end_date.isoformat(),
             "picks_window": t.picks_window,
@@ -51,32 +79,7 @@ async def get_my_picks(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tournament not found")
 
     pick = get_tournament_picks(db, current_user.id, tournament_id)
-
-    if pick:
-        top4 = [pick.top4_team1_id, pick.top4_team2_id, pick.top4_team3_id, pick.top4_team4_id]
-        return TournamentPicksResponse(
-            tournament_id=tournament.id,
-            tournament_name=tournament.name,
-            picks_window=tournament.picks_window,
-            top4_team_ids=top4,
-            best_batsman_player_id=pick.best_batsman_player_id,
-            best_bowler_player_id=pick.best_bowler_player_id,
-            points_earned=pick.points_earned,
-            is_window2=pick.is_window2,
-            is_processed=pick.is_processed,
-        )
-
-    return TournamentPicksResponse(
-        tournament_id=tournament.id,
-        tournament_name=tournament.name,
-        picks_window=tournament.picks_window,
-        top4_team_ids=[None, None, None, None],
-        best_batsman_player_id=None,
-        best_bowler_player_id=None,
-        points_earned=0,
-        is_window2=False,
-        is_processed=False,
-    )
+    return _build_picks_response(db, tournament, pick)
 
 
 @router.post("/{tournament_id}/picks", response_model=TournamentPicksResponse)
@@ -86,21 +89,15 @@ async def submit_picks(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Submit or update tournament picks (only when window is open or open2)."""
+    """Submit or update tournament picks while the picks window is open."""
     tournament = db.query(Tournament).filter(Tournament.id == tournament_id).first()
     if not tournament:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tournament not found")
 
-    if tournament.picks_window not in ("open", "open2"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Picks window is currently '{tournament.picks_window}'. Picks are not accepted.",
-        )
-
     if len(data.top4_team_ids) > 4:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You can select at most 4 teams for Top 4.",
+            detail="You can select at most 4 teams.",
         )
 
     try:
@@ -111,22 +108,14 @@ async def submit_picks(
             top4_team_ids=data.top4_team_ids,
             best_batsman_player_id=data.best_batsman_player_id,
             best_bowler_player_id=data.best_bowler_player_id,
+            golden_ball_player_id=data.golden_ball_player_id,
+            golden_boot_player_id=data.golden_boot_player_id,
+            golden_glove_player_id=data.golden_glove_player_id,
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    top4 = [pick.top4_team1_id, pick.top4_team2_id, pick.top4_team3_id, pick.top4_team4_id]
-    return TournamentPicksResponse(
-        tournament_id=tournament.id,
-        tournament_name=tournament.name,
-        picks_window=tournament.picks_window,
-        top4_team_ids=top4,
-        best_batsman_player_id=pick.best_batsman_player_id,
-        best_bowler_player_id=pick.best_bowler_player_id,
-        points_earned=pick.points_earned,
-        is_window2=pick.is_window2,
-        is_processed=pick.is_processed,
-    )
+    return _build_picks_response(db, tournament, pick)
 
 
 @router.get("/{tournament_id}/teams", response_model=list[TeamPickOption])

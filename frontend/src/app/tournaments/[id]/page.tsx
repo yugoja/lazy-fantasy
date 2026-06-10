@@ -76,11 +76,15 @@ export default function TournamentCentralPage() {
     }
   };
 
-  const isOpen = picks?.picks_window === 'open' || picks?.picks_window === 'open2';
+  const isFootball = picks?.sport === 'football';
+  const isOpen = picks?.is_open ?? false;
   const hasPicks = picks && (
     picks.top4_team_ids.some(id => id !== null) ||
     picks.best_batsman_player_id !== null ||
-    picks.best_bowler_player_id !== null
+    picks.best_bowler_player_id !== null ||
+    picks.golden_ball_player_id !== null ||
+    picks.golden_boot_player_id !== null ||
+    picks.golden_glove_player_id !== null
   );
 
   const upcomingMatches = matches.filter(m => m.status !== 'completed' && m.status !== 'result_set').slice(0, 3);
@@ -129,7 +133,7 @@ export default function TournamentCentralPage() {
           <Card className="p-4 space-y-4">
             {/* Top 4 teams */}
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Top 4 Teams</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{isFootball ? 'Semi-Finalists' : 'Top 4 Teams'}</p>
               <div className="flex flex-wrap gap-2">
                 {picks!.top4_team_ids.filter((id): id is number => id !== null).map((teamId, idx) => {
                   const team = teams.find(t => t.id === teamId);
@@ -153,39 +157,65 @@ export default function TournamentCentralPage() {
 
             <div className="border-t border-border" />
 
-            {/* Batsman + Bowler */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Batsman</p>
-                {picks!.best_batsman_player_id ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-500">
-                      {(players.find(p => p.id === picks!.best_batsman_player_id)?.name ?? '?').charAt(0)}
-                    </div>
-                    <span className="text-sm font-medium truncate">
-                      {players.find(p => p.id === picks!.best_batsman_player_id)?.name ?? '…'}
-                    </span>
+            {/* Player awards */}
+            {isFootball ? (
+              <div className="grid grid-cols-3 gap-3">
+                {([
+                  { label: 'Boot', id: picks!.golden_boot_player_id, tone: 'bg-amber-500/20 text-amber-500' },
+                  { label: 'Ball', id: picks!.golden_ball_player_id, tone: 'bg-yellow-500/20 text-yellow-600' },
+                  { label: 'Glove', id: picks!.golden_glove_player_id, tone: 'bg-emerald-500/20 text-emerald-600' },
+                ] as const).map(award => (
+                  <div key={award.label}>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">{award.label}</p>
+                    {award.id ? (
+                      <div className="flex items-center gap-2">
+                        <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold', award.tone)}>
+                          {(players.find(p => p.id === award.id)?.name ?? '?').charAt(0)}
+                        </div>
+                        <span className="text-sm font-medium truncate">
+                          {players.find(p => p.id === award.id)?.name ?? '…'}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Not picked</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not picked</p>
-                )}
+                ))}
               </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Bowler</p>
-                {picks!.best_bowler_player_id ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-sky-500/20 flex items-center justify-center text-xs font-bold text-sky-500">
-                      {(players.find(p => p.id === picks!.best_bowler_player_id)?.name ?? '?').charAt(0)}
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Batsman</p>
+                  {picks!.best_batsman_player_id ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-500">
+                        {(players.find(p => p.id === picks!.best_batsman_player_id)?.name ?? '?').charAt(0)}
+                      </div>
+                      <span className="text-sm font-medium truncate">
+                        {players.find(p => p.id === picks!.best_batsman_player_id)?.name ?? '…'}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium truncate">
-                      {players.find(p => p.id === picks!.best_bowler_player_id)?.name ?? '…'}
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Not picked</p>
-                )}
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Not picked</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Bowler</p>
+                  {picks!.best_bowler_player_id ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-sky-500/20 flex items-center justify-center text-xs font-bold text-sky-500">
+                        {(players.find(p => p.id === picks!.best_bowler_player_id)?.name ?? '?').charAt(0)}
+                      </div>
+                      <span className="text-sm font-medium truncate">
+                        {players.find(p => p.id === picks!.best_bowler_player_id)?.name ?? '…'}
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Not picked</p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {isOpen && (
               <div className="pt-2">

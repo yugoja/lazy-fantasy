@@ -958,8 +958,28 @@ async def set_picks_result(
     tournament.result_top4_team2_id = team_ids[1]
     tournament.result_top4_team3_id = team_ids[2]
     tournament.result_top4_team4_id = team_ids[3]
-    tournament.result_best_batsman_player_id = data.result_best_batsman_player_id
-    tournament.result_best_bowler_player_id = data.result_best_bowler_player_id
+
+    if tournament.sport == "football":
+        if not (
+            data.result_golden_ball_player_id
+            and data.result_golden_boot_player_id
+            and data.result_golden_glove_player_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Golden Ball, Boot, and Glove winners are required.",
+            )
+        tournament.result_golden_ball_player_id = data.result_golden_ball_player_id
+        tournament.result_golden_boot_player_id = data.result_golden_boot_player_id
+        tournament.result_golden_glove_player_id = data.result_golden_glove_player_id
+    else:
+        if not (data.result_best_batsman_player_id and data.result_best_bowler_player_id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Best Batsman and Best Bowler are required.",
+            )
+        tournament.result_best_batsman_player_id = data.result_best_batsman_player_id
+        tournament.result_best_bowler_player_id = data.result_best_bowler_player_id
     db.commit()
 
     scored = score_tournament_picks(db, tournament_id)
