@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Trophy, Star, Footprints, Hand, Search } from 'lucide-react';
+import { Check, Trophy, Star, Footprints, Hand, Search, X } from 'lucide-react';
 import { cn, getTeamLogoUrl } from '@/lib/utils';
 
 const SF_POINTS = 25;
@@ -122,11 +122,11 @@ export default function FootballTournamentPicks({
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Icon className="w-4 h-4" />
-                        {meta.title}
-                        <span className="text-xs font-normal text-muted-foreground">· {meta.hint}</span>
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span className="shrink-0">{meta.title}</span>
+                        <span className="text-xs font-normal text-muted-foreground shrink-0">· {meta.hint}</span>
                         {selected && (
-                            <Badge variant="secondary" className="ml-auto text-xs">
+                            <Badge variant="secondary" className="ml-auto max-w-[45%] truncate text-xs">
                                 {playerById.get(selected)?.name ?? '—'}
                             </Badge>
                         )}
@@ -135,26 +135,38 @@ export default function FootballTournamentPicks({
                 <CardContent>
                     <div className="space-y-1 max-h-64 overflow-y-auto">
                         {pool.length === 0 && (
-                            <p className="text-sm text-muted-foreground text-center py-4">No players found</p>
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                                {playerSearch
+                                    ? `No players match “${playerSearch}”`
+                                    : award === 'glove'
+                                        ? 'No goalkeepers available yet'
+                                        : 'No players available yet'}
+                            </p>
                         )}
                         {pool.map(player => {
                             const isSelected = selected === player.id;
                             return (
                                 <button
                                     key={player.id}
+                                    type="button"
                                     disabled={!isOpen}
+                                    aria-pressed={isSelected}
                                     onClick={() => set(isSelected ? null : player.id)}
                                     className={cn(
-                                        'w-full flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors text-left',
+                                        'w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-colors text-left',
                                         isSelected ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted',
                                         !isOpen && 'cursor-default',
                                     )}
                                 >
-                                    <div>
-                                        <span>{player.name}</span>
-                                        <span className="text-xs text-muted-foreground ml-2">{player.team_name}</span>
+                                    <div className="min-w-0 flex-1 flex items-baseline gap-2">
+                                        <span className="truncate min-w-0">{player.name}</span>
+                                        {player.team_name && (
+                                            <span className="shrink-0 max-w-[6rem] truncate text-xs text-muted-foreground">
+                                                {player.team_name}
+                                            </span>
+                                        )}
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 shrink-0">
                                         <span className="text-xs text-muted-foreground">{player.role}</span>
                                         {isSelected && <Check className="w-3 h-3 text-primary" />}
                                     </div>
@@ -228,9 +240,9 @@ export default function FootballTournamentPicks({
                         </div>
                         <div className="flex gap-3 pt-1 border-t border-border">
                             {(['boot', 'ball', 'glove'] as Award[]).map(a => (
-                                <div key={a} className="flex-1">
-                                    <p className="text-xs text-muted-foreground mb-0.5">{AWARD_META[a].title}</p>
-                                    <p className={cn('text-sm font-medium', awardValue[a] ? 'text-foreground' : 'text-muted-foreground/50')}>
+                                <div key={a} className="flex-1 min-w-0">
+                                    <p className="text-xs text-muted-foreground mb-0.5 truncate">{AWARD_META[a].title}</p>
+                                    <p className={cn('text-sm font-medium truncate', awardValue[a] ? 'text-foreground' : 'text-muted-foreground/50')}>
                                         {awardValue[a] ? (playerById.get(awardValue[a]!)?.name ?? '—') : '—'}
                                     </p>
                                 </div>
@@ -269,8 +281,6 @@ export default function FootballTournamentPicks({
                 </Card>
             )}
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-
             {/* Semi-finalists */}
             <Card>
                 <CardHeader className="pb-3">
@@ -283,6 +293,11 @@ export default function FootballTournamentPicks({
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
+                    {teams.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                            No teams available yet — check back once the squads are confirmed.
+                        </p>
+                    ) : (
                     <div className="grid grid-cols-2 gap-2">
                         {teams.map(team => {
                             const isSelected = selectedSemis.includes(team.id);
@@ -292,7 +307,9 @@ export default function FootballTournamentPicks({
                             return (
                                 <button
                                     key={team.id}
+                                    type="button"
                                     disabled={disabled}
+                                    aria-pressed={isSelected}
                                     onClick={() => toggleSemi(team.id)}
                                     className={cn(
                                         'relative flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
@@ -304,7 +321,7 @@ export default function FootballTournamentPicks({
                                 >
                                     {logoSrc ? (
                                         // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={logoSrc} alt={team.short_name} width={20} height={20}
+                                        <img src={logoSrc} alt="" aria-hidden="true" width={20} height={20}
                                             className="h-5 w-5 object-contain shrink-0"
                                             onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                                     ) : isSelected ? (
@@ -316,20 +333,34 @@ export default function FootballTournamentPicks({
                             );
                         })}
                     </div>
+                    )}
                 </CardContent>
             </Card>
 
             {/* Player search */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                 <input
                     type="text"
+                    inputMode="search"
+                    aria-label="Search players by name or team"
                     placeholder="Search players..."
                     value={playerSearch}
                     onChange={e => setPlayerSearch(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    maxLength={80}
+                    className="w-full rounded-lg border border-border bg-background pl-9 pr-9 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     disabled={!isOpen}
                 />
+                {playerSearch && (
+                    <button
+                        type="button"
+                        aria-label="Clear search"
+                        onClick={() => setPlayerSearch('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
             </div>
 
             {renderPlayerList('boot', filtered)}
@@ -340,6 +371,9 @@ export default function FootballTournamentPicks({
             {isOpen && (
                 <div className="fixed bottom-16 left-0 right-0 z-10 bg-background border-t border-border px-4 py-3">
                     <div className="container-mobile">
+                        {error && (
+                            <p className="mb-2 text-xs text-red-500" role="alert">{error}</p>
+                        )}
                         <div className="flex items-center justify-between mb-2 text-xs text-muted-foreground">
                             <span>{selectedSemis.length}/4 semis</span>
                             <span>{boot ? '✓' : '–'} Boot · {ball ? '✓' : '–'} Ball · {glove ? '✓' : '–'} Glove</span>
