@@ -76,10 +76,11 @@ def join_league(db: Session, user_id: int, league_id: int) -> LeagueMember:
     return member
 
 
-def _get_tournament_pick_points(db: Session, league_created_at) -> dict:
+def _get_tournament_pick_points(db: Session, league_created_at, sport: str) -> dict:
     """
-    Returns {user_id: total_tournament_pick_points} for processed picks
-    in tournaments that started after the league was created.
+    Returns {user_id: total_tournament_pick_points} for processed picks in
+    tournaments of the given sport that started after the league was created.
+    Scoped by sport so e.g. football mega-picks only count in football leagues.
     """
     rows = (
         db.query(TournamentPick.user_id, func.sum(TournamentPick.points_earned))
@@ -87,6 +88,7 @@ def _get_tournament_pick_points(db: Session, league_created_at) -> dict:
         .filter(
             TournamentPick.is_processed == True,
             Tournament.start_date >= league_created_at,
+            Tournament.sport == sport,
         )
         .group_by(TournamentPick.user_id)
         .all()
@@ -129,7 +131,7 @@ def _compute_standings(db: Session, league_id: int) -> list[tuple[int, int]]:
     )
 
     # Add tournament pick points
-    tp_points = _get_tournament_pick_points(db, league.created_at)
+    tp_points = _get_tournament_pick_points(db, league.created_at, league.sport)
     totals = [(user_id, pts + tp_points.get(user_id, 0)) for user_id, pts in results]
     totals.sort(key=lambda x: x[1], reverse=True)
 
@@ -277,7 +279,7 @@ def get_league_leaderboard(
                 for user_id, username, display_name, avatar_url, total_points in augmented]
 
     # Add tournament pick points and re-sort
-    tp_points = _get_tournament_pick_points(db, league.created_at)
+    tp_points = _get_tournament_pick_points(db, league.created_at, league.sport)
     augmented = [
         (user_id, username, display_name, avatar_url, total_points + tp_points.get(user_id, 0))
         for user_id, username, display_name, avatar_url, total_points in results
