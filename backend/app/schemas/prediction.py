@@ -146,6 +146,7 @@ class FootballPredictionDetailResponse(BaseModel):
 
 class FriendPrediction(BaseModel):
     """A league member's prediction for a match, shown in the league activity feed."""
+    sport: Literal["cricket"] = "cricket"
     username: str
     display_name: Optional[str] = None
     is_me: bool
@@ -163,3 +164,27 @@ class FriendPrediction(BaseModel):
     actual_most_wickets_team1_player: PlayerResponse | None = None
     actual_most_wickets_team2_player: PlayerResponse | None = None
     actual_pom_player: PlayerResponse | None = None
+
+
+class FootballFriendPrediction(BaseModel):
+    """A league member's football prediction for a match (scoreline + 3 player
+    picks), shown on the Friends' Picks page. The football analogue of
+    FriendPrediction."""
+    sport: Literal["football"] = "football"
+    username: str
+    display_name: Optional[str] = None
+    is_me: bool
+    points_earned: int
+    is_processed: bool
+    # What the friend predicted
+    team1_goals: int
+    team2_goals: int
+    advance_winner: TeamResponse | None = None
+    player_picks: list[FootballPlayerPickDetail]
+    # Actual result (None until completed)
+    actual_team1_goals_reg: int | None = None
+    actual_team2_goals_reg: int | None = None
+    actual_team1_goals_et: int | None = None
+    actual_team2_goals_et: int | None = None
+    actual_shootout_winner: TeamResponse | None = None
+    result_score: int | None = None

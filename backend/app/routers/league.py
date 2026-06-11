@@ -16,7 +16,12 @@ from app.schemas.league import (
     LeaderboardResponse,
 )
 from app.utils.images import LEAGUES_DIR, save_upload
-from app.schemas.prediction import FriendPrediction
+from app.schemas.prediction import (
+    FriendPrediction,
+    FootballFriendPrediction,
+    FootballPlayerPickDetail,
+)
+from app.services.scoring import football_score_breakdown
 from app.schemas.match import TeamResponse, PlayerResponse
 from app.schemas.dugout import DugoutEvent
 from app.services.auth import get_current_user
@@ -216,7 +221,59 @@ async def update_league(
     return league
 
 
-@router.get("/{league_id}/matches/{match_id}/predictions", response_model=list[FriendPrediction])
+def _build_football_friend_predictions(
+    match, preds, current_user_id: int
+) -> list[FootballFriendPrediction]:
+    """Build football friend-prediction payloads (scoreline + 3 player picks).
+
+    Mirrors the cricket path but reads the FootballPrediction extension and the
+    per-pick score breakdown once a result exists.
+    """
+    fr = match.football_result
+    results: list[FootballFriendPrediction] = []
+    for pred, user in preds:
+        fp = pred.football
+        if fp is None:
+            continue  # defensive: a football match row without its extension
+
+        pick_points: list[int | None] = [None, None, None]
+        result_score: int | None = None
+        if fr is not None:
+            breakdown = football_score_breakdown(pred, match, fr)
+            pick_points = list(breakdown["player_scores"])
+            result_score = breakdown["result_score"]
+
+        picks = [fp.player_pick_1, fp.player_pick_2, fp.player_pick_3]
+        results.append(FootballFriendPrediction(
+            username=user.username,
+            display_name=user.display_name,
+            is_me=(user.id == current_user_id),
+            points_earned=pred.points_earned,
+            is_processed=pred.is_processed,
+            team1_goals=fp.team1_goals,
+            team2_goals=fp.team2_goals,
+            advance_winner=TeamResponse.model_validate(fp.advance_winner) if fp.advance_winner else None,
+            player_picks=[
+                FootballPlayerPickDetail(player=PlayerResponse.model_validate(p), points=pts)
+                for p, pts in zip(picks, pick_points)
+            ],
+            actual_team1_goals_reg=fr.team1_goals_reg if fr else None,
+            actual_team2_goals_reg=fr.team2_goals_reg if fr else None,
+            actual_team1_goals_et=fr.team1_goals_et if fr else None,
+            actual_team2_goals_et=fr.team2_goals_et if fr else None,
+            actual_shootout_winner=TeamResponse.model_validate(fr.shootout_winner) if fr and fr.shootout_winner else None,
+            result_score=result_score,
+        ))
+
+    # Current user first, then by points (processed) / username (pending).
+    results.sort(key=lambda x: (not x.is_me, -x.points_earned if x.is_processed else 0, x.username))
+    return results
+
+
+@router.get(
+    "/{league_id}/matches/{match_id}/predictions",
+    response_model=list[FriendPrediction | FootballFriendPrediction],
+)
 async def get_league_match_predictions(
     league_id: int,
     match_id: int,
@@ -256,6 +313,12 @@ async def get_league_match_predictions(
         .filter(Prediction.match_id == match_id, Prediction.user_id.in_(member_ids))
         .all()
     )
+
+    # Football and cricket use different scoring models (scoreline + player picks
+    # vs winner/runs/wickets/POM), so they need separate payload shapes.
+    sport = match.tournament.sport if match.tournament else "cricket"
+    if sport == "football":
+        return _build_football_friend_predictions(match, preds, current_user.id)
 
     def get_team(team_id: int | None) -> TeamResponse | None:
         if team_id is None:

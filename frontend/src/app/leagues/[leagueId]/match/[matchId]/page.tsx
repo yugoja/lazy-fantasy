@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import { getLeagueMatchPredictions, getMatchDetail, getMyLeagues, getMatchVerdict, FriendPrediction, DugoutEvent } from '@/lib/api';
+import { getLeagueMatchPredictions, getMatchDetail, getMyLeagues, getMatchVerdict, FriendPrediction, FootballFriendPrediction, DugoutEvent } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -274,6 +274,184 @@ function ConsensusStrip({ predictions, match }: { predictions: FriendPrediction[
   );
 }
 
+// ---------------------------------------------------------------------------
+// Football rendering (scoreline + 3 player picks, different scoring model)
+// ---------------------------------------------------------------------------
+
+function footballAgreement(pred: FootballFriendPrediction, myPred: FootballFriendPrediction): number {
+  // Out of 4: exact scoreline + each of the 3 player picks (order-independent).
+  let count = 0;
+  if (pred.team1_goals === myPred.team1_goals && pred.team2_goals === myPred.team2_goals) count++;
+  const mine = new Set(myPred.player_picks.map(p => p.player.id));
+  for (const pp of pred.player_picks) if (mine.has(pp.player.id)) count++;
+  return count;
+}
+
+function FootballPredictionCard({
+  pred,
+  match,
+  myPred,
+}: {
+  pred: FootballFriendPrediction;
+  match: MatchInfo;
+  myPred: FootballFriendPrediction | null;
+}) {
+  const label = pred.display_name || pred.username;
+  const initials = label.substring(0, 2).toUpperCase();
+
+  const agreement = !pred.is_me && myPred ? footballAgreement(pred, myPred) : null;
+  const agreementColor =
+    agreement === null ? '' :
+    agreement >= 3 ? 'text-green-400' :
+    agreement >= 2 ? 'text-yellow-400' :
+    'text-muted-foreground';
+
+  const myPoints = myPred?.points_earned ?? null;
+  const h2hDelta = pred.is_processed && !pred.is_me && myPoints !== null
+    ? pred.points_earned - myPoints
+    : null;
+
+  const hasResult = pred.is_processed && pred.actual_team1_goals_reg !== null;
+  const actualT1 = (pred.actual_team1_goals_reg ?? 0) + (pred.actual_team1_goals_et ?? 0);
+  const actualT2 = (pred.actual_team2_goals_reg ?? 0) + (pred.actual_team2_goals_et ?? 0);
+  const exactScore = hasResult && pred.team1_goals === actualT1 && pred.team2_goals === actualT2;
+  const myPickIds = !pred.is_me && myPred ? new Set(myPred.player_picks.map(p => p.player.id)) : null;
+
+  return (
+    <Card className={cn('border-border', pred.is_me && 'border-primary/40 bg-primary/5')}>
+      <CardContent className="p-4 space-y-3">
+        {/* User row */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-sm truncate">{label}</span>
+                {pred.is_me && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">You</Badge>
+                )}
+              </div>
+              {agreement !== null && (
+                <p className={cn('text-[10px] mt-0.5', agreementColor)}>
+                  Agrees on {agreement}/4 with you
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-0.5 shrink-0">
+            {pred.is_processed ? (
+              <Badge variant={pred.points_earned > 0 ? 'default' : 'secondary'} className="text-[10px]">
+                +{pred.points_earned} pts
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[10px]">Pending</Badge>
+            )}
+            {h2hDelta !== null && h2hDelta !== 0 && (
+              <span className={cn('text-[10px] font-medium', h2hDelta > 0 ? 'text-red-400' : 'text-green-400')}>
+                {h2hDelta > 0 ? `+${h2hDelta} on you` : `You lead by ${Math.abs(h2hDelta)}`}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Predicted scoreline */}
+        <div className="flex items-center justify-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground w-10 text-right truncate">{match.team_1.short_name}</span>
+          <span className={cn('text-lg font-bold tabular-nums', exactScore && 'text-green-400')}>
+            {pred.team1_goals}<span className="text-muted-foreground mx-1">–</span>{pred.team2_goals}
+          </span>
+          <span className="text-xs font-medium text-muted-foreground w-10 truncate">{match.team_2.short_name}</span>
+          {hasResult && (
+            exactScore
+              ? <span className="text-[10px] text-green-400 font-semibold ml-1">exact</span>
+              : <span className="text-[10px] text-muted-foreground ml-1 whitespace-nowrap">actual {actualT1}–{actualT2}</span>
+          )}
+        </div>
+        {pred.advance_winner && (
+          <p className="text-[10px] text-center text-muted-foreground">
+            Advances: <span className="font-medium text-foreground">{pred.advance_winner.short_name}</span>
+          </p>
+        )}
+
+        {/* Player picks */}
+        <div className="space-y-1">
+          {pred.player_picks.map((pp, i) => {
+            const correct = pp.points !== null && pp.points > 0;
+            const sameAsMe = myPickIds?.has(pp.player.id) ?? false;
+            return (
+              <div
+                key={i}
+                className={cn(
+                  'flex items-center gap-2 text-xs rounded px-1 -mx-1',
+                  sameAsMe && 'bg-primary/5',
+                )}
+              >
+                <Star className={cn('h-3 w-3 shrink-0', correct ? 'text-green-400' : 'text-yellow-400/70')} />
+                <span className={cn('flex-1 truncate font-medium text-[11px]', correct && 'text-green-400')}>
+                  {pp.player.name}
+                </span>
+                {pp.points !== null && (
+                  <span className={cn('text-[10px] font-semibold shrink-0', pp.points > 0 ? 'text-green-400' : 'text-muted-foreground')}>
+                    {pp.points > 0 ? `+${pp.points}` : '0'}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FootballConsensusStrip({ predictions, match }: { predictions: FootballFriendPrediction[]; match: MatchInfo }) {
+  const total = predictions.length;
+
+  const scoreCounts: Record<string, number> = {};
+  predictions.forEach(p => {
+    const k = `${p.team1_goals}–${p.team2_goals}`;
+    scoreCounts[k] = (scoreCounts[k] || 0) + 1;
+  });
+  const [topScore, topScoreCount] = Object.entries(scoreCounts).sort((a, b) => b[1] - a[1])[0];
+
+  const playerCounts: Record<number, { name: string; count: number }> = {};
+  predictions.forEach(p => p.player_picks.forEach(pp => {
+    const e = playerCounts[pp.player.id] ?? { name: pp.player.name, count: 0 };
+    e.count++;
+    playerCounts[pp.player.id] = e;
+  }));
+  const topPlayers = Object.values(playerCounts).sort((a, b) => b.count - a.count).slice(0, 4);
+
+  return (
+    <Card className="border-border/50 bg-muted/30">
+      <CardContent className="p-3 space-y-2">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Group consensus</p>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Most-picked score</span>
+          <span className="font-medium">
+            {match.team_1.short_name} {topScore} {match.team_2.short_name}{' '}
+            <span className="text-muted-foreground">({topScoreCount}/{total})</span>
+          </span>
+        </div>
+        <div className="space-y-1 pt-0.5">
+          <span className="text-[10px] text-muted-foreground">Popular picks</span>
+          {topPlayers.map((p, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <div className="flex-1 h-1 rounded-full bg-border overflow-hidden">
+                <div className="h-full rounded-full bg-primary/60" style={{ width: `${(p.count / total) * 100}%` }} />
+              </div>
+              <span className="text-[11px] font-medium truncate max-w-[8rem]">{p.name}</span>
+              <span className="text-[10px] text-muted-foreground shrink-0">{p.count}/{total}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function LeagueMatchPredictionsPage() {
   const { isAuthenticated, username, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -281,7 +459,7 @@ export default function LeagueMatchPredictionsPage() {
   const leagueId = Number(params.leagueId);
   const matchId = Number(params.matchId);
 
-  const [predictions, setPredictions] = useState<FriendPrediction[]>([]);
+  const [predictions, setPredictions] = useState<Array<FriendPrediction | FootballFriendPrediction>>([]);
   const [match, setMatch] = useState<MatchInfo | null>(null);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [verdict, setVerdict] = useState<DugoutEvent | null>(null);
@@ -361,7 +539,7 @@ export default function LeagueMatchPredictionsPage() {
   }
 
   const currentLeague = leagues.find(l => l.id === leagueId);
-  const myPred = predictions.find(p => p.is_me) ?? null;
+  const isFootball = predictions.length > 0 && predictions[0].sport === 'football';
 
   return (
     <div className="container-mobile py-6 space-y-4 pb-24">
@@ -413,17 +591,37 @@ export default function LeagueMatchPredictionsPage() {
             <MatchVerdictCard event={verdict} currentUsername={username ?? null} />
           )}
 
-          {/* Group consensus */}
-          {predictions.length >= 2 && match && (
-            <ConsensusStrip predictions={predictions} match={match} />
-          )}
-
-          {/* Cards */}
-          <div className="space-y-3">
-            {predictions.map((pred, i) => (
-              <PredictionCard key={i} pred={pred} match={match!} myPred={myPred} />
-            ))}
-          </div>
+          {isFootball ? (() => {
+            const fbPreds = predictions as FootballFriendPrediction[];
+            const fbMyPred = fbPreds.find(p => p.is_me) ?? null;
+            return (
+              <>
+                {fbPreds.length >= 2 && match && (
+                  <FootballConsensusStrip predictions={fbPreds} match={match} />
+                )}
+                <div className="space-y-3">
+                  {fbPreds.map((pred, i) => (
+                    <FootballPredictionCard key={i} pred={pred} match={match!} myPred={fbMyPred} />
+                  ))}
+                </div>
+              </>
+            );
+          })() : (() => {
+            const crPreds = predictions as FriendPrediction[];
+            const crMyPred = crPreds.find(p => p.is_me) ?? null;
+            return (
+              <>
+                {crPreds.length >= 2 && match && (
+                  <ConsensusStrip predictions={crPreds} match={match} />
+                )}
+                <div className="space-y-3">
+                  {crPreds.map((pred, i) => (
+                    <PredictionCard key={i} pred={pred} match={match!} myPred={crMyPred} />
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </>
       )}
     </div>

@@ -188,6 +188,7 @@ export async function uploadLeagueImage(leagueId: number, file: File): Promise<L
 }
 
 export interface FriendPrediction {
+    sport: 'cricket';
     username: string;
     display_name: string | null;
     is_me: boolean;
@@ -207,8 +208,30 @@ export interface FriendPrediction {
     actual_pom_player: { id: number; name: string; team_id: number; role: string } | null;
 }
 
+/** A league member's football prediction for a match (scoreline + 3 player picks). */
+export interface FootballFriendPrediction {
+    sport: 'football';
+    username: string;
+    display_name: string | null;
+    is_me: boolean;
+    points_earned: number;
+    is_processed: boolean;
+    team1_goals: number;
+    team2_goals: number;
+    advance_winner: TeamInfo | null;
+    player_picks: FootballPlayerPickDetail[];
+    actual_team1_goals_reg: number | null;
+    actual_team2_goals_reg: number | null;
+    actual_team1_goals_et: number | null;
+    actual_team2_goals_et: number | null;
+    actual_shootout_winner: TeamInfo | null;
+    result_score: number | null;
+}
+
 export async function getLeagueMatchPredictions(leagueId: number, matchId: number) {
-    return request<FriendPrediction[]>(`/leagues/${leagueId}/matches/${matchId}/predictions`);
+    return request<Array<FriendPrediction | FootballFriendPrediction>>(
+        `/leagues/${leagueId}/matches/${matchId}/predictions`,
+    );
 }
 
 export interface LeaderboardEntry {
