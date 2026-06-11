@@ -134,7 +134,18 @@ def get_match_players(db: Session, match_id: int) -> tuple[list[Player], list[Pl
     if not match:
         return None
 
-    lineup_rows = db.query(MatchLineup).filter(MatchLineup.match_id == match_id).all()
+    # `match_lineups` is a cricket-only mechanism: it pins a hand-picked XI and,
+    # when present, this function returns ONLY those players as the squad. Football
+    # must never use it — its predict flow expects the full squad (it derives the
+    # pitch/bench split itself), and lineup/availability come from the linked
+    # fixture. Honouring a stray football lineup row silently truncates the squad
+    # (empty bench, unpickable subs), so we ignore lineups for non-cricket sports.
+    sport = match.tournament.sport if match.tournament else "cricket"
+    lineup_rows = (
+        db.query(MatchLineup).filter(MatchLineup.match_id == match_id).all()
+        if sport == "cricket"
+        else []
+    )
 
     if lineup_rows:
         lineup_player_ids = {row.player_id for row in lineup_rows}

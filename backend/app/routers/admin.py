@@ -597,6 +597,20 @@ async def set_match_lineup(
             detail="Match not found",
         )
 
+    # Lineups (match_lineups) are cricket-only. For football the squad and
+    # starter/bench split come from the linked fixture + availability sync, and
+    # writing lineup rows would truncate the predict-flow squad. Block it here.
+    sport = match.tournament.sport if match.tournament else "cricket"
+    if sport != "cricket":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"Lineups can't be set for {sport} matches — the squad and "
+                "starter/bench split are managed automatically from the linked "
+                "fixture. Link the match and run the availability sync instead."
+            ),
+        )
+
     if len(lineup_data.player_ids) != 22:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
