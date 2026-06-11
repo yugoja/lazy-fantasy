@@ -13,12 +13,19 @@ class DugoutEventType(str, Enum):
 
 
 class VerdictHits(BaseModel):
-    winner: bool
-    runs_t1: bool
-    runs_t2: bool
-    wkts_t1: bool
-    wkts_t2: bool
-    pom: bool
+    # Cricket categories (default False so the football path can omit them)
+    winner: bool = False
+    runs_t1: bool = False
+    runs_t2: bool = False
+    wkts_t1: bool = False
+    wkts_t2: bool = False
+    pom: bool = False
+    # Football categories
+    outcome: bool = False       # predicted the correct W/D/L result
+    exact_score: bool = False   # predicted the exact final scoreline
+    pick_1: bool = False        # each player pick that scored points
+    pick_2: bool = False
+    pick_3: bool = False
 
 
 class VerdictWinner(BaseModel):
@@ -63,6 +70,13 @@ class DugoutEvent(BaseModel):
     match_label: str | None = None
     top_score: int | None = None
     runner_up_score: int | None = None
+    # Match verdict — football extras (sport defaults to cricket for back-compat)
+    sport: str = "cricket"
+    team1_short: str | None = None
+    team2_short: str | None = None
+    team1_goals: int | None = None
+    team2_goals: int | None = None
+    is_draw: bool | None = None
     # Tournament-picks CTA fields
     tournament_id: int | None = None
     tournament_name: str | None = None

@@ -19,7 +19,31 @@ from app.schemas.dugout import (
     VerdictWinner,
 )
 from app.services.league import _compute_standings
+from app.services.scoring import football_score_breakdown
 from app.services.scoring_cricket import compute_hits
+
+
+def _sign(a: int, b: int) -> int:
+    return (a > b) - (a < b)
+
+
+def _football_hits(pred, match) -> dict:
+    """Per-category football 'hits' for the verdict card: correct outcome, exact
+    scoreline, and which of the three player picks scored."""
+    fp = getattr(pred, "football", None)
+    fr = match.football_result
+    if fp is None or fr is None:
+        return {}
+    at1 = fr.team1_goals_reg + (fr.team1_goals_et or 0)
+    at2 = fr.team2_goals_reg + (fr.team2_goals_et or 0)
+    scores = football_score_breakdown(pred, match, fr)["player_scores"]
+    return {
+        "outcome": _sign(fp.team1_goals, fp.team2_goals) == _sign(at1, at2),
+        "exact_score": fp.team1_goals == at1 and fp.team2_goals == at2,
+        "pick_1": bool(len(scores) > 0 and (scores[0] or 0) > 0),
+        "pick_2": bool(len(scores) > 1 and (scores[1] or 0) > 0),
+        "pick_3": bool(len(scores) > 2 and (scores[2] or 0) > 0),
+    }
 
 
 def get_match_verdict(
@@ -37,7 +61,14 @@ def get_match_verdict(
     match = db.query(Match).filter(Match.id == match_id).first()
     if not match or match.status != MatchStatus.COMPLETED:
         return None
-    if match.result_winner_id is None:
+
+    sport = match.tournament.sport if match.tournament else "cricket"
+    if sport == "football":
+        # Football can end in a draw (no winner), so gate on the result row, not
+        # result_winner_id.
+        if match.football_result is None:
+            return None
+    elif match.result_winner_id is None:
         return None
 
     league = db.query(League).filter(League.id == league_id).first()
@@ -67,7 +98,8 @@ def get_match_verdict(
     # Per-user data: points + hits
     by_user_points: dict[int, int] = {p.user_id: p.points_earned for p in predictions}
     by_user_hits: dict[int, dict[str, bool]] = {
-        p.user_id: compute_hits(p, match) for p in predictions
+        p.user_id: (_football_hits(p, match) if sport == "football" else compute_hits(p, match))
+        for p in predictions
     }
 
     # Tier the entries: top score = winners, then runners-up
@@ -120,17 +152,42 @@ def get_match_verdict(
     winners = [_to_winner(uid) for uid in winner_uids]
     runners_up = [_to_runner(uid) for uid in runner_uids]
 
-    # Team short names — losing team is whichever isn't the winner
-    winning_team_short = (
-        match.team_1.short_name if match.result_winner_id == match.team_1_id else match.team_2.short_name
-    )
-    losing_team_short = (
-        match.team_2.short_name if match.result_winner_id == match.team_1_id else match.team_1.short_name
-    )
+    winning_team_short: str | None = None
+    losing_team_short: str | None = None
+    fb_team1_goals: int | None = None
+    fb_team2_goals: int | None = None
+    is_draw: bool | None = None
 
-    # POM player name
+    if sport == "football" and match.football_result is not None:
+        # Derive the winner from the scoreline + shootout, not result_winner_id —
+        # that column may be unset on legacy rows, and a draw legitimately has no
+        # winner.
+        fr = match.football_result
+        fb_team1_goals = fr.team1_goals_reg + (fr.team1_goals_et or 0)
+        fb_team2_goals = fr.team2_goals_reg + (fr.team2_goals_et or 0)
+        if fr.shootout_winner_id is not None:
+            winner_id = fr.shootout_winner_id
+        elif fb_team1_goals > fb_team2_goals:
+            winner_id = match.team_1_id
+        elif fb_team2_goals > fb_team1_goals:
+            winner_id = match.team_2_id
+        else:
+            winner_id = None
+        is_draw = winner_id is None
+        if winner_id is not None:
+            winning_team_short = match.team_1.short_name if winner_id == match.team_1_id else match.team_2.short_name
+            losing_team_short = match.team_2.short_name if winner_id == match.team_1_id else match.team_1.short_name
+    elif match.result_winner_id is not None:
+        winning_team_short = (
+            match.team_1.short_name if match.result_winner_id == match.team_1_id else match.team_2.short_name
+        )
+        losing_team_short = (
+            match.team_2.short_name if match.result_winner_id == match.team_1_id else match.team_1.short_name
+        )
+
+    # POM player name (cricket only)
     pom_name: str | None = None
-    if match.result_pom_player_id:
+    if sport != "football" and match.result_pom_player_id:
         pom = db.query(Player).filter(Player.id == match.result_pom_player_id).first()
         if pom:
             pom_name = pom.name
@@ -167,4 +224,10 @@ def get_match_verdict(
         match_label=match_label,
         top_score=top_score,
         runner_up_score=runner_up_score,
+        sport=sport,
+        team1_short=match.team_1.short_name,
+        team2_short=match.team_2.short_name,
+        team1_goals=fb_team1_goals,
+        team2_goals=fb_team2_goals,
+        is_draw=is_draw,
     )

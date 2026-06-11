@@ -50,11 +50,12 @@ function getCopy(
   isTight: boolean,
   tightMargin: number | null,
   isMultiTie: boolean,
+  isFootball: boolean,
 ): Copy {
   if (variant === 'you' && winners.length === 1) {
     return {
       headline: <><em>You</em> ran the table.</>,
-      sub: <>{topScore}/140. <i>Best card on the board.</i></>,
+      sub: <>{topScore}{isFootball ? ' pts' : '/140'}. <i>Best card on the board.</i></>,
       primaryCta: 'Brag now →',
     };
   }
@@ -109,19 +110,32 @@ function getCopy(
 
 // ---- subviews ----
 
-function HitsGrid({ hits, variant }: { hits: VerdictHits; variant: Variant }) {
-  const cells: Array<{ label: string; ok: boolean }> = [
+function hitCells(hits: VerdictHits, sport: string): Array<{ label: string; ok: boolean }> {
+  if (sport === 'football') {
+    return [
+      { label: 'Result', ok: !!hits.outcome },
+      { label: 'Score', ok: !!hits.exact_score },
+      { label: 'Pick 1', ok: !!hits.pick_1 },
+      { label: 'Pick 2', ok: !!hits.pick_2 },
+      { label: 'Pick 3', ok: !!hits.pick_3 },
+    ];
+  }
+  return [
     { label: 'Winner', ok: hits.winner },
     { label: 'Runs', ok: hits.runs_t1 || hits.runs_t2 },
     { label: 'Wkts', ok: hits.wkts_t1 || hits.wkts_t2 },
     { label: 'POM', ok: hits.pom },
   ];
+}
+
+function HitsGrid({ hits, variant, sport }: { hits: VerdictHits; variant: Variant; sport: string }) {
+  const cells = hitCells(hits, sport);
   const hitBg =
     variant === 'you' ? 'bg-accent text-accent-foreground'
     : variant === 'cold' ? 'bg-sky-400 text-slate-900'
     : 'bg-primary text-primary-foreground';
   return (
-    <div className="mt-3 grid grid-cols-4 gap-1.5">
+    <div className={cn('mt-3 grid gap-1.5', cells.length === 5 ? 'grid-cols-5' : 'grid-cols-4')}>
       {cells.map((c) => (
         <div key={c.label} className="flex flex-col items-center gap-1 rounded-md bg-black/30 py-2">
           <span className={cn(
@@ -139,8 +153,8 @@ function HitsGrid({ hits, variant }: { hits: VerdictHits; variant: Variant }) {
   );
 }
 
-function CompactHitRow({ winner }: { winner: VerdictWinner }) {
-  const cells = [winner.hits.winner, winner.hits.runs_t1 || winner.hits.runs_t2, winner.hits.wkts_t1 || winner.hits.wkts_t2, winner.hits.pom];
+function CompactHitRow({ winner, sport }: { winner: VerdictWinner; sport: string }) {
+  const cells = hitCells(winner.hits, sport).map(c => c.ok);
   return (
     <div className="flex items-center gap-1.5 rounded-md bg-black/30 px-2 py-1.5">
       <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent mr-0.5">
@@ -158,7 +172,7 @@ function CompactHitRow({ winner }: { winner: VerdictWinner }) {
   );
 }
 
-function SoloWinnerPanel({ winner, topScore, variant }: { winner: VerdictWinner; topScore: number; variant: Variant }) {
+function SoloWinnerPanel({ winner, topScore, variant, sport }: { winner: VerdictWinner; topScore: number; variant: Variant; sport: string }) {
   const rank = rankShiftLabel(winner.prev_rank, winner.new_rank);
   const bigScore =
     variant === 'you' ? 'text-accent'
@@ -187,7 +201,7 @@ function SoloWinnerPanel({ winner, topScore, variant }: { winner: VerdictWinner;
         </div>
       </div>
       <div className={cn('font-heading font-bold text-3xl leading-none tabular-nums tracking-tight', bigScore)}>
-        {topScore}<span className="ml-0.5 align-[5px] text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">/140</span>
+        {topScore}<span className="ml-0.5 align-[5px] text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{sport === 'football' ? 'pts' : '/140'}</span>
       </div>
     </div>
   );
@@ -285,12 +299,13 @@ export function MatchVerdictCard({ event, currentUsername, onDismiss }: Props) {
   const isCold = !isYou && topScore <= COLD_SCORE_THRESHOLD;
   const variant: Variant = isYou ? 'you' : isCold ? 'cold' : 'default';
 
+  const isFootball = event.sport === 'football';
   const isMultiTie = winners.length >= 2;
-  const isFlawless = winners.length === 1 && topScore === 140;
+  const isFlawless = !isFootball && winners.length === 1 && topScore === 140;
   const tightMargin = (!isMultiTie && runnerScore != null) ? topScore - runnerScore : null;
   const isTight = tightMargin != null && tightMargin > 0 && tightMargin <= TIGHT_MARGIN;
 
-  const copy = getCopy(variant, winners, topScore, isFlawless, isTight, tightMargin, isMultiTie);
+  const copy = getCopy(variant, winners, topScore, isFlawless, isTight, tightMargin, isMultiTie, isFootball);
 
   const headlineEmClass =
     variant === 'you' ? 'not-italic font-normal text-accent'
@@ -333,28 +348,53 @@ export function MatchVerdictCard({ event, currentUsername, onDismiss }: Props) {
         </div>
 
         {/* Fixture row */}
-        <div className="mt-3 flex items-center gap-2 pb-3 border-b border-dashed border-border">
-          <span className="inline-grid place-items-center h-[22px] w-[22px] rounded-full bg-muted text-[9px] font-bold tracking-wider font-heading opacity-50">
-            {event.losing_team_short ?? '—'}
-          </span>
-          <span className="italic font-normal text-[13.5px] text-muted-foreground mx-0.5">vs</span>
-          <span
-            className={cn(
-              'inline-grid place-items-center h-[22px] w-[22px] rounded-full text-[9px] font-bold tracking-wider font-heading',
-              variant === 'cold'
-                ? 'bg-muted shadow-[0_0_0_1.5px_hsl(200_80%_60%/0.55)]'
-                : 'bg-muted shadow-[0_0_0_1.5px_hsl(var(--accent)/0.55)]',
-            )}
-          >
-            {event.winning_team_short ?? '—'}
-          </span>
-          {event.pom_player_name && (
-            <span className={cn('ml-auto inline-flex items-center gap-1.5 font-heading text-[10px] font-semibold uppercase tracking-[0.16em]', pomColor)}>
-              <span className="text-[11px]">★</span>
-              {event.pom_player_name} · POM
+        {isFootball ? (
+          <div className="mt-3 flex items-center justify-center gap-2.5 pb-3 border-b border-dashed border-border">
+            <span className={cn(
+              'inline-grid place-items-center h-[22px] min-w-[34px] px-1.5 rounded-full text-[9px] font-bold tracking-wider font-heading',
+              event.is_draw ? 'bg-muted' : event.winning_team_short === event.team1_short
+                ? 'bg-muted shadow-[0_0_0_1.5px_hsl(var(--accent)/0.55)]' : 'bg-muted opacity-50',
+            )}>
+              {event.team1_short ?? '—'}
             </span>
-          )}
-        </div>
+            <span className="font-heading font-bold text-[18px] leading-none tabular-nums tracking-tight">
+              {event.team1_goals ?? 0}<span className="text-muted-foreground mx-1.5">–</span>{event.team2_goals ?? 0}
+            </span>
+            <span className={cn(
+              'inline-grid place-items-center h-[22px] min-w-[34px] px-1.5 rounded-full text-[9px] font-bold tracking-wider font-heading',
+              event.is_draw ? 'bg-muted' : event.winning_team_short === event.team2_short
+                ? 'bg-muted shadow-[0_0_0_1.5px_hsl(var(--accent)/0.55)]' : 'bg-muted opacity-50',
+            )}>
+              {event.team2_short ?? '—'}
+            </span>
+            {event.is_draw && (
+              <span className="ml-1 font-heading text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Draw</span>
+            )}
+          </div>
+        ) : (
+          <div className="mt-3 flex items-center gap-2 pb-3 border-b border-dashed border-border">
+            <span className="inline-grid place-items-center h-[22px] w-[22px] rounded-full bg-muted text-[9px] font-bold tracking-wider font-heading opacity-50">
+              {event.losing_team_short ?? '—'}
+            </span>
+            <span className="italic font-normal text-[13.5px] text-muted-foreground mx-0.5">vs</span>
+            <span
+              className={cn(
+                'inline-grid place-items-center h-[22px] w-[22px] rounded-full text-[9px] font-bold tracking-wider font-heading',
+                variant === 'cold'
+                  ? 'bg-muted shadow-[0_0_0_1.5px_hsl(200_80%_60%/0.55)]'
+                  : 'bg-muted shadow-[0_0_0_1.5px_hsl(var(--accent)/0.55)]',
+              )}
+            >
+              {event.winning_team_short ?? '—'}
+            </span>
+            {event.pom_player_name && (
+              <span className={cn('ml-auto inline-flex items-center gap-1.5 font-heading text-[10px] font-semibold uppercase tracking-[0.16em]', pomColor)}>
+                <span className="text-[11px]">★</span>
+                {event.pom_player_name} · POM
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Headline + sub */}
         <h3 className="mt-4 font-heading text-[26px] font-bold leading-none tracking-[-0.022em]">
@@ -367,15 +407,15 @@ export function MatchVerdictCard({ event, currentUsername, onDismiss }: Props) {
         </p>
 
         {/* Winner panel(s) */}
-        {winners.length === 1 && <SoloWinnerPanel winner={winners[0]} topScore={topScore} variant={variant} />}
+        {winners.length === 1 && <SoloWinnerPanel winner={winners[0]} topScore={topScore} variant={variant} sport={event.sport ?? 'cricket'} />}
         {winners.length === 2 && <TwoWayTiePanel winners={winners} topScore={topScore} />}
         {winners.length >= 3 && <ThreeWayTiePanel winners={winners} topScore={topScore} />}
 
         {/* Hits */}
-        {winners.length === 1 && <HitsGrid hits={winners[0].hits} variant={variant} />}
+        {winners.length === 1 && <HitsGrid hits={winners[0].hits} variant={variant} sport={event.sport ?? 'cricket'} />}
         {winners.length === 2 && (
           <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-            {winners.map(w => <CompactHitRow key={w.user_id} winner={w} />)}
+            {winners.map(w => <CompactHitRow key={w.user_id} winner={w} sport={event.sport ?? 'cricket'} />)}
           </div>
         )}
         {/* 3-way tie deliberately omits hits — per-category outcomes per-row would mislead */}

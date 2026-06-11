@@ -521,12 +521,19 @@ export async function getMyF1PredictionsDetailed() {
 
 // Dugout
 export interface VerdictHits {
+    // Cricket categories
     winner: boolean;
     runs_t1: boolean;
     runs_t2: boolean;
     wkts_t1: boolean;
     wkts_t2: boolean;
     pom: boolean;
+    // Football categories
+    outcome?: boolean;
+    exact_score?: boolean;
+    pick_1?: boolean;
+    pick_2?: boolean;
+    pick_3?: boolean;
 }
 
 export interface VerdictWinner {
@@ -570,6 +577,13 @@ export interface DugoutEvent {
     match_label?: string | null;
     top_score?: number | null;
     runner_up_score?: number | null;
+    // Match verdict — football extras
+    sport?: string;
+    team1_short?: string | null;
+    team2_short?: string | null;
+    team1_goals?: number | null;
+    team2_goals?: number | null;
+    is_draw?: boolean | null;
     // Tournament-picks CTA fields
     tournament_id?: number | null;
     tournament_name?: string | null;

@@ -207,12 +207,14 @@ def _match_verdict_events(
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     cutoff = now - timedelta(days=VERDICT_WINDOW_DAYS)
 
-    # Recent completed matches with a winner set, across all tournaments
+    # Recent completed matches, across all tournaments. We don't filter on
+    # result_winner_id here: football matches can end in a draw (no winner) yet
+    # still have a verdict. get_match_verdict() gates per-sport on whether the
+    # result is actually recorded, returning None for unscored matches.
     recent_matches = (
         db.query(Match.id, Match.start_time)
         .filter(
             Match.status == MatchStatus.COMPLETED,
-            Match.result_winner_id != None,
             Match.start_time >= cutoff,
         )
         .order_by(Match.start_time.desc())

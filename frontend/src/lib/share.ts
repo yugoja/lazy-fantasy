@@ -68,9 +68,10 @@ function buildVerdictText(event: DugoutEvent): string {
 
   const isYou = event.is_me && winners.length === 1;
   const isCold = !event.is_me && topScore <= COLD_THRESHOLD;
+  const score = event.sport === 'football' ? `${topScore} pts` : `${topScore} of 140`;
 
   if (isYou) {
-    return `Just ran the table at ${league}. ${topScore} of 140 in match ${matchLabel}.\n${url}`;
+    return `Just ran the table at ${league}. ${score} in match ${matchLabel}.\n${url}`;
   }
 
   if (isCold) {
@@ -92,7 +93,7 @@ function buildVerdictText(event: DugoutEvent): string {
 
   // Solo (not you, not cold)
   const name = winners[0] ? (winners[0].display_name || winners[0].username) : verdictDisplayName(event);
-  return `${name} ran the table at ${league}. ${topScore} of 140 in match ${matchLabel}.\n${url}`;
+  return `${name} ran the table at ${league}. ${score} in match ${matchLabel}.\n${url}`;
 }
 
 export async function shareVerdict(event: DugoutEvent): Promise<void> {

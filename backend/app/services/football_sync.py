@@ -175,6 +175,16 @@ def _apply_football_result(
         ))
     db.add(fr)
     match.status = MatchStatus.COMPLETED
+    # Record the match winner on the shared column so cross-sport surfaces
+    # (dugout Match Verdict, etc.) can key off it. None for a genuine draw.
+    if shootout_winner_id is not None:
+        match.result_winner_id = shootout_winner_id
+    elif t1_total > t2_total:
+        match.result_winner_id = match.team_1_id
+    elif t2_total > t1_total:
+        match.result_winner_id = match.team_2_id
+    else:
+        match.result_winner_id = None
     db.commit()
 
     db.query(Prediction).filter(Prediction.match_id == match.id).update(
