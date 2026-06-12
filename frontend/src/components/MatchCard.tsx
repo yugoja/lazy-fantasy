@@ -196,50 +196,49 @@ export function MatchCard({
           )}
         </div>
 
-        {/* Teams */}
-        <div className="flex items-center justify-between gap-2">
+        {/* Teams — tricode scoreboard (codes lead, full name as caption so long
+            names like "Bosnia and Herzegovina" can't break the layout) */}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 py-1">
           {/* Team 1 */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex flex-col items-center gap-1 min-w-0">
             {flagUrl1 && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={flagUrl1}
                 alt={team1.name}
-                width={32}
-                height={32}
-                className="h-8 w-8 shrink-0 object-contain"
+                width={30}
+                height={30}
+                className="h-[30px] w-[30px] shrink-0 object-contain rounded-[3px]"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             )}
-            <div className="flex flex-col min-w-0">
-              <span className="font-bold text-base truncate leading-tight">{team1.name}</span>
-              {team1.fifa_ranking && (
-                <span className="font-heading text-[9px] text-muted-foreground/50">FIFA #{team1.fifa_ranking}</span>
-              )}
-            </div>
+            <span className="font-bold text-2xl leading-none tracking-tight">{team1.short_name}</span>
+            <span className="text-[11px] text-muted-foreground truncate w-full text-center">{team1.name}</span>
+            {team1.fifa_ranking && (
+              <span className="font-heading text-[9px] text-muted-foreground/50">FIFA #{team1.fifa_ranking}</span>
+            )}
           </div>
 
           {/* VS */}
-          <span className="text-xs text-muted-foreground font-medium shrink-0 px-1">vs</span>
+          <span className="text-xs italic text-muted-foreground/70 font-medium px-1 pt-3">vs</span>
 
           {/* Team 2 */}
-          <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-            <div className="flex flex-col items-end min-w-0">
-              <span className="font-bold text-base truncate leading-tight text-right">{team2.name}</span>
-              {team2.fifa_ranking && (
-                <span className="font-heading text-[9px] text-muted-foreground/50">FIFA #{team2.fifa_ranking}</span>
-              )}
-            </div>
+          <div className="flex flex-col items-center gap-1 min-w-0">
             {flagUrl2 && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={flagUrl2}
                 alt={team2.name}
-                width={32}
-                height={32}
-                className="h-8 w-8 shrink-0 object-contain"
+                width={30}
+                height={30}
+                className="h-[30px] w-[30px] shrink-0 object-contain rounded-[3px]"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
+            )}
+            <span className="font-bold text-2xl leading-none tracking-tight">{team2.short_name}</span>
+            <span className="text-[11px] text-muted-foreground truncate w-full text-center">{team2.name}</span>
+            {team2.fifa_ranking && (
+              <span className="font-heading text-[9px] text-muted-foreground/50">FIFA #{team2.fifa_ranking}</span>
             )}
           </div>
         </div>
