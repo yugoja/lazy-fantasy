@@ -567,6 +567,7 @@ export interface DugoutEvent {
     rank: number | null;
     rank_delta: number | null;
     agreement_count: number | null;
+    agreement_total?: number | null;
     team_short_name: string | null;
     // Match verdict fields
     winners?: VerdictWinner[] | null;

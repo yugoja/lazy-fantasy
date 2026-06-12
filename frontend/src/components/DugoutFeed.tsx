@@ -90,7 +90,7 @@ function AgreementRow({ event, onDismiss }: { event: DugoutEvent; onDismiss: () 
           {' and '}
           <span className="font-semibold">{eventLabel(event)}</span>
           {' agree on '}
-          <span className="text-green-400 font-semibold">{event.agreement_count}/6</span>
+          <span className="text-green-400 font-semibold">{event.agreement_count}/{event.agreement_total ?? 6}</span>
           {' picks'}
         </p>
         <p className="text-[11px] text-muted-foreground">{event.league_name}</p>

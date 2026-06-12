@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
-from app.models import League, LeagueMember, Match, MatchStatus, Prediction, User
+from app.models import League, LeagueMember, Match, MatchStatus, Prediction, Tournament, User
 from app.models.dugout_dismissal import DugoutDismissal
 from app.schemas.dugout import DugoutEvent, DugoutEventType
 from app.services.league import _compute_standings, get_user_leagues
@@ -56,16 +56,23 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
     # We'll filter by locked matches
     locked_match_ids_by_league: dict[int, int | None] = {}
     for league_id, member_ids in members_by_league.items():
-        result = (
+        # The locked match must belong to the league's own sport. Members often
+        # play both cricket and football, and without this filter the globally
+        # most-recent match (e.g. a World Cup fixture) would leak into a cricket
+        # league's dugout — producing nonsense agreement/contrarian events.
+        league_sport = getattr(league_map.get(league_id), "sport", None)
+        query = (
             db.query(Prediction.match_id)
             .join(Match, Prediction.match_id == Match.id)
+            .join(Tournament, Match.tournament_id == Tournament.id)
             .filter(
                 Prediction.user_id.in_(member_ids),
                 Match.start_time < now,
             )
-            .order_by(Match.start_time.desc())
-            .first()
         )
+        if league_sport:
+            query = query.filter(Tournament.sport == league_sport)
+        result = query.order_by(Match.start_time.desc()).first()
         locked_match_ids_by_league[league_id] = result[0] if result else None
 
     relevant_match_ids = list({mid for mid in locked_match_ids_by_league.values() if mid})
@@ -100,11 +107,16 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
     for p in all_predictions:
         preds_by_match_user[p.match_id][p.user_id] = p
 
+    # Locked matches (with sport + team ids), for sport-aware comparisons
+    matches_by_id: dict[int, Match] = {
+        m.id: m for m in db.query(Match).filter(Match.id.in_(relevant_match_ids)).all()
+    }
+
     events = []
     events.extend(_tournament_picks_events(db, user_id, leagues))
     events.extend(_match_verdict_events(db, user_id, leagues))
-    events.extend(_contrarian_events(db, user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map))
-    events.extend(_agreement_events(user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map))
+    events.extend(_contrarian_events(db, user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map, matches_by_id))
+    events.extend(_agreement_events(user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map, matches_by_id))
     events.extend(_streak_events(db, user_id, leagues, members_by_league, all_member_ids, user_map, league_map))
     events.extend(_rank_shift_events(db, user_id, leagues, members_by_league))
 
@@ -241,6 +253,24 @@ def _match_verdict_events(
     return events
 
 
+def _called_winner_id(pred: Prediction, match: Match) -> int | None:
+    """The team the user predicted to win, per sport. None for a predicted draw
+    or an incomplete pick."""
+    sport = match.tournament.sport if match.tournament else "cricket"
+    if sport == "football":
+        fp = getattr(pred, "football", None)
+        if fp is None:
+            return None
+        if fp.advance_winner_id:
+            return fp.advance_winner_id
+        if fp.team1_goals > fp.team2_goals:
+            return match.team_1_id
+        if fp.team2_goals > fp.team1_goals:
+            return match.team_2_id
+        return None  # predicted draw — not a "lone backer"
+    return pred.predicted_winner_id
+
+
 def _contrarian_events(
     db: Session,
     user_id: int,
@@ -250,11 +280,13 @@ def _contrarian_events(
     preds_by_match_user: dict,
     user_map: dict,
     league_map: dict,
+    matches_by_id: dict,
 ) -> list[DugoutEvent]:
     events = []
     for league in leagues:
         match_id = locked_match_ids_by_league.get(league.id)
-        if not match_id:
+        match = matches_by_id.get(match_id) if match_id else None
+        if not match:
             continue
         league_member_ids = set(members_by_league[league.id])
         member_preds = {
@@ -265,12 +297,13 @@ def _contrarian_events(
         if len(member_preds) < 2:
             continue
 
-        # Count how many picked each winner
+        # Count how many backed each winner (sport-aware; skip draws / no-pick)
         winner_counts: dict[int, list[int]] = defaultdict(list)
         for uid, pred in member_preds.items():
-            winner_counts[pred.predicted_winner_id].append(uid)
+            wid = _called_winner_id(pred, match)
+            if wid is not None:
+                winner_counts[wid].append(uid)
 
-        # Load team short names for lone picks
         lone_picks = [(team_id, uids[0]) for team_id, uids in winner_counts.items() if len(uids) == 1]
         if not lone_picks:
             continue
@@ -311,11 +344,13 @@ def _agreement_events(
     preds_by_match_user: dict,
     user_map: dict,
     league_map: dict,
+    matches_by_id: dict,
 ) -> list[DugoutEvent]:
     events = []
     for league in leagues:
         match_id = locked_match_ids_by_league.get(league.id)
-        if not match_id:
+        match = matches_by_id.get(match_id) if match_id else None
+        if not match:
             continue
         league_member_ids = set(members_by_league[league.id])
         member_preds = {
@@ -333,8 +368,9 @@ def _agreement_events(
                 break
             if uid == user_id:
                 continue
-            agreement = _count_agreement(my_pred, pred)
-            if agreement >= 4:
+            agreement, total = _count_agreement(my_pred, pred, match)
+            # Surface only strong overlaps: 4/6 (cricket) or 3/4 (football).
+            if agreement >= total - 2 and agreement >= 3:
                 user = user_map.get(uid)
                 if not user:
                     continue
@@ -347,13 +383,29 @@ def _agreement_events(
                     display_name=user.display_name,
                     is_me=False,
                     agreement_count=agreement,
+                    agreement_total=total,
                 ))
                 count += 1
 
     return events
 
 
-def _count_agreement(p1: Prediction, p2: Prediction) -> int:
+def _count_agreement(p1: Prediction, p2: Prediction, match: Match) -> tuple[int, int]:
+    """(agreed categories, total categories) between two predictions, sport-aware.
+    Never counts two empty/null fields as agreement."""
+    sport = match.tournament.sport if match.tournament else "cricket"
+    if sport == "football":
+        fp1, fp2 = getattr(p1, "football", None), getattr(p2, "football", None)
+        if fp1 is None or fp2 is None:
+            return 0, 4
+        agree = 0
+        if (fp1.team1_goals, fp1.team2_goals) == (fp2.team1_goals, fp2.team2_goals):
+            agree += 1
+        picks1 = {fp1.player_pick_1_id, fp1.player_pick_2_id, fp1.player_pick_3_id} - {None}
+        picks2 = {fp2.player_pick_1_id, fp2.player_pick_2_id, fp2.player_pick_3_id} - {None}
+        agree += len(picks1 & picks2)
+        return agree, 4
+
     fields = [
         "predicted_winner_id",
         "predicted_most_runs_team1_player_id",
@@ -362,7 +414,11 @@ def _count_agreement(p1: Prediction, p2: Prediction) -> int:
         "predicted_most_wickets_team2_player_id",
         "predicted_pom_player_id",
     ]
-    return sum(1 for f in fields if getattr(p1, f) == getattr(p2, f))
+    agree = sum(
+        1 for f in fields
+        if getattr(p1, f) is not None and getattr(p1, f) == getattr(p2, f)
+    )
+    return agree, 6
 
 
 def _streak_events(

@@ -60,6 +60,7 @@ class DugoutEvent(BaseModel):
     rank: int | None = None
     rank_delta: int | None = None
     agreement_count: int | None = None
+    agreement_total: int | None = None
     team_short_name: str | None = None
     # Match verdict fields
     winners: list[VerdictWinner] | None = None
