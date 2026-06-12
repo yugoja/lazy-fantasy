@@ -15,6 +15,21 @@ VERDICT_MATCHES_PER_LEAGUE = 3
 VERDICT_WINDOW_DAYS = 7
 VERDICT_MAX_TOTAL = 6
 
+# Hard cap on how many events of each kind the feed will ever show. Extras are
+# discarded even if the user hasn't dismissed them, so no single kind floods it.
+MAX_EVENTS_PER_TYPE = 3
+
+
+def _limit_per_type(events: list[DugoutEvent], n: int = MAX_EVENTS_PER_TYPE) -> list[DugoutEvent]:
+    """Keep at most ``n`` events of each type, preserving order (best-first)."""
+    seen: dict = defaultdict(int)
+    kept: list[DugoutEvent] = []
+    for e in events:
+        if seen[e.type] < n:
+            kept.append(e)
+            seen[e.type] += 1
+    return kept
+
 
 def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
     leagues = get_user_leagues(db, user_id)
@@ -86,7 +101,7 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
             e for e in events
             if (e.type, e.league_id, e.match_id if e.match_id else 0, e.username) not in dismissed_keys
         ]
-        return events[:10]
+        return _limit_per_type(events)
 
     # Batch-load all predictions for relevant matches across all members
     all_predictions = (
@@ -136,8 +151,9 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
         DugoutEventType.AGREEMENT: 4,
         DugoutEventType.STREAK: 5,
     }
+    events = _limit_per_type(events)
     events.sort(key=lambda e: priority[e.type])
-    return events[:10]
+    return events
 
 
 def _tournament_picks_events(

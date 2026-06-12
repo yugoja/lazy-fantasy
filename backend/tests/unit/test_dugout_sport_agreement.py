@@ -71,3 +71,28 @@ class TestCalledWinner:
 
     def test_cricket_uses_predicted_winner(self):
         assert _called_winner_id(_cricket(win=42), _match("cricket")) == 42
+
+
+class TestLimitPerType:
+    def test_caps_each_type_at_three(self):
+        from app.services.dugout import _limit_per_type
+        from app.schemas.dugout import DugoutEvent, DugoutEventType
+
+        def ev(t, i):
+            return DugoutEvent(type=t, league_name="L", league_id=1, username=f"u{i}")
+
+        events = (
+            [ev(DugoutEventType.MATCH_VERDICT, i) for i in range(5)]
+            + [ev(DugoutEventType.AGREEMENT, i) for i in range(4)]
+            + [ev(DugoutEventType.STREAK, i) for i in range(1)]
+        )
+        kept = _limit_per_type(events)
+        by_type = {}
+        for e in kept:
+            by_type[e.type] = by_type.get(e.type, 0) + 1
+        assert by_type[DugoutEventType.MATCH_VERDICT] == 3
+        assert by_type[DugoutEventType.AGREEMENT] == 3
+        assert by_type[DugoutEventType.STREAK] == 1
+        # order preserved (best-first): first 3 verdicts kept
+        verdicts = [e.username for e in kept if e.type == DugoutEventType.MATCH_VERDICT]
+        assert verdicts == ["u0", "u1", "u2"]
