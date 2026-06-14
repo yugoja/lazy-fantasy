@@ -45,33 +45,37 @@ jobs:
 
             echo "==> Deploying $ENV"
 
-            # Pull latest code and rebuild
+            # 1. Pull latest code
+            su - lazy-fantasy -c "
+              cd $APP_DIR
+              git fetch origin ${{ github.ref_name }}
+              git reset --hard origin/${{ github.ref_name }}
+            "
+
+            # 2. Backend deps + migrations, then restart immediately. This is
+            #    decoupled from the frontend build so a frontend failure (e.g. an
+            #    OOM during 'npm run build') can never skip the backend restart.
+            su - lazy-fantasy -c "
+              cd $APP_DIR/backend
+              source venv/bin/activate
+              pip install -q -r requirements.txt
+              alembic upgrade head
+            "
+            systemctl restart "$BACKEND_SVC"
+            sleep 3
+            systemctl is-active "$BACKEND_SVC" && echo "✓ $BACKEND_SVC running" || exit 1
+
+            # 3. Frontend build, then restart.
             su - lazy-fantasy -c "
               export NVM_DIR=\"\$HOME/.nvm\"
               [ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"
 
-              cd $APP_DIR
-              git fetch origin ${{ github.ref_name }}
-              git reset --hard origin/${{ github.ref_name }}
-
-              # Backend
-              cd backend
-              source venv/bin/activate
-              pip install -q -r requirements.txt
-              alembic upgrade head
-
-              # Frontend
-              cd ../frontend
+              cd $APP_DIR/frontend
               npm install --prefer-offline
               npm run build
             "
-
-            # Restart services
-            systemctl restart "$BACKEND_SVC" "$FRONTEND_SVC"
-
-            # Verify
+            systemctl restart "$FRONTEND_SVC"
             sleep 3
-            systemctl is-active "$BACKEND_SVC" && echo "✓ $BACKEND_SVC running" || exit 1
             systemctl is-active "$FRONTEND_SVC" && echo "✓ $FRONTEND_SVC running" || exit 1
 
             echo "==> $ENV deploy complete!"
