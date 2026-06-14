@@ -83,6 +83,17 @@ def sync_match_result(db: Session, match_id: int) -> dict:
         else:
             unresolved.append(f"{stat.name} (team2)")
 
+    # Two distinct API players can resolve to the same DB player (e.g. Brazil's
+    # GK "Ederson" and midfielder "Éderson" both map to one DB "EDERSON"). Keep a
+    # single event per DB player — the one who actually played most — so the
+    # unique (match, player) constraint can't crash the whole sync.
+    deduped: dict[int, tuple[Player, FootballPlayerStat]] = {}
+    for player, stat in resolved_events:
+        current = deduped.get(player.id)
+        if current is None or stat.minutes_played > current[1].minutes_played:
+            deduped[player.id] = (player, stat)
+    resolved_events = list(deduped.values())
+
     # Derive shootout winner
     shootout_winner_id: int | None = None
     if result.status_short == "PEN" and result.penalty_team1 is not None and result.penalty_team2 is not None:

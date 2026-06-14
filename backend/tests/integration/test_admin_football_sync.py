@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from app.models.match import Match, MatchStatus
 from app.models.player import Player
 from app.models.tournament import Tournament
-from app.models.football_match_result import FootballMatchResult
+from app.models.football_match_result import FootballMatchResult, FootballPlayerMatchEvent
 from app.services.football_provider import FootballFixtureResult, FootballPlayerStat
 from app.services.football_sync import set_provider
 
@@ -295,6 +295,56 @@ class TestSyncFootball:
         data = resp.json()
         assert len(data["unresolved_players"]) == 1
         assert "ZZZXXX Nobody" in data["unresolved_players"][0]
+
+        set_provider(None)
+
+    def test_duplicate_resolution_does_not_crash(
+        self, admin_client, db_session, linked_football_match, test_teams
+    ):
+        # Two API players with the same name resolving to one DB player (e.g.
+        # Brazil's two "Ederson"s) must not violate uq_football_event_match_player.
+        client, headers = admin_client
+        team1, _ = test_teams
+        t1_players = db_session.query(Player).filter(Player.team_id == team1.id).all()
+        for p in t1_players:
+            p.role = "Forward"
+            p.api_football_player_id = None  # force name-based resolution
+        db_session.commit()
+        target = t1_players[0]
+
+        fixture_result = FootballFixtureResult(
+            fixture_id=12345, status_short="FT",
+            home_team_api_id=100, away_team_api_id=200,
+            team1_goals_reg=1, team2_goals_reg=0,
+            team1_goals_et=None, team2_goals_et=None,
+            penalty_team1=None, penalty_team2=None,
+        )
+        # Same name, different api ids, different minutes — both resolve to `target`
+        player_stats = [
+            FootballPlayerStat(api_player_id=99991, name=target.name, team_api_id=100,
+                minutes_played=20, goals=0, assists=0, red_card=False, own_goals=0,
+                ingame_pen_saves=0, shootout_pen_saves=0, ingame_pen_misses=0),
+            FootballPlayerStat(api_player_id=99992, name=target.name, team_api_id=100,
+                minutes_played=90, goals=1, assists=0, red_card=False, own_goals=0,
+                ingame_pen_saves=0, shootout_pen_saves=0, ingame_pen_misses=0),
+        ]
+        mock_provider = MagicMock()
+        mock_provider.get_fixture_result.return_value = fixture_result
+        mock_provider.get_player_stats.return_value = player_stats
+        set_provider(mock_provider)
+
+        resp = client.post(
+            f"/admin/matches/{linked_football_match.id}/sync-football",
+            headers=headers,
+        )
+        assert resp.status_code == 200  # used to 500 on UniqueViolation
+        assert resp.json()["status"] == "synced"
+
+        events = db_session.query(FootballPlayerMatchEvent).filter_by(
+            match_id=linked_football_match.id, player_id=target.id
+        ).all()
+        assert len(events) == 1            # deduped to one
+        assert events[0].minutes_played == 90  # kept the one who played most
 
         set_provider(None)
 

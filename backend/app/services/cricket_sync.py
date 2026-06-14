@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models.match import Match, MatchStatus
 from app.models.match_lineup import MatchLineup
+from app.models.tournament import Tournament
 from app.models.player import Player
 from app.services.cricket_provider import CricketProvider, ProviderMatchInfo, ProviderPlayer
 from app.services.league import snapshot_league_ranks
@@ -41,7 +42,9 @@ def sync_lineups(db: Session) -> None:
     window = now + timedelta(hours=4)
     matches = (
         db.query(Match)
+        .join(Tournament, Match.tournament_id == Tournament.id)
         .filter(
+            Tournament.sport == "cricket",
             Match.status == MatchStatus.SCHEDULED,
             Match.external_match_id.isnot(None),
             Match.sync_state == "linked",
@@ -62,7 +65,9 @@ def sync_results(db: Session) -> None:
 
     candidates = (
         db.query(Match)
+        .join(Tournament, Match.tournament_id == Tournament.id)
         .filter(
+            Tournament.sport == "cricket",
             Match.external_match_id.isnot(None),
             Match.status == MatchStatus.SCHEDULED,
             Match.start_time <= cutoff,
