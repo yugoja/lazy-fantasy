@@ -123,6 +123,22 @@ async def get_players_for_match(
         )
 
     team_1_players, team_2_players, lineup_announced, last_t1_ids, last_t2_ids = players_result
+
+    # Confirmed football lineup (formation + per-player grid), once announced.
+    import json
+    lineup = json.loads(match.lineup_data) if getattr(match, "lineup_data", None) else None
+    slots = lineup.get("slots", {}) if lineup else {}
+
+    def _player_resp(p, played: bool) -> PlayerResponse:
+        slot = slots.get(str(p.id))
+        return PlayerResponse(
+            id=p.id, name=p.name, team_id=p.team_id, role=p.role,
+            played_last_match=played,
+            is_starter=slot is not None,
+            grid_row=slot[0] if slot else None,
+            grid_col=slot[1] if slot else None,
+        )
+
     team_1_form = get_team_recent_form(
         db,
         team_id=match.team_1_id,
@@ -142,30 +158,14 @@ async def get_players_for_match(
         match_id=match.id,
         team_1=TeamResponse.model_validate(match.team_1),
         team_2=TeamResponse.model_validate(match.team_2),
-        team_1_players=[
-            PlayerResponse(
-                id=p.id,
-                name=p.name,
-                team_id=p.team_id,
-                role=p.role,
-                played_last_match=(p.id in last_t1_ids),
-            )
-            for p in team_1_players
-        ],
-        team_2_players=[
-            PlayerResponse(
-                id=p.id,
-                name=p.name,
-                team_id=p.team_id,
-                role=p.role,
-                played_last_match=(p.id in last_t2_ids),
-            )
-            for p in team_2_players
-        ],
+        team_1_players=[_player_resp(p, p.id in last_t1_ids) for p in team_1_players],
+        team_2_players=[_player_resp(p, p.id in last_t2_ids) for p in team_2_players],
         team_1_form=[TeamFormEntryResponse(**entry) for entry in team_1_form],
         team_2_form=[TeamFormEntryResponse(**entry) for entry in team_2_form],
-        lineup_announced=lineup_announced,
+        lineup_announced=lineup_announced or bool(slots),
         start_time=match.start_time,
         sport=match.tournament.sport if match.tournament else "cricket",
         stage=match.stage,
+        team_1_formation=lineup.get("team1_formation") if lineup else None,
+        team_2_formation=lineup.get("team2_formation") if lineup else None,
     )

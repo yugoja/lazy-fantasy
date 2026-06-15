@@ -37,6 +37,10 @@ class Match(Base):
     sync_error: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     last_synced_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
+    # Confirmed football lineup (formation + per-player grid) as JSON, once the
+    # XI is announced. Null otherwise. Drives the real-formation predict pitch.
+    lineup_data: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
     # Match results (nullable until match is completed)
     result_winner_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("teams.id"), nullable=True

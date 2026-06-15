@@ -509,6 +509,50 @@ def update_player_form_after_match(
     db.commit()
 
 
+def store_match_formation(db: Session, match, provider) -> bool:
+    """Persist the confirmed formation + per-player grid on the match as JSON.
+
+    response[0] is the home team (== match.team_1, matching the result-sync
+    convention). Returns True if a lineup was stored. Starters whose API id
+    can't be matched to a DB player are skipped (they just won't be placed).
+    """
+    import json
+
+    if not match.external_match_id or not match.external_match_id.lstrip("-").isdigit():
+        return False
+    formations = provider.get_fixture_formations(int(match.external_match_id))
+    if formations is None:
+        return False
+    home, away = formations
+
+    def _api_map(team_id: int) -> dict[str, int]:
+        rows = (
+            db.query(Player.api_football_player_id, Player.id)
+            .filter(Player.team_id == team_id, Player.api_football_player_id.isnot(None))
+            .all()
+        )
+        return {str(api_id): pid for api_id, pid in rows}
+
+    slots: dict[str, list[int]] = {}
+    for team_form, team_id in ((home, match.team_1_id), (away, match.team_2_id)):
+        api_to_db = _api_map(team_id)
+        for slot in team_form.starters:
+            db_id = api_to_db.get(str(slot.api_player_id))
+            if db_id is not None:
+                slots[str(db_id)] = [slot.row, slot.col]
+
+    if not slots:
+        return False
+
+    match.lineup_data = json.dumps({
+        "team1_formation": home.formation,
+        "team2_formation": away.formation,
+        "slots": slots,
+    })
+    db.commit()
+    return True
+
+
 def update_availability_from_lineup(
     db: Session,
     match,

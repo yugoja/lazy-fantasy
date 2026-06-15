@@ -109,6 +109,14 @@ function formatCountdown(startTime: string, now: number): string {
 }
 
 function layoutPlayers(players: Player[]): { starters: Player[]; subs: Player[] } {
+  // Confirmed lineup: trust the real XI (is_starter) so we show the actual
+  // starters and bench instead of a role-quota guess.
+  if (players.some(p => p.is_starter)) {
+    return {
+      starters: players.filter(p => p.is_starter),
+      subs: players.filter(p => !p.is_starter),
+    };
+  }
   const byRole: Record<string, Player[]> = {};
   for (const p of players) {
     const r = p.role.toLowerCase();
@@ -140,7 +148,30 @@ function getPitchPosition(role: string, idx: number, total: number, side: 'top' 
   return { x, y };
 }
 
+// Place starters from the API's real formation grid (row = line from keeper to
+// attack, col = slot across the line), reproducing the exact shape (4-2-3-1 etc).
+function buildGridPositions(players: Player[], side: 'top' | 'bottom'): Array<{ player: Player; x: number; y: number }> {
+  const starters = players.filter(p => p.grid_row != null && p.grid_col != null);
+  const maxRow = Math.max(...starters.map(p => p.grid_row as number));
+  const colsByRow: Record<number, number[]> = {};
+  starters.forEach(p => { (colsByRow[p.grid_row as number] ??= []).push(p.grid_col as number); });
+  const margin = 12;
+  return starters.map(p => {
+    const row = p.grid_row as number, col = p.grid_col as number;
+    const rowFrac = maxRow > 1 ? (row - 1) / (maxRow - 1) : 0;
+    const y = side === 'bottom' ? 92 - rowFrac * 40 : 8 + rowFrac * 40;
+    const maxCol = Math.max(...colsByRow[row]);
+    const colFrac = maxCol > 1 ? (col - 1) / (maxCol - 1) : 0.5;
+    let x = margin + colFrac * (100 - 2 * margin);
+    if (side === 'top') x = 100 - x;  // mirror so both shapes face the centre line
+    return { player: p, x, y };
+  });
+}
+
 function buildTokenPositions(players: Player[], side: 'top' | 'bottom'): Array<{ player: Player; x: number; y: number }> {
+  if (players.some(p => p.grid_row != null && p.grid_col != null)) {
+    return buildGridPositions(players, side);
+  }
   const byRole: Record<string, Player[]> = {};
   for (const p of players) {
     const r = p.role.toLowerCase();
@@ -728,6 +759,20 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
                   </div>
                 );
               })}
+            </div>
+
+            {/* Lineup status */}
+            <div className="mb-2 text-center text-[10px] font-heading uppercase tracking-[0.18em]">
+              {matchData.lineup_announced ? (
+                <span className="text-primary">
+                  Confirmed XI
+                  {(matchData.team_1_formation || matchData.team_2_formation) && (
+                    <span className="text-muted-foreground"> · {matchData.team_1_formation ?? '—'} v {matchData.team_2_formation ?? '—'}</span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">Predicted XI · lineup not announced yet</span>
+              )}
             </div>
 
             {/* Pitch */}

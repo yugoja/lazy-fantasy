@@ -43,6 +43,19 @@ class FixtureLineup:
 
 
 @dataclass
+class LineupSlot:
+    api_player_id: int
+    row: int   # 1 = keeper, rising toward attack
+    col: int   # position across that line (1 = one touchline)
+
+
+@dataclass
+class TeamFormation:
+    formation: str                 # e.g. "4-2-3-1"
+    starters: list[LineupSlot]
+
+
+@dataclass
 class FootballPlayerStat:
     api_player_id: int
     name: str
@@ -266,6 +279,34 @@ class ApiFootballProvider:
             home_subs=_extract_ids(home, "substitutes"),
             away_subs=_extract_ids(away, "substitutes"),
         )
+
+    def get_fixture_formations(self, fixture_id: int) -> Optional[tuple[TeamFormation, TeamFormation]]:
+        """Confirmed (home, away) formations with each starter's grid position.
+
+        Returns None until the lineup is announced.
+        """
+        data = self._get("fixtures/lineups", fixture=fixture_id)
+        if not data:
+            return None
+        response = data.get("response", [])
+        if len(response) < 2:
+            return None
+
+        def _team(obj: dict) -> TeamFormation:
+            slots: list[LineupSlot] = []
+            for e in obj.get("startXI", []):
+                player = e.get("player", {})
+                pid, grid = player.get("id"), player.get("grid")
+                if pid is None or not grid or ":" not in str(grid):
+                    continue
+                row, col = str(grid).split(":", 1)
+                try:
+                    slots.append(LineupSlot(int(pid), int(row), int(col)))
+                except ValueError:
+                    continue
+            return TeamFormation(formation=obj.get("formation") or "", starters=slots)
+
+        return _team(response[0]), _team(response[1])
 
     def get_player_stats(self, fixture_id: int) -> list[FootballPlayerStat]:
         data = self._get("fixtures/players", fixture=fixture_id)

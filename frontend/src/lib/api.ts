@@ -384,14 +384,27 @@ export interface MatchPlayersResponse {
     match_id: number;
     team_1: { id: number; name: string; short_name: string; fifa_ranking?: number | null };
     team_2: { id: number; name: string; short_name: string; fifa_ranking?: number | null };
-    team_1_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
-    team_2_players: Array<{ id: number; name: string; team_id: number; role: string; played_last_match: boolean }>;
+    team_1_players: Array<MatchPlayer>;
+    team_2_players: Array<MatchPlayer>;
     team_1_form: TeamFormEntry[];
     team_2_form: TeamFormEntry[];
     lineup_announced: boolean;
     start_time: string;
     sport: string;
     stage: string | null;
+    team_1_formation?: string | null;
+    team_2_formation?: string | null;
+}
+
+export interface MatchPlayer {
+    id: number;
+    name: string;
+    team_id: number;
+    role: string;
+    played_last_match: boolean;
+    is_starter?: boolean;
+    grid_row?: number | null;
+    grid_col?: number | null;
 }
 
 export async function getMatchPlayers(matchId: number) {

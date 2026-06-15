@@ -21,6 +21,10 @@ class PlayerResponse(BaseModel):
     team_id: int
     role: str
     played_last_match: bool = False
+    # Confirmed-lineup fields (football, once the XI is announced)
+    is_starter: bool = False
+    grid_row: int | None = None  # 1 = keeper, rising toward attack
+    grid_col: int | None = None  # position across the line
 
     model_config = {"from_attributes": True}
 
@@ -96,6 +100,8 @@ class MatchPlayersResponse(BaseModel):
     start_time: datetime
     sport: str = "cricket"
     stage: Optional[str] = None  # football: GROUP/R32/R16/QF/SF/THIRD/FINAL
+    team_1_formation: Optional[str] = None  # e.g. "4-2-3-1", once announced
+    team_2_formation: Optional[str] = None
 
     @field_serializer("start_time")
     def serialize_start_time(self, v: datetime) -> str:

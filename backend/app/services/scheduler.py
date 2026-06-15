@@ -148,6 +148,8 @@ def _run_lineup_sync(match_id: int) -> None:
             logger.info(f"Lineup not yet announced for match {match_id}")
             return
         update_availability_from_lineup(db, match, lineup)
+        from app.services.player_form_service import store_match_formation
+        store_match_formation(db, match, provider)
         logger.info(f"Lineup sync done for match {match_id}")
     except Exception as e:
         logger.error(f"Lineup sync job for match {match_id} failed: {e}")
