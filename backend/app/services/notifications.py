@@ -10,6 +10,44 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
+def send_password_reset_email(user_email: str, reset_url: str) -> bool:
+    """Send a password-reset link via Resend. Returns True on success."""
+    if not settings.RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY not set — skipping password reset email")
+        return False
+
+    resend.api_key = settings.RESEND_API_KEY
+    html = f"""
+    <div style="font-family:Inter,sans-serif;background:#0a0a0f;color:#e8e8e6;max-width:480px;margin:0 auto;padding:32px 24px;border-radius:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:28px;">
+        <span style="font-size:20px;">🏆</span>
+        <span style="font-size:17px;font-weight:700;color:#e8e8e6;">Lazy Fantasy</span>
+      </div>
+      <p style="font-size:13px;font-weight:600;color:#26d666;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 12px;">Reset your password</p>
+      <p style="font-size:15px;color:#e8e8e6;margin:0 0 24px;line-height:1.6;">
+        We got a request to reset your Lazy Fantasy password. Tap below to choose a new one. This link expires in 1 hour.
+      </p>
+      <a href="{reset_url}" style="display:inline-block;background:#26d666;color:#0a0a0f;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;text-decoration:none;">
+        Reset Password →
+      </a>
+      <p style="font-size:12px;color:#6b7280;margin-top:32px;">
+        If you didn't request this, you can safely ignore this email — your password won't change.
+      </p>
+    </div>
+    """
+    try:
+        resend.Emails.send({
+            "from": "Lazy Fantasy <noreply@lazyfantasy.app>",
+            "to": [user_email],
+            "subject": "Reset your Lazy Fantasy password",
+            "html": html,
+        })
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send password reset email to {user_email}: {e}")
+        return False
+
+
 def send_reminder_email(user_email: str, team_1: str, team_2: str, match_time: str) -> bool:
     """Send a match reminder email via Resend. Returns True on success."""
     if not settings.RESEND_API_KEY:

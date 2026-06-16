@@ -43,6 +43,34 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
+def _pw_fingerprint(hashed_password: str | None) -> str:
+    import hashlib
+    return hashlib.sha256((hashed_password or "").encode("utf-8")).hexdigest()[:16]
+
+
+def create_password_reset_token(user: User) -> str:
+    """A short-lived reset token bound to the user's current password hash, so it
+    self-invalidates as soon as the password changes (effectively single-use)."""
+    return create_access_token(
+        {"sub": str(user.id), "purpose": "pwreset", "fp": _pw_fingerprint(user.hashed_password)},
+        expires_delta=timedelta(hours=1),
+    )
+
+
+def verify_password_reset_token(db: Session, token: str) -> User | None:
+    """Return the user for a valid, unexpired, unused reset token; else None."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except JWTError:
+        return None
+    if payload.get("purpose") != "pwreset" or not payload.get("sub"):
+        return None
+    user = db.query(User).filter(User.id == int(payload["sub"])).first()
+    if not user or _pw_fingerprint(user.hashed_password) != payload.get("fp"):
+        return None
+    return user
+
+
 def get_user_by_username(db: Session, username: str) -> User | None:
     """Get user by username."""
     return db.query(User).filter(User.username == username).first()

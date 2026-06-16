@@ -10,9 +10,12 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.schemas.auth import (
+    ForgotPasswordRequest,
     GoogleAuthRequest,
     GoogleAuthResponse,
     ProfileUpdate,
+    ResetPasswordRequest,
+    SimpleMessage,
     Token,
     UserCreate,
     UserResponse,
@@ -21,12 +24,16 @@ from app.services.auth import (
     authenticate_user,
     create_access_token,
     create_google_user,
+    create_password_reset_token,
     create_user,
     get_current_user,
+    get_password_hash,
     get_user_by_email,
     get_user_by_google_id,
     get_user_by_username,
+    verify_password_reset_token,
 )
+from app.services.notifications import send_password_reset_email
 from app.models import User
 from app.utils.images import AVATARS_DIR, save_upload
 
@@ -85,6 +92,47 @@ async def login(
     access_token = create_access_token(
         data={"sub": str(user.id)},
         expires_delta=access_token_expires,
+    )
+    return Token(access_token=access_token, token_type="bearer", display_name=user.display_name)
+
+
+@router.post("/forgot-password", response_model=SimpleMessage)
+async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Email a password-reset link. Always returns 200 (never reveals whether an
+    account exists)."""
+    generic = SimpleMessage(message="If an account exists for that email, a reset link is on its way.")
+    user = get_user_by_email(db, data.email)
+    # Only for password accounts — Google-only users have no password to reset.
+    if user and user.hashed_password:
+        token = create_password_reset_token(user)
+        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+        try:
+            send_password_reset_email(user.email, reset_url)
+        except Exception as e:
+            logger.error(f"forgot-password email failed for {user.email}: {e}")
+    return generic
+
+
+@router.post("/reset-password", response_model=Token)
+async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Set a new password from a valid reset token, and log the user straight in."""
+    if len(data.new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters.",
+        )
+    user = verify_password_reset_token(db, data.token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This reset link is invalid or has expired. Request a new one.",
+        )
+    user.hashed_password = get_password_hash(data.new_password)
+    db.commit()
+
+    access_token = create_access_token(
+        data={"sub": str(user.id)},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
     )
     return Token(access_token=access_token, token_type="bearer", display_name=user.display_name)
 

@@ -95,6 +95,20 @@ export async function googleLogin(credential: string) {
     });
 }
 
+export async function forgotPassword(email: string) {
+    return request<{ message: string }>('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+    });
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+    return request<{ access_token: string; token_type: string; display_name?: string | null }>(
+        '/auth/reset-password',
+        { method: 'POST', body: JSON.stringify({ token, new_password: newPassword }) },
+    );
+}
+
 export interface UserProfile {
     id: number;
     username: string;
