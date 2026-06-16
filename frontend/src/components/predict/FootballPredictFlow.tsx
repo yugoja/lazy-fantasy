@@ -153,16 +153,21 @@ function getPitchPosition(role: string, idx: number, total: number, side: 'top' 
 function buildGridPositions(players: Player[], side: 'top' | 'bottom'): Array<{ player: Player; x: number; y: number }> {
   const starters = players.filter(p => p.grid_row != null && p.grid_col != null);
   const maxRow = Math.max(...starters.map(p => p.grid_row as number));
-  const colsByRow: Record<number, number[]> = {};
-  starters.forEach(p => { (colsByRow[p.grid_row as number] ??= []).push(p.grid_col as number); });
-  const margin = 12;
+  const byRow: Record<number, Player[]> = {};
+  starters.forEach(p => { (byRow[p.grid_row as number] ??= []).push(p); });
+  // Lines with fewer players sit more centrally (a 2-man pivot shouldn't hug the
+  // touchlines); a single striker is centred.
+  const insetFor = (n: number) => (n >= 4 ? 10 : n === 3 ? 22 : n === 2 ? 32 : 50);
   return starters.map(p => {
     const row = p.grid_row as number, col = p.grid_col as number;
     const rowFrac = maxRow > 1 ? (row - 1) / (maxRow - 1) : 0;
-    const y = side === 'bottom' ? 92 - rowFrac * 40 : 8 + rowFrac * 40;
-    const maxCol = Math.max(...colsByRow[row]);
-    const colFrac = maxCol > 1 ? (col - 1) / (maxCol - 1) : 0.5;
-    let x = margin + colFrac * (100 - 2 * margin);
+    // Keep each team inside its own half (GK near own goal → front line short of
+    // the halfway line) so the two formations leave a clear gap at the centre.
+    const y = side === 'bottom' ? 94 - rowFrac * 36 : 6 + rowFrac * 36;
+    const cols = byRow[row].map(q => q.grid_col as number);
+    const lo = Math.min(...cols), hi = Math.max(...cols), n = cols.length;
+    const m = insetFor(n);
+    let x = (n <= 1 || hi === lo) ? 50 : m + ((col - lo) / (hi - lo)) * (100 - 2 * m);
     if (side === 'top') x = 100 - x;  // mirror so both shapes face the centre line
     return { player: p, x, y };
   });
