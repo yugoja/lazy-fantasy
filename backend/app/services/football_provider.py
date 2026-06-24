@@ -326,9 +326,14 @@ class ApiFootballProvider:
                 goals = int(goals_block.get("total") or 0)
                 assists = int(goals_block.get("assists") or 0)
                 red_card = bool(s.get("cards", {}).get("red"))
-                pen_saves = int(goals_block.get("saves") or 0)
+                # `goals.saves` is the keeper's TOTAL shots saved (routine saves),
+                # which the v2 model does not score. The penalty-save bonus comes
+                # only from `penalty.saved` (penalties the keeper actually saved).
+                pen_saves = int(pen_block.get("saved") or 0)
                 pen_missed = int(pen_block.get("missed") or 0)
-                shootout_saves = int(pen_block.get("saved") or 0)
+                # fixtures/players does not separate shootout saves; they would
+                # need the fixtures/events endpoint. Keep this bucket empty for now.
+                shootout_saves = 0
 
                 stats.append(FootballPlayerStat(
                     api_player_id=int(player_info.get("id", 0)),

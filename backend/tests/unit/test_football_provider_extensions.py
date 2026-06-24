@@ -6,6 +6,7 @@ from app.services.football_provider import (
     ApiFootballProvider,
     WCSquadPlayer,
     FixtureLineup,
+    FootballPlayerStat,
 )
 
 
@@ -169,3 +170,56 @@ def test_get_fixture_lineup_returns_none_when_empty_response():
     with patch.object(provider, "_get", return_value={"response": []}):
         lineup = provider.get_fixture_lineup(fixture_id=999)
     assert lineup is None
+
+
+# ── get_player_stats (GK penalty-save semantics) ──────────────────────────────
+
+def _player_stats_api_response(*, saves=0, pen_saved=0, pen_missed=0, minutes=90,
+                                goals=0, assists=0, red=False):
+    """Mirror the api-football `fixtures/players` shape. `goals.saves` is the
+    keeper's TOTAL shots saved; `penalty.saved` is penalties actually saved."""
+    return {
+        "response": [{
+            "team": {"id": 10},
+            "players": [{
+                "player": {"id": 100, "name": "Test Keeper"},
+                "statistics": [{
+                    "games": {"minutes": minutes, "position": "G"},
+                    "goals": {"total": goals, "assists": assists, "conceded": 1, "saves": saves},
+                    "penalty": {"saved": pen_saved, "missed": pen_missed},
+                    "cards": {"red": 1 if red else None},
+                }],
+            }],
+        }],
+    }
+
+
+def test_get_player_stats_total_saves_are_not_penalty_saves():
+    """Regression: a keeper with 8 routine saves and 0 penalties saved must
+    score 0 penalty-save events — `goals.saves` is not a pen save."""
+    provider = _make_provider()
+    response = _player_stats_api_response(saves=8, pen_saved=0)
+    with patch.object(provider, "_get", return_value=response):
+        stats = provider.get_player_stats(fixture_id=999)
+    assert len(stats) == 1
+    assert isinstance(stats[0], FootballPlayerStat)
+    assert stats[0].ingame_pen_saves == 0   # NOT 8
+    assert stats[0].shootout_pen_saves == 0
+
+
+def test_get_player_stats_penalty_saved_counts_as_ingame_pen_save():
+    provider = _make_provider()
+    response = _player_stats_api_response(saves=5, pen_saved=1)
+    with patch.object(provider, "_get", return_value=response):
+        stats = provider.get_player_stats(fixture_id=999)
+    assert stats[0].ingame_pen_saves == 1   # from penalty.saved, not goals.saves
+    assert stats[0].shootout_pen_saves == 0
+
+
+def test_get_player_stats_passes_through_basic_events():
+    provider = _make_provider()
+    response = _player_stats_api_response(goals=1, assists=2, pen_missed=1, red=True, minutes=78)
+    with patch.object(provider, "_get", return_value=response):
+        stats = provider.get_player_stats(fixture_id=999)
+    s = stats[0]
+    assert (s.goals, s.assists, s.ingame_pen_misses, s.red_card, s.minutes_played) == (1, 2, 1, True, 78)
