@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.models import League, LeagueMember, Match, MatchStatus, Prediction, Tournament, User
 from app.models.dugout_dismissal import DugoutDismissal
 from app.schemas.dugout import DugoutEvent, DugoutEventType
+from app.services.announcements import ACTIVE_ANNOUNCEMENTS
 from app.services.league import _compute_standings, get_user_leagues
 from app.services.match_verdict import get_match_verdict
 
@@ -18,6 +19,18 @@ VERDICT_MAX_TOTAL = 6
 # Hard cap on how many events of each kind the feed will ever show. Extras are
 # discarded even if the user hasn't dismissed them, so no single kind floods it.
 MAX_EVENTS_PER_TYPE = 3
+
+# Feed ordering: a system announcement leads, then the time-sensitive picks CTA,
+# verdicts (freshest result), rank shifts, then social signals.
+_PRIORITY = {
+    DugoutEventType.ANNOUNCEMENT: -1,
+    DugoutEventType.TOURNAMENT_PICKS: 0,
+    DugoutEventType.MATCH_VERDICT: 1,
+    DugoutEventType.RANK_SHIFT: 2,
+    DugoutEventType.CONTRARIAN: 3,
+    DugoutEventType.AGREEMENT: 4,
+    DugoutEventType.STREAK: 5,
+}
 
 
 def _limit_per_type(events: list[DugoutEvent], n: int = MAX_EVENTS_PER_TYPE) -> list[DugoutEvent]:
@@ -94,6 +107,7 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
     if not relevant_match_ids:
         # No locked matches with predictions → only rank shifts + match verdicts possible
         events: list[DugoutEvent] = []
+        events.extend(_announcement_events(db, user_id, leagues))
         events.extend(_tournament_picks_events(db, user_id, leagues))
         events.extend(_match_verdict_events(db, user_id, leagues))
         events.extend(_rank_shift_events(db, user_id, leagues, members_by_league))
@@ -101,7 +115,9 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
             e for e in events
             if (e.type, e.league_id, e.match_id if e.match_id else 0, e.username) not in dismissed_keys
         ]
-        return _limit_per_type(events)
+        events = _limit_per_type(events)
+        events.sort(key=lambda e: _PRIORITY[e.type])
+        return events
 
     # Batch-load all predictions for relevant matches across all members
     all_predictions = (
@@ -128,6 +144,7 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
     }
 
     events = []
+    events.extend(_announcement_events(db, user_id, leagues))
     events.extend(_tournament_picks_events(db, user_id, leagues))
     events.extend(_match_verdict_events(db, user_id, leagues))
     events.extend(_contrarian_events(db, user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map, matches_by_id))
@@ -141,18 +158,43 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
         if (e.type, e.league_id, e.match_id if e.match_id else 0, e.username) not in dismissed_keys
     ]
 
-    # Time-sensitive picks CTA surfaces first, then verdicts (freshest result),
-    # rank shifts, then social signals.
-    priority = {
-        DugoutEventType.TOURNAMENT_PICKS: 0,
-        DugoutEventType.MATCH_VERDICT: 1,
-        DugoutEventType.RANK_SHIFT: 2,
-        DugoutEventType.CONTRARIAN: 3,
-        DugoutEventType.AGREEMENT: 4,
-        DugoutEventType.STREAK: 5,
-    }
     events = _limit_per_type(events)
-    events.sort(key=lambda e: priority[e.type])
+    events.sort(key=lambda e: _PRIORITY[e.type])
+    return events
+
+
+def _announcement_events(
+    db: Session,
+    user_id: int,
+    leagues: list,
+) -> list[DugoutEvent]:
+    """One-off system messages for a curated audience (e.g. a scoring fix).
+
+    Anchored to a single league so a user sees each announcement once regardless
+    of how many leagues they're in; dismissal is keyed by the announcement's
+    stable ``key`` (carried as ``username``)."""
+    if not leagues:
+        return []
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    anchor = leagues[0]  # pre-sorted by member count desc
+
+    events: list[DugoutEvent] = []
+    for ann in ACTIVE_ANNOUNCEMENTS:
+        if now >= ann.expires_at:
+            continue
+        if user_id not in ann.audience:
+            continue
+        events.append(DugoutEvent(
+            type=DugoutEventType.ANNOUNCEMENT,
+            league_name=anchor.name,
+            league_id=anchor.id,
+            match_id=None,
+            username=ann.key,          # dismissal anchor (subject_username)
+            display_name=None,
+            is_me=False,
+            announcement_title=ann.title,
+            announcement_body=ann.body,
+        ))
     return events
 
 

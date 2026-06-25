@@ -583,7 +583,7 @@ export interface VerdictRunner {
 }
 
 export interface DugoutEvent {
-    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift' | 'match_verdict' | 'tournament_picks';
+    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift' | 'match_verdict' | 'tournament_picks' | 'announcement';
     league_name: string;
     league_id: number;
     match_id: number | null;
@@ -617,6 +617,9 @@ export interface DugoutEvent {
     tournament_name?: string | null;
     picks_lock_at?: string | null;
     has_picks?: boolean | null;
+    // One-off announcement fields
+    announcement_title?: string | null;
+    announcement_body?: string | null;
 }
 
 export async function getDugoutEvents() {

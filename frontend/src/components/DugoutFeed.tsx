@@ -6,7 +6,7 @@ import { DugoutEvent, dismissDugoutEvent } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, CheckCheck, Users, X, Trophy, ArrowRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, CheckCheck, Users, X, Trophy, ArrowRight, Megaphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MatchVerdictCard } from '@/components/MatchVerdictCard';
 import { useAuth } from '@/lib/auth';
@@ -232,6 +232,29 @@ function TournamentPicksCard({ event, onDismiss }: { event: DugoutEvent; onDismi
   );
 }
 
+// A one-off system message (e.g. a scoring correction). Neutral/info styling so
+// it reads as an announcement from us, not a social signal about a member.
+function AnnouncementCard({ event, onDismiss }: { event: DugoutEvent; onDismiss: () => void }) {
+  return (
+    <Card className="border-amber-500/30 bg-amber-500/[0.06]">
+      <CardContent className="p-3">
+        <div className="flex items-start gap-2.5">
+          <div className="h-8 w-8 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Megaphone className="h-4 w-4 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">{event.announcement_title ?? 'Announcement'}</p>
+            {event.announcement_body && (
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{event.announcement_body}</p>
+            )}
+          </div>
+          <DismissButton onDismiss={onDismiss} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function eventKey(e: DugoutEvent) {
   return `${e.type}:${e.league_id}:${e.match_id}:${e.username}`;
 }
@@ -268,6 +291,7 @@ export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] })
     );
   }
 
+  const announcementEvents = events.filter(e => e.type === 'announcement');
   const pickEvents = events.filter(e => e.type === 'tournament_picks');
   const verdictEvents = events.filter(e => e.type === 'match_verdict');
   const cardEvents = events.filter(e => e.type === 'contrarian' || e.type === 'streak');
@@ -282,6 +306,11 @@ export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] })
       </div>
 
       <div className="space-y-2">
+        {/* System announcements — lead the feed */}
+        {announcementEvents.map((event) => (
+          <AnnouncementCard key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />
+        ))}
+
         {/* Tournament-picks CTA — marquee item, surfaces first */}
         {pickEvents.map((event) => (
           <TournamentPicksCard key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />

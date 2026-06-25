@@ -10,6 +10,7 @@ class DugoutEventType(str, Enum):
     RANK_SHIFT = "rank_shift"
     MATCH_VERDICT = "match_verdict"
     TOURNAMENT_PICKS = "tournament_picks"
+    ANNOUNCEMENT = "announcement"
 
 
 class VerdictHits(BaseModel):
@@ -83,6 +84,9 @@ class DugoutEvent(BaseModel):
     tournament_name: str | None = None
     picks_lock_at: datetime | None = None
     has_picks: bool | None = None
+    # One-off announcement fields (system message, not tied to a member/match)
+    announcement_title: str | None = None
+    announcement_body: str | None = None
 
 
 class DugoutDismissRequest(BaseModel):
