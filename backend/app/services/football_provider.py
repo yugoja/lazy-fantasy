@@ -64,10 +64,22 @@ class FootballPlayerStat:
     goals: int
     assists: int
     red_card: bool
-    own_goals: int              # always 0 — API limitation, admin corrects via form
+    own_goals: int              # filled from fixtures/events (see get_fixture_events)
     ingame_pen_saves: int
     shootout_pen_saves: int
     ingame_pen_misses: int
+
+
+@dataclass
+class FootballGoalEvent:
+    """A Goal-type event from fixtures/events. `detail` is one of
+    "Normal Goal" | "Own Goal" | "Penalty" | "Missed Penalty". `is_shootout`
+    marks the post-match penalty shootout (which never feeds the scoreline)."""
+    api_player_id: int
+    name: str
+    team_api_id: int
+    detail: str
+    is_shootout: bool
 
 
 _FINISHED_STATUSES = {"FT", "AET", "PEN"}
@@ -119,11 +131,16 @@ class ApiFootballProvider:
         reg = score.get("fulltime", {})
         et = score.get("extratime", {})
         pen = score.get("penalty", {})
+        final = f.get("goals", {}) or {}  # final reg+ET total, excludes shootout
 
         t1_reg = _int(reg.get("home")) or 0
         t2_reg = _int(reg.get("away")) or 0
-        t1_et = _int(et.get("home"))
-        t2_et = _int(et.get("away"))
+        # `score.extratime` holds goals scored *during* ET only, not the running
+        # total — so the end-of-ET scoreline is the top-level `goals` (reg+ET,
+        # shootout excluded). Only populate it when ET was actually played.
+        went_to_et = et.get("home") is not None or et.get("away") is not None
+        t1_et = _int(final.get("home")) if went_to_et else None
+        t2_et = _int(final.get("away")) if went_to_et else None
         p1 = _int(pen.get("home"))
         p2 = _int(pen.get("away"))
 
@@ -349,3 +366,30 @@ class ApiFootballProvider:
                     ingame_pen_misses=pen_missed,
                 ))
         return stats
+
+    def get_fixture_events(self, fixture_id: int) -> list[FootballGoalEvent]:
+        """Goal-type events for a fixture (fixtures/events).
+
+        `fixtures/players` exposes neither own goals nor the penalty shootout, so
+        these are sourced here: own goals (detail "Own Goal") and shootout
+        penalties (comments "Penalty Shootout")."""
+        data = self._get("fixtures/events", fixture=fixture_id)
+        if not data:
+            return []
+        events: list[FootballGoalEvent] = []
+        for e in data.get("response", []):
+            if e.get("type") != "Goal":
+                continue
+            player = e.get("player", {}) or {}
+            pid = player.get("id")
+            if pid is None:
+                continue
+            comments = (e.get("comments") or "")
+            events.append(FootballGoalEvent(
+                api_player_id=int(pid),
+                name=player.get("name", ""),
+                team_api_id=int((e.get("team", {}) or {}).get("id", 0)),
+                detail=e.get("detail", "") or "",
+                is_shootout="shootout" in comments.lower(),
+            ))
+        return events

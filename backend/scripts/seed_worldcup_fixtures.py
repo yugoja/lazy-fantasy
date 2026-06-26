@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.database import SessionLocal
 from app.models import Match, MatchStatus, Team, Tournament
+from app.services.scoring_football import KNOCKOUT_STAGES
 
 DEFAULT_JSON = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -43,6 +44,7 @@ STAGE_MAP = {
     "Semi-finals": "SF",
     "Third-place Playoff": "THIRD",
     "Third Place Play-off": "THIRD",
+    "3rd Place Final": "THIRD",   # api-football's label
     "Final": "FINAL",
 }
 
@@ -138,7 +140,20 @@ def run(json_path: str):
             t1 = team_id[m["home_team"]]
             t2 = team_id[m["away_team"]]
             start = parse_kickoff(m["kickoff_utc"])
-            stage = STAGE_MAP.get(m.get("stage", ""), "GROUP")
+            # Fail loudly on an unrecognised stage rather than silently defaulting
+            # to GROUP — a mislabeled knockout would lose its ×2 multiplier and
+            # advance-winner scoring. Empty label = group (the source omits it).
+            raw_stage = (m.get("stage") or "").strip()
+            if raw_stage in STAGE_MAP:
+                stage = STAGE_MAP[raw_stage]
+            elif raw_stage in ("", "Group Stage"):
+                stage = "GROUP"
+            else:
+                raise ValueError(
+                    f"Unrecognised stage {raw_stage!r} for "
+                    f"{m['home_team']} v {m['away_team']}: add it to STAGE_MAP. "
+                    f"Knockout matches must map into {sorted(KNOCKOUT_STAGES)}."
+                )
             if (t1, t2, start) in existing_keys:
                 skipped += 1
                 continue

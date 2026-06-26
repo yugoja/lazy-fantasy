@@ -7,6 +7,7 @@ from app.services.football_provider import (
     WCSquadPlayer,
     FixtureLineup,
     FootballPlayerStat,
+    FootballGoalEvent,
 )
 
 
@@ -223,3 +224,92 @@ def test_get_player_stats_passes_through_basic_events():
         stats = provider.get_player_stats(fixture_id=999)
     s = stats[0]
     assert (s.goals, s.assists, s.ingame_pen_misses, s.red_card, s.minutes_played) == (1, 2, 1, True, 78)
+
+
+# ── get_fixture_events (own goals + shootout) ─────────────────────────────────
+
+def _events_response(items):
+    return {"response": items}
+
+
+def _goal(player_id=100, name="Scorer", team=10, detail="Normal Goal", comments=None, type_="Goal"):
+    return {"type": type_, "team": {"id": team}, "player": {"id": player_id, "name": name},
+            "detail": detail, "comments": comments}
+
+
+def test_get_fixture_events_parses_own_goal():
+    provider = _make_provider()
+    resp = _events_response([
+        _goal(detail="Normal Goal"),
+        _goal(player_id=200, name="OG Man", detail="Own Goal"),
+        {"type": "Card", "player": {"id": 1}, "detail": "Yellow Card"},  # ignored
+    ])
+    with patch.object(provider, "_get", return_value=resp):
+        events = provider.get_fixture_events(fixture_id=1)
+    assert all(isinstance(e, FootballGoalEvent) for e in events)
+    assert len(events) == 2  # only Goal-type
+    og = [e for e in events if e.detail == "Own Goal"]
+    assert len(og) == 1 and og[0].api_player_id == 200 and og[0].is_shootout is False
+
+
+def test_get_fixture_events_flags_shootout():
+    provider = _make_provider()
+    resp = _events_response([
+        _goal(detail="Penalty", comments="Penalty Shootout"),
+        _goal(detail="Missed Penalty", comments="Penalty Shootout"),
+        _goal(detail="Penalty", comments=None),  # in-game penalty, not shootout
+    ])
+    with patch.object(provider, "_get", return_value=resp):
+        events = provider.get_fixture_events(fixture_id=1)
+    assert sum(e.is_shootout for e in events) == 2
+    assert sum(not e.is_shootout for e in events) == 1
+
+
+def test_get_fixture_events_empty_when_no_data():
+    provider = _make_provider()
+    with patch.object(provider, "_get", return_value=None):
+        assert provider.get_fixture_events(fixture_id=1) == []
+
+
+# ── get_fixture_result (AET scoreline uses cumulative final, not ET-only) ──────
+
+def _fixture_response(status, fulltime, extratime, final, penalty=None):
+    return {"response": [{
+        "fixture": {"status": {"short": status}},
+        "teams": {"home": {"id": 1}, "away": {"id": 2}},
+        "goals": final,
+        "score": {"fulltime": fulltime, "extratime": extratime,
+                  "penalty": penalty or {"home": None, "away": None}},
+    }]}
+
+
+def test_get_fixture_result_aet_uses_cumulative_final_not_et_only():
+    """2022-final shape: 2-2 after 90, +1-1 in ET → final 3-3. extratime is the
+    ET-only delta, so the ET scoreline must come from the cumulative `goals`."""
+    provider = _make_provider()
+    resp = _fixture_response(
+        "PEN",
+        fulltime={"home": 2, "away": 2},
+        extratime={"home": 1, "away": 1},
+        final={"home": 3, "away": 3},
+        penalty={"home": 4, "away": 2},
+    )
+    with patch.object(provider, "_get", return_value=resp):
+        r = provider.get_fixture_result(fixture_id=979139)
+    assert (r.team1_goals_reg, r.team2_goals_reg) == (2, 2)   # end of 90
+    assert (r.team1_goals_et, r.team2_goals_et) == (3, 3)     # end of ET (cumulative)
+    assert (r.penalty_team1, r.penalty_team2) == (4, 2)
+
+
+def test_get_fixture_result_ft_has_no_et():
+    provider = _make_provider()
+    resp = _fixture_response(
+        "FT",
+        fulltime={"home": 1, "away": 0},
+        extratime={"home": None, "away": None},
+        final={"home": 1, "away": 0},
+    )
+    with patch.object(provider, "_get", return_value=resp):
+        r = provider.get_fixture_result(fixture_id=1)
+    assert (r.team1_goals_reg, r.team2_goals_reg) == (1, 0)
+    assert r.team1_goals_et is None and r.team2_goals_et is None

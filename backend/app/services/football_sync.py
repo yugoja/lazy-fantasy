@@ -68,6 +68,7 @@ def sync_match_result(db: Session, match_id: int) -> dict:
 
     resolved_events: list[tuple[Player, FootballPlayerStat]] = []
     unresolved: list[str] = []
+    unresolved_stats: list[FootballPlayerStat] = []
 
     for stat in team1_stats:
         player = _resolve_football_player(stat, team1_db, db)
@@ -75,6 +76,7 @@ def sync_match_result(db: Session, match_id: int) -> dict:
             resolved_events.append((player, stat))
         else:
             unresolved.append(f"{stat.name} (team1)")
+            unresolved_stats.append(stat)
 
     for stat in team2_stats:
         player = _resolve_football_player(stat, team2_db, db)
@@ -82,6 +84,7 @@ def sync_match_result(db: Session, match_id: int) -> dict:
             resolved_events.append((player, stat))
         else:
             unresolved.append(f"{stat.name} (team2)")
+            unresolved_stats.append(stat)
 
     # Two distinct API players can resolve to the same DB player (e.g. Brazil's
     # GK "Ederson" and midfielder "Éderson" both map to one DB "EDERSON"). Keep a
@@ -93,6 +96,17 @@ def sync_match_result(db: Session, match_id: int) -> dict:
         if current is None or stat.minutes_played > current[1].minutes_played:
             deduped[player.id] = (player, stat)
     resolved_events = list(deduped.values())
+
+    # Own goals aren't in fixtures/players — pull them from fixtures/events and
+    # attach to the matching player's stat (shootout events excluded; an own goal
+    # is always in regulation/ET).
+    og_by_api: dict[int, int] = {}
+    for ge in _provider.get_fixture_events(fixture_id):
+        if ge.detail == "Own Goal" and not ge.is_shootout and ge.api_player_id:
+            og_by_api[ge.api_player_id] = og_by_api.get(ge.api_player_id, 0) + 1
+    if og_by_api:
+        for _player, stat in resolved_events:
+            stat.own_goals = og_by_api.get(stat.api_player_id, 0)
 
     # Derive shootout winner
     shootout_winner_id: int | None = None
@@ -127,6 +141,10 @@ def sync_match_result(db: Session, match_id: int) -> dict:
     match.sync_error = sync_error[:500] if sync_error else None
     db.commit()
 
+    # Loud alert when an unresolved API player was actually *picked* by someone:
+    # they silently score 0 (the Isak/GK class of bug). Surface it so we reconcile.
+    unresolved_picks = _flag_unresolved_picks(db, match, unresolved_stats)
+
     try:
         from app.services.player_form_service import update_player_form_after_match
         update_player_form_after_match(db, match, player_stats, result)
@@ -137,6 +155,7 @@ def sync_match_result(db: Session, match_id: int) -> dict:
         "status": "synced",
         "predictions_processed": predictions_processed,
         "unresolved_players": unresolved,
+        "unresolved_picks": unresolved_picks,
         "sync_error": sync_error,
     }
 
@@ -158,7 +177,15 @@ def _apply_football_result(
     t2_total: int,
 ) -> int:
     existing = db.query(FootballMatchResult).filter_by(match_id=match.id).first()
+    # Shootout pen saves can't be derived from the API (a saved and an off-target
+    # shootout penalty both read as "Missed Penalty"), so they're entered by hand.
+    # Preserve any non-zero value across this delete-and-recreate so a re-sync
+    # doesn't wipe the manual correction.
+    manual_shootout_saves: dict[int, int] = {}
     if existing:
+        for ev in existing.player_events:
+            if ev.shootout_pen_saves:
+                manual_shootout_saves[ev.player_id] = ev.shootout_pen_saves
         db.delete(existing)
         db.flush()
 
@@ -179,7 +206,7 @@ def _apply_football_result(
             assists=stat.assists,
             team_goals_conceded=conceded,
             ingame_pen_saves=stat.ingame_pen_saves,
-            shootout_pen_saves=stat.shootout_pen_saves,
+            shootout_pen_saves=manual_shootout_saves.get(player.id, stat.shootout_pen_saves),
             red_card=stat.red_card,
             own_goals=stat.own_goals,
             ingame_pen_misses=stat.ingame_pen_misses,
@@ -205,6 +232,69 @@ def _apply_football_result(
 
     snapshot_league_ranks(db, match.id)
     return calculate_scores(db, match.id)
+
+
+# ---------------------------------------------------------------------------
+# Unresolved-pick alerting
+# ---------------------------------------------------------------------------
+
+def _flag_unresolved_picks(
+    db: Session, match: Match, unresolved_stats: list[FootballPlayerStat]
+) -> list[str]:
+    """Detect unresolved API players who were *picked* for this match — they
+    silently score 0. Returns human-readable warnings and logs each loudly.
+
+    Matches an unresolved API stat to a picked player by surname-token overlap
+    (looser than the sync's own matcher, which already failed on these by
+    definition) so a near-miss like "Husam Ali Mohammad Abudahab" vs
+    "HUSAM ABUDAHAB" still gets surfaced for reconciliation."""
+    from app.models.football_prediction import FootballPrediction
+
+    if not unresolved_stats:
+        return []
+
+    rows = (
+        db.query(
+            FootballPrediction.player_pick_1_id,
+            FootballPrediction.player_pick_2_id,
+            FootballPrediction.player_pick_3_id,
+        )
+        .join(Prediction, Prediction.id == FootballPrediction.prediction_id)
+        .filter(Prediction.match_id == match.id)
+        .all()
+    )
+    pick_counts: dict[int, int] = {}
+    for r in rows:
+        for pid in r:
+            if pid:
+                pick_counts[pid] = pick_counts.get(pid, 0) + 1
+    if not pick_counts:
+        return []
+
+    picked_players = db.query(Player).filter(Player.id.in_(list(pick_counts))).all()
+    # surname token = last token of the normalized name
+    by_surname: dict[str, list[Player]] = {}
+    for p in picked_players:
+        toks = _normalize(p.name).split()
+        if toks:
+            by_surname.setdefault(toks[-1], []).append(p)
+
+    warnings: list[str] = []
+    for stat in unresolved_stats:
+        stat_tokens = set(_normalize(stat.name).split())
+        for surname, players in by_surname.items():
+            # unambiguous: exactly one picked player shares this surname token
+            if surname in stat_tokens and len(players) == 1:
+                p = players[0]
+                n = pick_counts[p.id]
+                msg = (
+                    f"match {match.id}: picked player '{p.name}' (id {p.id}, "
+                    f"{n} pick(s)) likely UNSCORED — API stat '{stat.name}' "
+                    f"(api_id {stat.api_player_id}) did not resolve"
+                )
+                logger.warning(msg)
+                warnings.append(msg)
+    return warnings
 
 
 # ---------------------------------------------------------------------------
