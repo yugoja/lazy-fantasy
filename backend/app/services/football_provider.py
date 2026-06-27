@@ -157,6 +157,14 @@ class ApiFootballProvider:
             penalty_team2=p2,
         )
 
+    def list_fixtures(self, league_id: int, season: int) -> list[dict]:
+        """All raw fixtures for a league+season (used to fill the knockout
+        bracket as ties are published)."""
+        data = self._get("fixtures", league=league_id, season=season)
+        if not data:
+            return []
+        return data.get("response", [])
+
     def get_wc_teams(self, league_id: int, season: int) -> list[dict]:
         """Return list of {id, name} dicts for all teams in the WC league."""
         data = self._get("teams", league=league_id, season=season)

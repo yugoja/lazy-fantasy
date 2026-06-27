@@ -2,7 +2,7 @@
 import logging
 import re
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from difflib import get_close_matches
 
 from sqlalchemy.orm import Session
@@ -11,11 +11,25 @@ from app.models.football_match_result import FootballMatchResult, FootballPlayer
 from app.models.match import Match, MatchStatus
 from app.models.player import Player
 from app.models.prediction import Prediction
+from app.models.team import Team
+from app.models.tournament import Tournament
 from app.services.football_provider import ApiFootballProvider, FootballPlayerStat
 from app.services.league import snapshot_league_ranks
 from app.services.scoring import calculate_scores
 
 logger = logging.getLogger(__name__)
+
+# World Cup knockout bracket fill (see scripts/seed_worldcup_knockouts.py).
+WC_LEAGUE_ID = 1
+WC_SEASON = 2026
+_KNOCKOUT_STAGES = ("R32", "R16", "QF", "SF", "THIRD", "FINAL")
+_ROUND_TO_STAGE = {
+    "Round of 32": "R32", "Round of 16": "R16",
+    "Quarter-finals": "QF", "Semi-finals": "SF",
+    "3rd Place Final": "THIRD", "Final": "FINAL",
+}
+# Tolerance when matching an api-football kickoff to a seeded skeleton slot.
+_FILL_WINDOW = timedelta(hours=6)
 
 _provider: ApiFootballProvider | None = None
 
@@ -151,6 +165,13 @@ def sync_match_result(db: Session, match_id: int) -> dict:
     except Exception as e:
         logger.warning(f"player_form update failed for match {match.id}: {e}")
 
+    # Each completed match may let api-football publish the next-round tie, so
+    # refresh the knockout bracket — this incrementally fills R32 → Final.
+    try:
+        fill_knockout_teams(db)
+    except Exception as e:
+        logger.warning(f"knockout fill after match {match.id} failed: {e}")
+
     return {
         "status": "synced",
         "predictions_processed": predictions_processed,
@@ -158,6 +179,67 @@ def sync_match_result(db: Session, match_id: int) -> dict:
         "unresolved_picks": unresolved_picks,
         "sync_error": sync_error,
     }
+
+
+def fill_knockout_teams(db: Session, apply: bool = True) -> dict:
+    """Fill real teams + external_match_id onto seeded TBD knockout matches as
+    api-football publishes each tie. Matches an api-football knockout fixture to a
+    seeded slot by (stage, kickoff within _FILL_WINDOW). Idempotent; safe to call
+    after every result sync. Returns {filled, unchanged, unmatched}."""
+    if not _provider:
+        return {"filled": 0, "unchanged": 0, "unmatched": 0, "skipped": "no provider"}
+
+    tournaments = db.query(Tournament).filter(Tournament.sport == "football").all()
+    if len(tournaments) != 1:
+        return {"filled": 0, "unchanged": 0, "unmatched": 0, "skipped": "tournament ambiguous"}
+    tournament = tournaments[0]
+
+    ko_matches = (
+        db.query(Match)
+        .filter(Match.tournament_id == tournament.id, Match.stage.in_(_KNOCKOUT_STAGES))
+        .all()
+    )
+    if not ko_matches:
+        return {"filled": 0, "unchanged": 0, "unmatched": 0, "skipped": "no skeleton"}
+
+    team_by_api = {
+        t.api_football_team_id: t
+        for t in db.query(Team).filter(Team.sport == "football",
+                                       Team.api_football_team_id.isnot(None)).all()
+    }
+
+    def _naive(dt: datetime) -> datetime:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None) if dt.tzinfo else dt
+
+    filled = unchanged = unmatched = 0
+    for f in _provider.list_fixtures(WC_LEAGUE_ID, WC_SEASON):
+        stage = _ROUND_TO_STAGE.get(f.get("league", {}).get("round", ""))
+        if stage is None:
+            continue  # group stage / unknown
+        kickoff = _naive(datetime.fromisoformat(f["fixture"]["date"]))
+        cands = [m for m in ko_matches
+                 if m.stage == stage and abs(_naive(m.start_time) - kickoff) <= _FILL_WINDOW]
+        if not cands:
+            unmatched += 1
+            continue
+        m = min(cands, key=lambda mm: abs(_naive(mm.start_time) - kickoff))
+        home = team_by_api.get(str(f["teams"]["home"]["id"]))
+        away = team_by_api.get(str(f["teams"]["away"]["id"]))
+        if not home or not away:
+            unmatched += 1
+            continue
+        fixture_id = str(f["fixture"]["id"])
+        if (m.team_1_id, m.team_2_id, m.external_match_id) == (home.id, away.id, fixture_id):
+            unchanged += 1
+            continue
+        if apply:
+            m.team_1_id, m.team_2_id, m.external_match_id = home.id, away.id, fixture_id
+        filled += 1
+        logger.info(f"knockout fill: {stage} match {m.id} -> "
+                    f"{home.short_name} v {away.short_name} (fixture {fixture_id})")
+    if apply and filled:
+        db.commit()
+    return {"filled": filled, "unchanged": unchanged, "unmatched": unmatched}
 
 
 # ---------------------------------------------------------------------------

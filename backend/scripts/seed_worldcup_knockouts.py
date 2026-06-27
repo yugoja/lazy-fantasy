@@ -174,53 +174,15 @@ def seed(db, tournament, apply: bool):
 # Phase 2: fill decided teams from api-football
 # ---------------------------------------------------------------------------
 def fill(db, tournament, apply: bool):
-    H = {"x-apisports-key": settings.FOOTBALL_API_KEY}
-    r = requests.get(f"{API_BASE}/fixtures", headers=H,
-                     params={"league": WC_LEAGUE_ID, "season": WC_SEASON}, timeout=20)
-    fixtures = r.json().get("response", [])
-    ko_fixtures = [f for f in fixtures if "Group" not in f["league"]["round"]]
-    print(f"api-football knockout fixtures available: {len(ko_fixtures)}")
+    """Delegates to the shared service so the scheduler (which fills after every
+    match) and this CLI use identical logic."""
+    from app.services import football_sync
+    from app.services.football_provider import ApiFootballProvider
 
-    team_by_api = {t.api_football_team_id: t for t in
-                   db.query(Team).filter(Team.sport == "football",
-                                         Team.api_football_team_id != None).all()}  # noqa: E711
-    ko_matches = _knockout_matches(db, tournament.id)
-
-    filled = skipped = unmatched = 0
-    for f in ko_fixtures:
-        stage = STAGE_MAP.get(f["league"]["round"])
-        if stage is None:
-            continue
-        kickoff = _naive_utc(datetime.fromisoformat(f["fixture"]["date"]))
-        # nearest skeleton match of the same stage within the window
-        cands = [m for m in ko_matches if m.stage == stage
-                 and abs(_naive_utc(m.start_time) - kickoff) <= FILL_WINDOW]
-        if not cands:
-            unmatched += 1
-            print(f"  ? no skeleton slot for {stage} @ {kickoff} "
-                  f"({f['teams']['home']['name']} v {f['teams']['away']['name']})")
-            continue
-        m = min(cands, key=lambda mm: abs(_naive_utc(mm.start_time) - kickoff))
-        home = team_by_api.get(str(f["teams"]["home"]["id"]))
-        away = team_by_api.get(str(f["teams"]["away"]["id"]))
-        if not home or not away:
-            unmatched += 1
-            print(f"  ? team not in DB: {f['teams']['home']['name']} / {f['teams']['away']['name']}")
-            continue
-        fixture_id = str(f["fixture"]["id"])
-        if (m.team_1_id, m.team_2_id, m.external_match_id) == (home.id, away.id, fixture_id):
-            skipped += 1
-            continue
-        if apply:
-            m.team_1_id, m.team_2_id = home.id, away.id
-            m.external_match_id = fixture_id
-        filled += 1
-        print(f"  ~ {stage} match {m.id}: {home.short_name} v {away.short_name} "
-              f"(fixture {fixture_id})")
-    if apply:
-        db.commit()
-    print(f"fill [{'APPLY' if apply else 'dry'}]: {filled} filled, {skipped} unchanged, "
-          f"{unmatched} unmatched")
+    football_sync.set_provider(
+        ApiFootballProvider(settings.FOOTBALL_API_KEY, settings.FOOTBALL_API_BASE_URL))
+    res = football_sync.fill_knockout_teams(db, apply=apply)
+    print(f"fill [{'APPLY' if apply else 'dry'}]: {res}")
 
 
 if __name__ == "__main__":
