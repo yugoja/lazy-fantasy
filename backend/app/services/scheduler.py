@@ -128,8 +128,35 @@ def _run_football_fallback_for_match(match_id: int) -> None:
         db.close()
 
 
+# Lineup polling: api-football often posts the confirmed XI only ~20 min before
+# kickoff, well after a single T-1h fire. So poll from ~T-75 and re-arm every
+# few minutes until the XI appears or kickoff arrives (mirrors the result-sync
+# not_finished retry).
+LINEUP_POLL_START_MINUTES = 75
+LINEUP_RETRY_MINUTES = 10
+
+
+def _schedule_lineup_poll(match_id: int, start, now) -> None:
+    """Arm the first lineup-poll job (~T-75), which then re-arms itself until the
+    XI is found or kickoff. If we're already inside the window (e.g. a restart),
+    fire almost immediately. No-op for past matches."""
+    if start <= now:
+        return
+    run_at = max(start - timedelta(minutes=LINEUP_POLL_START_MINUTES), now + timedelta(seconds=5))
+    if run_at < start:
+        scheduler.add_job(
+            _run_lineup_sync,
+            trigger="date",
+            run_date=run_at,
+            args=[match_id],
+            id=f"lineup_sync_{match_id}",
+            replace_existing=True,
+        )
+
+
 def _run_lineup_sync(match_id: int) -> None:
-    """One-shot job: update player availability from confirmed lineup ~1h before kickoff."""
+    """Update availability + formation from the confirmed lineup; if it isn't
+    announced yet, re-arm a retry until kickoff."""
     from app.models.match import Match
     from app.services.football_sync import get_provider
     from app.services.player_form_service import update_availability_from_lineup
@@ -145,7 +172,22 @@ def _run_lineup_sync(match_id: int) -> None:
             return
         lineup = provider.get_fixture_lineup(int(match.external_match_id))
         if lineup is None:
-            logger.info(f"Lineup not yet announced for match {match_id}")
+            kickoff = match.start_time
+            if kickoff.tzinfo is None:
+                kickoff = kickoff.replace(tzinfo=timezone.utc)
+            retry_at = datetime.now(timezone.utc) + timedelta(minutes=LINEUP_RETRY_MINUTES)
+            if retry_at < kickoff:
+                scheduler.add_job(
+                    _run_lineup_sync,
+                    trigger="date",
+                    run_date=retry_at,
+                    args=[match_id],
+                    id=f"lineup_sync_{match_id}",
+                    replace_existing=True,
+                )
+                logger.info(f"Lineup not yet announced for match {match_id} — retrying at {retry_at.isoformat()}")
+            else:
+                logger.info(f"Lineup never announced for match {match_id} before kickoff")
             return
         update_availability_from_lineup(db, match, lineup)
         from app.services.player_form_service import store_match_formation
@@ -204,16 +246,7 @@ def schedule_football_fallback(match) -> None:
     )
     logger.info(f"Scheduled fallback for match {match.id} at {start.isoformat()}")
 
-    lineup_time = start - timedelta(hours=1)
-    if lineup_time > datetime.now(timezone.utc):
-        scheduler.add_job(
-            _run_lineup_sync,
-            trigger="date",
-            run_date=lineup_time,
-            args=[match.id],
-            id=f"lineup_sync_{match.id}",
-            replace_existing=True,
-        )
+    _schedule_lineup_poll(match.id, start, datetime.now(timezone.utc))
 
 
 def _run_football_result_sync(match_id: int) -> None:
@@ -332,16 +365,7 @@ def _schedule_football_jobs_at_startup() -> None:
                 )
                 fallbacks_scheduled += 1
 
-                lineup_time = start - timedelta(hours=1)
-                if lineup_time > now:
-                    scheduler.add_job(
-                        _run_lineup_sync,
-                        trigger="date",
-                        run_date=lineup_time,
-                        args=[match.id],
-                        id=f"lineup_sync_{match.id}",
-                        replace_existing=True,
-                    )
+                _schedule_lineup_poll(match.id, start, now)
 
             # Result sync job — for any linked match not yet result_synced
             if match.external_match_id and match.sync_state != "result_synced":
