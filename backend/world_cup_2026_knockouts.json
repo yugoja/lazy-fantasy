@@ -1,0 +1,230 @@
+{
+  "tournament": "FIFA World Cup 2026",
+  "source": "ESPN fifa.world scoreboard",
+  "matches": [
+    {
+      "slot": 73,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-06-28T19:00:00Z",
+      "venue": "SoFi Stadium",
+      "city": "Inglewood, California"
+    },
+    {
+      "slot": 74,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-06-29T17:00:00Z",
+      "venue": "NRG Stadium",
+      "city": "Houston, Texas"
+    },
+    {
+      "slot": 75,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-06-29T20:30:00Z",
+      "venue": "Gillette Stadium",
+      "city": "Foxborough, Massachusetts"
+    },
+    {
+      "slot": 76,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-06-30T01:00:00Z",
+      "venue": "Estadio BBVA",
+      "city": "Guadalupe"
+    },
+    {
+      "slot": 77,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-06-30T17:00:00Z",
+      "venue": "AT&T Stadium",
+      "city": "Arlington, Texas"
+    },
+    {
+      "slot": 78,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-06-30T21:00:00Z",
+      "venue": "MetLife Stadium",
+      "city": "East Rutherford, New Jersey"
+    },
+    {
+      "slot": 79,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-01T01:00:00Z",
+      "venue": "Estadio Banorte",
+      "city": "Mexico City"
+    },
+    {
+      "slot": 80,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-01T16:00:00Z",
+      "venue": "Mercedes-Benz Stadium",
+      "city": "Atlanta, Georgia"
+    },
+    {
+      "slot": 81,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-01T20:00:00Z",
+      "venue": "Lumen Field",
+      "city": "Seattle, Washington"
+    },
+    {
+      "slot": 82,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-02T00:00:00Z",
+      "venue": "Levi's Stadium",
+      "city": "Santa Clara, California"
+    },
+    {
+      "slot": 83,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-02T19:00:00Z",
+      "venue": "SoFi Stadium",
+      "city": "Inglewood, California"
+    },
+    {
+      "slot": 84,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-02T23:00:00Z",
+      "venue": "BMO Field",
+      "city": "Toronto"
+    },
+    {
+      "slot": 85,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-03T03:00:00Z",
+      "venue": "BC Place",
+      "city": "Vancouver"
+    },
+    {
+      "slot": 86,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-03T18:00:00Z",
+      "venue": "AT&T Stadium",
+      "city": "Arlington, Texas"
+    },
+    {
+      "slot": 87,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-03T22:00:00Z",
+      "venue": "Hard Rock Stadium",
+      "city": "Miami Gardens, Florida"
+    },
+    {
+      "slot": 88,
+      "stage": "Round of 32",
+      "kickoff_utc": "2026-07-04T01:30:00Z",
+      "venue": "GEHA Field at Arrowhead Stadium",
+      "city": "Kansas City, Missouri"
+    },
+    {
+      "slot": 89,
+      "stage": "Round of 16",
+      "kickoff_utc": "2026-07-04T17:00:00Z",
+      "venue": "NRG Stadium",
+      "city": "Houston, Texas"
+    },
+    {
+      "slot": 90,
+      "stage": "Round of 16",
+      "kickoff_utc": "2026-07-04T21:00:00Z",
+      "venue": "Lincoln Financial Field",
+      "city": "Philadelphia, Pennsylvania"
+    },
+    {
+      "slot": 91,
+      "stage": "Round of 16",
+      "kickoff_utc": "2026-07-05T20:00:00Z",
+      "venue": "MetLife Stadium",
+      "city": "East Rutherford, New Jersey"
+    },
+    {
+      "slot": 92,
+      "stage": "Round of 16",
+      "kickoff_utc": "2026-07-06T00:00:00Z",
+      "venue": "Estadio Banorte",
+      "city": "Mexico City"
+    },
+    {
+      "slot": 93,
+      "stage": "Round of 16",
+      "kickoff_utc": "2026-07-06T19:00:00Z",
+      "venue": "AT&T Stadium",
+      "city": "Arlington, Texas"
+    },
+    {
+      "slot": 94,
+      "stage": "Round of 16",
+      "kickoff_utc": "2026-07-07T00:00:00Z",
+      "venue": "Lumen Field",
+      "city": "Seattle, Washington"
+    },
+    {
+      "slot": 95,
+      "stage": "Round of 16",
+      "kickoff_utc": "2026-07-07T16:00:00Z",
+      "venue": "Mercedes-Benz Stadium",
+      "city": "Atlanta, Georgia"
+    },
+    {
+      "slot": 96,
+      "stage": "Round of 16",
+      "kickoff_utc": "2026-07-07T20:00:00Z",
+      "venue": "BC Place",
+      "city": "Vancouver"
+    },
+    {
+      "slot": 97,
+      "stage": "Quarter-finals",
+      "kickoff_utc": "2026-07-09T20:00:00Z",
+      "venue": "Gillette Stadium",
+      "city": "Foxborough, Massachusetts"
+    },
+    {
+      "slot": 98,
+      "stage": "Quarter-finals",
+      "kickoff_utc": "2026-07-10T19:00:00Z",
+      "venue": "SoFi Stadium",
+      "city": "Inglewood, California"
+    },
+    {
+      "slot": 99,
+      "stage": "Quarter-finals",
+      "kickoff_utc": "2026-07-11T21:00:00Z",
+      "venue": "Hard Rock Stadium",
+      "city": "Miami Gardens, Florida"
+    },
+    {
+      "slot": 100,
+      "stage": "Quarter-finals",
+      "kickoff_utc": "2026-07-12T01:00:00Z",
+      "venue": "GEHA Field at Arrowhead Stadium",
+      "city": "Kansas City, Missouri"
+    },
+    {
+      "slot": 101,
+      "stage": "Semi-finals",
+      "kickoff_utc": "2026-07-14T19:00:00Z",
+      "venue": "AT&T Stadium",
+      "city": "Arlington, Texas"
+    },
+    {
+      "slot": 102,
+      "stage": "Semi-finals",
+      "kickoff_utc": "2026-07-15T19:00:00Z",
+      "venue": "Mercedes-Benz Stadium",
+      "city": "Atlanta, Georgia"
+    },
+    {
+      "slot": 103,
+      "stage": "Third-place Playoff",
+      "kickoff_utc": "2026-07-18T21:00:00Z",
+      "venue": "Hard Rock Stadium",
+      "city": "Miami Gardens, Florida"
+    },
+    {
+      "slot": 104,
+      "stage": "Final",
+      "kickoff_utc": "2026-07-19T19:00:00Z",
+      "venue": "MetLife Stadium",
+      "city": "East Rutherford, New Jersey"
+    }
+  ]
+}
