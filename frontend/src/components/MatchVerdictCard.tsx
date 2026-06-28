@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { Check, X } from 'lucide-react';
 import { DugoutEvent, VerdictHits, VerdictWinner, VerdictRunner } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { shareVerdict } from '@/lib/share';
+import { analytics } from '@/lib/analytics';
 
 interface Props {
   event: DugoutEvent;
@@ -292,6 +294,17 @@ export function MatchVerdictCard({ event, currentUsername, onDismiss }: Props) {
   const runnersUp = event.runners_up ?? [];
   const topScore = event.top_score ?? 0;
   const runnerScore = event.runner_up_score;
+
+  const hasVerdict = winners.length > 0;
+  // Fire result_revealed once when a real verdict card first renders for the user.
+  useEffect(() => {
+    if (!hasVerdict) return;
+    analytics.resultRevealed({
+      match_id: String(event.match_id),
+      league_id: event.league_id != null ? String(event.league_id) : undefined,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.match_id, event.league_id, hasVerdict]);
 
   if (winners.length === 0) return null;
 

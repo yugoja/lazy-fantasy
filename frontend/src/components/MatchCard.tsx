@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Clock, Lock, Users, Zap, Loader2, CheckCircle2, X } from 'lucide-react';
 import { cn, getTeamLogoUrl } from '@/lib/utils';
 import { autoPickFootball } from '@/lib/api';
+import { analytics } from '@/lib/analytics';
 
 interface Team {
   name: string;
@@ -117,6 +118,11 @@ export function MatchCard({
     setOverlayError('');
     try {
       await autoPickFootball(id, strategy);
+      analytics.predictionSubmitted({
+        method: 'auto',
+        auto_strategy: strategy,
+        match_id: String(id),
+      });
       setOverlayState('success');
       setLocalHasPredicted(true);
       onAutoPickSuccess?.(id);

@@ -10,6 +10,17 @@ import { TrendingUp, TrendingDown, CheckCheck, Users, X, Trophy, ArrowRight, Meg
 import { cn } from '@/lib/utils';
 import { MatchVerdictCard } from '@/components/MatchVerdictCard';
 import { useAuth } from '@/lib/auth';
+import { analytics } from '@/lib/analytics';
+
+// Fire a dugout_action with the event's context attached.
+function trackDugoutAction(event: DugoutEvent, action: string) {
+  analytics.dugoutAction({
+    action,
+    dugout_event_type: event.type,
+    match_id: event.match_id != null ? String(event.match_id) : undefined,
+    league_id: event.league_id != null ? String(event.league_id) : undefined,
+  });
+}
 
 function getInitials(name: string) {
   return name.substring(0, 2).toUpperCase();
@@ -66,7 +77,7 @@ function ContrарianCard({ event, onDismiss }: { event: DugoutEvent; onDismiss:
         </div>
         {event.match_id && (
           <div className="mt-2 flex justify-end">
-            <Link href={`/leagues/${event.league_id}/match/${event.match_id}`}>
+            <Link href={`/leagues/${event.league_id}/match/${event.match_id}`} onClick={() => trackDugoutAction(event, 'view_picks')}>
               <Button variant="ghost" size="sm" className="h-6 text-[11px] text-orange-400 hover:text-orange-300 px-2">
                 See all picks →
               </Button>
@@ -96,7 +107,7 @@ function AgreementRow({ event, onDismiss }: { event: DugoutEvent; onDismiss: () 
         <p className="text-[11px] text-muted-foreground">{event.league_name}</p>
       </div>
       {event.match_id && (
-        <Link href={`/leagues/${event.league_id}/match/${event.match_id}`}>
+        <Link href={`/leagues/${event.league_id}/match/${event.match_id}`} onClick={() => trackDugoutAction(event, 'compare')}>
           <Button variant="ghost" size="sm" className="h-6 text-[11px] px-2 text-muted-foreground">
             Compare
           </Button>
@@ -157,7 +168,7 @@ function RankShiftRow({ event, onDismiss }: { event: DugoutEvent; onDismiss: () 
         </p>
         <p className="text-[11px] text-muted-foreground">{event.league_name}</p>
       </div>
-      <Link href={`/leaderboard?league=${event.league_id}`}>
+      <Link href={`/leaderboard?league=${event.league_id}`} onClick={() => trackDugoutAction(event, 'leaderboard')}>
         <Button variant="ghost" size="sm" className="h-6 text-[11px] px-2 text-muted-foreground">
           Leaderboard
         </Button>
@@ -221,7 +232,7 @@ function TournamentPicksCard({ event, onDismiss }: { event: DugoutEvent; onDismi
           {countdown && <span className="text-muted-foreground">· closes in {countdown}</span>}
         </div>
 
-        <Link href={`/tournaments/${event.tournament_id}/picks`} className="mt-3.5 block">
+        <Link href={`/tournaments/${event.tournament_id}/picks`} className="mt-3.5 block" onClick={() => trackDugoutAction(event, 'tournament_picks')}>
           <Button className="w-full font-heading font-bold">
             {hasPicks ? 'Tweak your picks' : 'Make your picks'}
             <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -263,7 +274,16 @@ export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] })
   const [events, setEvents] = useState(initialEvents);
   const { username } = useAuth();
 
+  // Fire dugout_opened once per mount when the feed surfaces at least one event.
+  useEffect(() => {
+    if (initialEvents.length > 0) {
+      analytics.dugoutOpened({ event_count: initialEvents.length });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleDismiss = async (event: DugoutEvent) => {
+    trackDugoutAction(event, 'dismiss');
     // Optimistic removal
     setEvents(prev => prev.filter(e => eventKey(e) !== eventKey(event)));
     try {

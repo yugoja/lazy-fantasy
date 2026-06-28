@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { analytics } from '@/lib/analytics';
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUsername(storedUsername);
             setDisplayNameState(storedDisplayName || null);
             setAvatarUrlState(storedAvatarUrl || null);
+            analytics.identify(storedUsername, { display_name: storedDisplayName || undefined });
         }
         setIsLoading(false);
     }, []);
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(true);
         setUsername(username);
         setDisplayNameState(displayName ?? null);
+        analytics.identify(username, { display_name: displayName ?? undefined });
     };
 
     const setDisplayName = (name: string) => {
@@ -72,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUsername(null);
         setDisplayNameState(null);
         setAvatarUrlState(null);
+        analytics.reset();
         router.push('/login');
     };
 
