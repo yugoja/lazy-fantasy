@@ -29,6 +29,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { cn, getTeamLogoUrl } from '@/lib/utils';
+import { analytics } from '@/lib/analytics';
 
 type Player = MatchPlayersResponse['team_1_players'][number];
 
@@ -484,6 +485,12 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
         player_pick_1_id: scorers[0],
         player_pick_2_id: scorers[1],
         player_pick_3_id: scorers[2],
+      });
+      analytics.predictionSubmitted({
+        method: 'manual',
+        match_id: String(matchId),
+        is_knockout: isKnockout,
+        player_picks_count: scorers.length,
       });
       setShowSuccess(true);
       window.dispatchEvent(new Event('prediction-submitted'));
@@ -955,6 +962,7 @@ export function FootballPredictFlow({ matchId, matchData }: { matchId: number; m
               )}`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => analytics.recapShared({ channel: 'whatsapp', match_id: String(matchId) })}
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#25D366]/30 bg-[#25D366]/5 py-2.5 text-sm font-medium text-[#25D366]"
             >
               Nudge your group

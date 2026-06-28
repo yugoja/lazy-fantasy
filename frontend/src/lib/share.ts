@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import type { DugoutEvent } from '@/lib/api';
+import { analytics } from '@/lib/analytics';
 
 interface ShareOptions {
   text: string;
@@ -7,7 +8,11 @@ interface ShareOptions {
   image?: Blob;
 }
 
-export async function shareWithCard({ text, title, image }: ShareOptions): Promise<void> {
+/**
+ * Returns the channel the share actually resolved through, or null if the
+ * user aborted or it failed — lets callers attach analytics with context.
+ */
+export async function shareWithCard({ text, title, image }: ShareOptions): Promise<'native' | 'clipboard' | null> {
   // Tier 1: Web Share API with image file
   if (navigator.share && image) {
     const file = new File([image], 'lazy-fantasy.png', { type: 'image/png' });
@@ -16,9 +21,9 @@ export async function shareWithCard({ text, title, image }: ShareOptions): Promi
     if (navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({ text, title, files: [file] });
-        return;
+        return 'native';
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
+        if (err instanceof Error && err.name === 'AbortError') return null;
         // Fall through to text-only share
       }
     }
@@ -28,9 +33,9 @@ export async function shareWithCard({ text, title, image }: ShareOptions): Promi
   if (navigator.share) {
     try {
       await navigator.share({ text, title });
-      return;
+      return 'native';
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') return;
+      if (err instanceof Error && err.name === 'AbortError') return null;
       // Fall through to clipboard
     }
   }
@@ -39,8 +44,10 @@ export async function shareWithCard({ text, title, image }: ShareOptions): Promi
   try {
     await navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard');
+    return 'clipboard';
   } catch {
     toast.error('Could not share');
+    return null;
   }
 }
 
@@ -98,5 +105,8 @@ function buildVerdictText(event: DugoutEvent): string {
 
 export async function shareVerdict(event: DugoutEvent): Promise<void> {
   const text = buildVerdictText(event);
-  return shareWithCard({ text, title: 'Lazy Fantasy — Match Verdict' });
+  const channel = await shareWithCard({ text, title: 'Lazy Fantasy — Match Verdict' });
+  if (channel) {
+    analytics.recapShared({ channel, match_id: event.match_id ? String(event.match_id) : undefined });
+  }
 }
