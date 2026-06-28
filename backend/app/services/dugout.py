@@ -195,7 +195,7 @@ def _announcement_events(
             announcement_title=ann.title,
             announcement_body=ann.body,
             announcement_link=ann.link,
-            announcement_expires_at=ann.expires_at,
+            announcement_expires_at=ann.expires_at.replace(tzinfo=timezone.utc),
         ))
     return events
 
