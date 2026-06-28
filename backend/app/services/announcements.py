@@ -24,6 +24,7 @@ class Announcement:
     body: str
     expires_at: datetime              # naive UTC; not shown after this
     audience: Optional[frozenset[int]]  # user_ids who should see it; None = everyone
+    link: Optional[str] = None        # frontend href shown as a CTA button
 
 
 GK_SCORING_FIX = Announcement(
@@ -51,6 +52,7 @@ WORLD_CUP_PICKS_OPEN = Announcement(
     ),
     expires_at=datetime(2026, 6, 28, 19, 0),  # first R32 kickoff (SoFi, 19:00 UTC)
     audience=None,                    # show to all users
+    link="/tournaments",
 )
 
 

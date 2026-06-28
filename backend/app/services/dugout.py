@@ -194,6 +194,8 @@ def _announcement_events(
             is_me=False,
             announcement_title=ann.title,
             announcement_body=ann.body,
+            announcement_link=ann.link,
+            announcement_expires_at=ann.expires_at,
         ))
     return events
 

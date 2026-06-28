@@ -620,6 +620,8 @@ export interface DugoutEvent {
     // One-off announcement fields
     announcement_title?: string | null;
     announcement_body?: string | null;
+    announcement_link?: string | null;
+    announcement_expires_at?: string | null;
 }
 
 export async function getDugoutEvents() {

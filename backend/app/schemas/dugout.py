@@ -87,6 +87,8 @@ class DugoutEvent(BaseModel):
     # One-off announcement fields (system message, not tied to a member/match)
     announcement_title: str | None = None
     announcement_body: str | None = None
+    announcement_link: str | None = None       # optional CTA href
+    announcement_expires_at: datetime | None = None  # drives countdown timer
 
 
 class DugoutDismissRequest(BaseModel):

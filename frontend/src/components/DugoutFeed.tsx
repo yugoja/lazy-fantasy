@@ -243,9 +243,57 @@ function TournamentPicksCard({ event, onDismiss }: { event: DugoutEvent; onDismi
   );
 }
 
-// A one-off system message (e.g. a scoring correction). Neutral/info styling so
-// it reads as an announcement from us, not a social signal about a member.
+// A one-off system message (e.g. a scoring correction). When an announcement
+// carries a link + expiry it renders as an urgent CTA with a live countdown;
+// otherwise it falls back to a plain informational card.
 function AnnouncementCard({ event, onDismiss }: { event: DugoutEvent; onDismiss: () => void }) {
+  const hasAction = !!event.announcement_link && !!event.announcement_expires_at;
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!hasAction) return;
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [hasAction]);
+
+  const countdown = hasAction ? formatLockCountdown(event.announcement_expires_at!, nowMs) : null;
+
+  if (hasAction) {
+    return (
+      <Card className="relative overflow-hidden border-amber-500/40 bg-amber-500/[0.07]">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+              <Megaphone className="h-3 w-3" /> Picks closing
+            </span>
+            <DismissButton onDismiss={onDismiss} />
+          </div>
+
+          <h3 className="font-heading text-[17px] font-bold leading-tight">
+            {event.announcement_title ?? 'Announcement'}
+          </h3>
+          {event.announcement_body && (
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{event.announcement_body}</p>
+          )}
+
+          {countdown && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+              <span className="font-mono text-sm font-bold text-amber-400 tabular-nums">{countdown}</span>
+              <span className="text-xs text-muted-foreground">left</span>
+            </div>
+          )}
+
+          <Link href={event.announcement_link!} className="mt-3 block" onClick={() => trackDugoutAction(event, 'announcement_cta')}>
+            <Button className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold">
+              Make your picks <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-amber-500/30 bg-amber-500/[0.06]">
       <CardContent className="p-3">
