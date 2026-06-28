@@ -8,6 +8,7 @@ import InstallPrompt from "@/components/InstallPrompt";
 import IOSInstallPrompt from "@/components/IOSInstallPrompt";
 import NotificationPermission from "@/components/NotificationPermission";
 import { AuthProvider } from "@/lib/auth";
+import PostHogInit from "@/components/PostHogInit";
 import { Toaster } from "sonner";
 
 const dmSans = DM_Sans({
@@ -51,6 +52,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${dmSans.variable} ${spaceGrotesk.variable}`}>
       <body className={dmSans.className}>
+        <PostHogInit />
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         <Script id="sw-register" strategy="afterInteractive">
           {`if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');`}
