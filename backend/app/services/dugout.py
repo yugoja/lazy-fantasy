@@ -182,7 +182,7 @@ def _announcement_events(
     for ann in ACTIVE_ANNOUNCEMENTS:
         if now >= ann.expires_at:
             continue
-        if user_id not in ann.audience:
+        if ann.audience is not None and user_id not in ann.audience:
             continue
         events.append(DugoutEvent(
             type=DugoutEventType.ANNOUNCEMENT,

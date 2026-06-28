@@ -44,7 +44,7 @@ export default function TournamentsPage() {
 
   const loadData = async () => {
     try {
-      const data = await listTournaments();
+      const data = (await listTournaments()).filter(t => t.sport !== 'cricket');
       setTournaments(data);
 
       // Fetch picks for each tournament in parallel to get user pts

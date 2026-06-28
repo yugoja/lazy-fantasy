@@ -55,7 +55,9 @@ export default function FootballTournamentPicks({
     const [ball, setBall] = useState<number | null>(picks.golden_ball_player_id);
     const [boot, setBoot] = useState<number | null>(picks.golden_boot_player_id);
     const [glove, setGlove] = useState<number | null>(picks.golden_glove_player_id);
-    const [playerSearch, setPlayerSearch] = useState('');
+    const [bootSearch, setBootSearch] = useState('');
+    const [ballSearch, setBallSearch] = useState('');
+    const [gloveSearch, setGloveSearch] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [now, setNow] = useState(Date.now());
@@ -73,12 +75,19 @@ export default function FootballTournamentPicks({
         [players],
     );
 
-    const filtered = players.filter(p =>
-        playerSearch === '' ||
-        p.name.toLowerCase().includes(playerSearch.toLowerCase()) ||
-        (p.team_name ?? '').toLowerCase().includes(playerSearch.toLowerCase()),
+    const filterPlayers = (search: string) =>
+        players.filter(p =>
+            search === '' ||
+            p.name.toLowerCase().includes(search.toLowerCase()) ||
+            (p.team_name ?? '').toLowerCase().includes(search.toLowerCase()),
+        );
+
+    const keepersFiltered = players.filter(p =>
+        p.role === 'Goalkeeper' &&
+        (gloveSearch === '' ||
+            p.name.toLowerCase().includes(gloveSearch.toLowerCase()) ||
+            (p.team_name ?? '').toLowerCase().includes(gloveSearch.toLowerCase())),
     );
-    const keepers = filtered.filter(p => p.role === 'Goalkeeper');
 
     const toggleSemi = (teamId: number) => {
         setSelectedSemis(prev => {
@@ -113,7 +122,12 @@ export default function FootballTournamentPicks({
 
     const hasAny = selectedSemis.length > 0 || ball || boot || glove;
 
-    const renderPlayerList = (award: Award, pool: PlayerPickOption[]) => {
+    const renderPlayerList = (
+        award: Award,
+        pool: PlayerPickOption[],
+        search: string,
+        setSearch: (v: string) => void,
+    ) => {
         const selected = awardValue[award];
         const set = awardSetter[award];
         const meta = AWARD_META[award];
@@ -133,11 +147,36 @@ export default function FootballTournamentPicks({
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
+                    {/* Per-award search */}
+                    <div className="relative mb-3">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+                        <input
+                            type="text"
+                            inputMode="search"
+                            aria-label={`Search ${meta.title} players`}
+                            placeholder="Search players..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            maxLength={80}
+                            className="w-full rounded-md border border-border bg-background pl-8 pr-8 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            disabled={!isOpen}
+                        />
+                        {search && (
+                            <button
+                                type="button"
+                                aria-label="Clear search"
+                                onClick={() => setSearch('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
                     <div className="space-y-1 max-h-64 overflow-y-auto">
                         {pool.length === 0 && (
                             <p className="text-sm text-muted-foreground text-center py-4">
-                                {playerSearch
-                                    ? `No players match “${playerSearch}”`
+                                {search
+                                    ? `No players match "${search}"`
                                     : award === 'glove'
                                         ? 'No goalkeepers available yet'
                                         : 'No players available yet'}
@@ -337,35 +376,9 @@ export default function FootballTournamentPicks({
                 </CardContent>
             </Card>
 
-            {/* Player search */}
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                <input
-                    type="text"
-                    inputMode="search"
-                    aria-label="Search players by name or team"
-                    placeholder="Search players..."
-                    value={playerSearch}
-                    onChange={e => setPlayerSearch(e.target.value)}
-                    maxLength={80}
-                    className="w-full rounded-lg border border-border bg-background pl-9 pr-9 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    disabled={!isOpen}
-                />
-                {playerSearch && (
-                    <button
-                        type="button"
-                        aria-label="Clear search"
-                        onClick={() => setPlayerSearch('')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                )}
-            </div>
-
-            {renderPlayerList('boot', filtered)}
-            {renderPlayerList('ball', filtered)}
-            {renderPlayerList('glove', keepers)}
+            {renderPlayerList('boot', filterPlayers(bootSearch), bootSearch, setBootSearch)}
+            {renderPlayerList('ball', filterPlayers(ballSearch), ballSearch, setBallSearch)}
+            {renderPlayerList('glove', keepersFiltered, gloveSearch, setGloveSearch)}
 
             {/* Sticky submit */}
             {isOpen && (
