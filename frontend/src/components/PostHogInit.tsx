@@ -18,6 +18,10 @@ export default function PostHogInit() {
             ui_host: 'https://eu.posthog.com',
             defaults: '2025-05-24', // auto SPA pageviews — do NOT also set capture_pageview
             person_profiles: 'identified_only',
+            // No cookie banner: always use server-side hashing, never cookies/localStorage.
+            // 'always' has no consent dependency (unlike 'on_reject', which gated capture).
+            // Requires "Cookieless server hash mode" enabled in PostHog settings.
+            cookieless_mode: 'always',
         });
     }, []);
 
