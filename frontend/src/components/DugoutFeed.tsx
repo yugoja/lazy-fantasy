@@ -264,7 +264,7 @@ function AnnouncementCard({ event, onDismiss }: { event: DugoutEvent; onDismiss:
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-2 mb-2">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              <Megaphone className="h-3 w-3" /> Picks closing
+              <Megaphone className="h-3 w-3" /> Tournament picks closing
             </span>
             <DismissButton onDismiss={onDismiss} />
           </div>
