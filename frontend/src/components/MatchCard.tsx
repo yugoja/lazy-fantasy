@@ -29,7 +29,23 @@ interface MatchCardProps {
   lineupAnnounced?: boolean;
   className?: string;
   sport?: 'football' | 'cricket';
+  stage?: string | null;
   onAutoPickSuccess?: (matchId: number) => void;
+}
+
+const KNOCKOUT_STAGES = new Set(['R32', 'R16', 'QF', 'SF', 'THIRD', 'FINAL']);
+
+function stageLabel(stage: string): string {
+  switch (stage) {
+    case 'GROUP': return 'Group';
+    case 'R32':   return 'R32';
+    case 'R16':   return 'R16';
+    case 'QF':    return 'QF';
+    case 'SF':    return 'SF';
+    case 'THIRD': return '3rd Place';
+    case 'FINAL': return 'Final';
+    default:      return stage;
+  }
 }
 
 type OverlayState = 'hidden' | 'picking' | 'loading' | 'success' | 'error';
@@ -96,6 +112,7 @@ export function MatchCard({
   lineupAnnounced,
   className,
   sport,
+  stage,
   onAutoPickSuccess,
 }: MatchCardProps) {
   const isLive = status === 'LIVE';
@@ -157,16 +174,25 @@ export function MatchCard({
       <div className="flex flex-col gap-3">
         {/* Status Badge + Predicted + Countdown */}
         <div className="flex items-center gap-2">
-          <Badge
-            variant={isLive ? 'destructive' : isCompleted ? 'secondary' : 'default'}
-            className={cn(
-              'text-[10px] font-semibold uppercase',
-              isLive && 'bg-destructive/10 text-destructive border-destructive/20'
-            )}
-          >
-            {isLive && <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-destructive animate-pulse-dot" />}
-            {isUpcoming ? 'UPCOMING' : status}
-          </Badge>
+          {isLive ? (
+            <Badge className="text-[10px] font-semibold uppercase bg-destructive/10 text-destructive border-destructive/20">
+              <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-destructive animate-pulse-dot" />
+              LIVE
+            </Badge>
+          ) : isCompleted ? (
+            <Badge variant="secondary" className="text-[10px] font-semibold uppercase">
+              DONE
+            </Badge>
+          ) : stage && stage !== 'GROUP' && KNOCKOUT_STAGES.has(stage) ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-400 border border-amber-400/25">
+              {stage === 'FINAL' && <span aria-hidden>★</span>}
+              {stageLabel(stage)}
+            </span>
+          ) : (
+            <Badge variant="default" className="text-[10px] font-semibold uppercase">
+              {stage === 'GROUP' ? 'Group' : 'Upcoming'}
+            </Badge>
+          )}
 
           {pointsEarned !== undefined && (
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-[10px]">

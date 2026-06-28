@@ -29,6 +29,7 @@ interface Match {
     venue?: string;
     lineup_announced: boolean;
     sport?: string;
+    stage?: string | null;
 }
 
 interface Prediction {
@@ -229,6 +230,7 @@ export default function DashboardPage() {
                                 hasPredicted={predictedMatchIds.has(match.id)}
                                 lineupAnnounced={match.lineup_announced}
                                 sport={match.sport as 'football' | 'cricket' | undefined}
+                                stage={match.stage}
                                 onAutoPickSuccess={(matchId) => {
                                     setPredictions(prev => prev.some(p => p.match_id === matchId)
                                         ? prev

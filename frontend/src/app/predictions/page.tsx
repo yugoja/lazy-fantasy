@@ -25,6 +25,7 @@ interface Match {
   venue?: string;
   lineup_announced: boolean;
   sport?: string;
+  stage?: string | null;
 }
 
 interface Prediction {
@@ -129,6 +130,7 @@ export default function PredictionsPage() {
                 hasPredicted={hasPredicted}
                 lineupAnnounced={match.lineup_announced}
                 sport={match.sport as 'football' | 'cricket' | undefined}
+                stage={match.stage}
                 onAutoPickSuccess={(matchId) => {
                   setPredictions(prev => prev.some(p => p.match_id === matchId)
                     ? prev
@@ -708,7 +710,7 @@ export default function PredictionsPage() {
                 if (!pred) {
                   return (
                     <div key={match.id} className="space-y-2">
-                      <MatchCard id={match.id} team1={match.team_1} team2={match.team_2} startTime={match.start_time} status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'} venue={match.venue} hasPredicted={!!predictionByMatch.get(match.id)} lineupAnnounced={match.lineup_announced} sport={match.sport as 'football' | 'cricket' | undefined} />
+                      <MatchCard id={match.id} team1={match.team_1} team2={match.team_2} startTime={match.start_time} status={match.status as 'SCHEDULED' | 'LIVE' | 'COMPLETED'} venue={match.venue} hasPredicted={!!predictionByMatch.get(match.id)} lineupAnnounced={match.lineup_announced} sport={match.sport as 'football' | 'cricket' | undefined} stage={match.stage} />
                       {link && (
                         <Link href={link} className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-primary/40 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 hover:border-primary/60 transition-colors">
                           <Users className="h-4 w-4" />
