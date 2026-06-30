@@ -239,8 +239,10 @@ export default function PredictionsPage() {
     const isProcessed = pred.is_processed;
     const isKnockout = pred.stage ? KNOCKOUT_STAGES.has(pred.stage) : false;
 
-    const totalGoals1 = (pred.actual_team1_goals_reg ?? 0) + (pred.actual_team1_goals_et ?? 0);
-    const totalGoals2 = (pred.actual_team2_goals_reg ?? 0) + (pred.actual_team2_goals_et ?? 0);
+    // goals_et is the end-of-ET total (not just ET goals); use directly when ET was played.
+    const hasET = pred.actual_team1_goals_et !== null && pred.actual_team1_goals_et !== undefined;
+    const totalGoals1 = hasET ? pred.actual_team1_goals_et! : (pred.actual_team1_goals_reg ?? 0);
+    const totalGoals2 = hasET ? pred.actual_team2_goals_et! : (pred.actual_team2_goals_reg ?? 0);
     const hasResult = pred.actual_team1_goals_reg !== null;
 
     const predictedResult = pred.team1_goals > pred.team2_goals

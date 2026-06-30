@@ -312,8 +312,11 @@ function FootballPredictionCard({
     : null;
 
   const hasResult = pred.is_processed && pred.actual_team1_goals_reg !== null;
-  const actualT1 = (pred.actual_team1_goals_reg ?? 0) + (pred.actual_team1_goals_et ?? 0);
-  const actualT2 = (pred.actual_team2_goals_reg ?? 0) + (pred.actual_team2_goals_et ?? 0);
+  // goals_et is the end-of-ET total (includes regulation), not just extra-time goals.
+  // Use it directly when ET was played; otherwise use the regulation score.
+  const hasET = pred.actual_team1_goals_et !== null && pred.actual_team1_goals_et !== undefined;
+  const actualT1 = hasET ? pred.actual_team1_goals_et! : (pred.actual_team1_goals_reg ?? 0);
+  const actualT2 = hasET ? pred.actual_team2_goals_et! : (pred.actual_team2_goals_reg ?? 0);
   const exactScore = hasResult && pred.team1_goals === actualT1 && pred.team2_goals === actualT2;
   const myPickIds = !pred.is_me && myPred ? new Set(myPred.player_picks.map(p => p.player.id)) : null;
 
@@ -365,10 +368,17 @@ function FootballPredictionCard({
           <span className="text-xs font-medium text-muted-foreground w-10 truncate">{match.team_2.short_name}</span>
           {hasResult && (
             exactScore
-              ? <span className="text-[10px] text-green-400 font-semibold ml-1">exact</span>
-              : <span className="text-[10px] text-muted-foreground ml-1 whitespace-nowrap">actual {actualT1}–{actualT2}</span>
+              ? <span className="text-[10px] text-green-400 font-semibold ml-1">exact{hasET ? ' aet' : ''}</span>
+              : <span className="text-[10px] text-muted-foreground ml-1 whitespace-nowrap">
+                  actual {actualT1}–{actualT2}{hasET ? ' aet' : ''}
+                </span>
           )}
         </div>
+        {hasResult && pred.actual_shootout_winner && (
+          <p className="text-[10px] text-center text-muted-foreground">
+            {pred.actual_shootout_winner.short_name} <span className="font-medium">win on pens</span>
+          </p>
+        )}
         {pred.advance_winner && (
           <p className="text-[10px] text-center text-muted-foreground">
             Advances: <span className="font-medium text-foreground">{pred.advance_winner.short_name}</span>
