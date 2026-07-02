@@ -4,11 +4,9 @@ These are temporary, hand-curated system messages surfaced in the dugout feed.
 Each has a stable ``key`` (used as the dismissal anchor's subject_username),
 an expiry after which it stops showing, and an audience (None = all users).
 
-GK_SCORING_FIX (2026-06-25): on 2026-06-24 a parser bug was fixed that had been
-crediting goalkeepers +5 for every routine save (it read total saves instead of
-penalty saves). All completed matches were re-scored; the users below are those
-whose total *dropped* as a result. Safe to delete this module's entry after the
-expiry passes.
+To add a new announcement: create an ``Announcement`` instance below, add it to
+``ACTIVE_ANNOUNCEMENTS``, and remove it (or leave ``ACTIVE_ANNOUNCEMENTS = ()``)
+once its expiry has passed.
 """
 from __future__ import annotations
 
@@ -27,21 +25,6 @@ class Announcement:
     link: Optional[str] = None        # frontend href shown as a CTA button
 
 
-GK_SCORING_FIX = Announcement(
-    key="gk_scoring_fix_2026_06",
-    title="Scoring correction",
-    body=(
-        "We found and fixed a bug that was over-crediting goalkeeper saves, so "
-        "we re-scored the matches it touched. Your total dropped a little as a "
-        "result — the leaderboards are accurate now. Sorry for the mix-up!"
-    ),
-    expires_at=datetime(2026, 7, 2),  # ~1 week
-    audience=frozenset({
-        51, 73, 47, 2, 57, 46, 4, 74, 71, 43,
-        75, 60, 70, 38, 66, 72, 62, 39, 59,
-    }),
-)
-
 WORLD_CUP_PICKS_OPEN = Announcement(
     key="wc2026_picks_closing_soon",
     title="Make your World Cup picks!",
@@ -57,4 +40,4 @@ WORLD_CUP_PICKS_OPEN = Announcement(
 
 
 # All active announcements considered by the dugout generator.
-ACTIVE_ANNOUNCEMENTS: tuple[Announcement, ...] = (GK_SCORING_FIX, WORLD_CUP_PICKS_OPEN)
+ACTIVE_ANNOUNCEMENTS: tuple[Announcement, ...] = (WORLD_CUP_PICKS_OPEN,)
