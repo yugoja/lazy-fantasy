@@ -212,6 +212,7 @@ def fill_knockout_teams(db: Session, apply: bool = True) -> dict:
         return dt.astimezone(timezone.utc).replace(tzinfo=None) if dt.tzinfo else dt
 
     filled = unchanged = unmatched = 0
+    newly_filled: list[Match] = []
     for f in _provider.list_fixtures(WC_LEAGUE_ID, WC_SEASON):
         stage = _ROUND_TO_STAGE.get(f.get("league", {}).get("round", ""))
         if stage is None:
@@ -234,11 +235,26 @@ def fill_knockout_teams(db: Session, apply: bool = True) -> dict:
             continue
         if apply:
             m.team_1_id, m.team_2_id, m.external_match_id = home.id, away.id, fixture_id
+            newly_filled.append(m)
         filled += 1
         logger.info(f"knockout fill: {stage} match {m.id} -> "
                     f"{home.short_name} v {away.short_name} (fixture {fixture_id})")
     if apply and filled:
         db.commit()
+
+    # A tie only gets its result-sync job scheduled at backend startup or match
+    # creation — neither of which sees a knockout slot that gets linked *between*
+    # restarts (its teams are decided only as earlier rounds finish). Schedule it
+    # here so each freshly-linked match syncs on its own, overdue ones included.
+    # Lazy import avoids a circular dependency with the scheduler module.
+    if newly_filled:
+        try:
+            from app.services.scheduler import schedule_football_result_sync
+            for m in newly_filled:
+                schedule_football_result_sync(m)
+        except Exception as e:
+            logger.warning(f"could not schedule result sync for filled knockout ties: {e}")
+
     return {"filled": filled, "unchanged": unchanged, "unmatched": unmatched}
 
 
