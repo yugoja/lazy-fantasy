@@ -319,6 +319,63 @@ def schedule_football_result_sync(match) -> None:
     logger.info(f"Scheduled result sync for match {match.id} at {fire_at.isoformat()}")
 
 
+def _run_football_result_sweep() -> None:
+    """Periodic reconciler: sync any linked, past-kickoff football match that
+    isn't result_synced yet.
+
+    A safety net that needs no server restart and no surviving per-match job — it
+    covers ties linked between restarts, in-memory jobs lost on restart, and any
+    missed one-shot. Idempotent: matches already synced are excluded by
+    sync_state, and get_fixture_result returns None for anything not yet finished
+    (so an in-progress match is simply retried on the next sweep).
+    """
+    from app.services.football_sync import get_provider, sync_match_result
+    from app.models.tournament import Tournament
+
+    if not get_provider():
+        return
+
+    db: Session = SessionLocal()
+    try:
+        now = datetime.now(timezone.utc)
+        candidates = (
+            db.query(Match)
+            .join(Tournament, Match.tournament_id == Tournament.id)
+            .filter(
+                Tournament.sport == "football",
+                Match.external_match_id.isnot(None),
+                Match.sync_state != "result_synced",
+            )
+            .all()
+        )
+
+        synced = 0
+        overdue = 0
+        for match in candidates:
+            start = match.start_time
+            if start.tzinfo is None:
+                start = start.replace(tzinfo=timezone.utc)
+            # Only touch matches that should be over (~2h post-kickoff) to avoid
+            # pointless API calls on in-progress games.
+            if start > now - timedelta(hours=2):
+                continue
+            overdue += 1
+            try:
+                res = sync_match_result(db, match.id)
+                if res.get("status") == "synced":
+                    synced += 1
+            except Exception as e:
+                logger.warning(f"result sweep: match {match.id} failed: {e}")
+                db.rollback()
+
+        if overdue:
+            logger.info(f"Football result sweep: synced {synced}/{overdue} overdue match(es)")
+    except Exception as e:
+        logger.error(f"Football result sweep failed: {e}")
+    finally:
+        db.close()
+
+
 def _schedule_football_jobs_at_startup() -> None:
     """At startup, register date-triggered jobs for all upcoming and overdue football matches.
 
@@ -418,6 +475,18 @@ def start_scheduler() -> None:
         from app.services.football_sync import set_provider as set_football_provider
         set_football_provider(ApiFootballProvider(settings.FOOTBALL_API_KEY, settings.FOOTBALL_API_BASE_URL))
         logger.info("Football provider configured")
+
+        # Periodic safety net: reconcile any linked, finished-but-unsynced match.
+        # Makes result scoring restart-independent — the per-match one-shot jobs
+        # are in-memory, this sweep isn't (it re-derives work from the DB).
+        scheduler.add_job(
+            _run_football_result_sweep,
+            trigger="interval",
+            minutes=30,
+            id="football_result_sweep",
+            replace_existing=True,
+        )
+        logger.info("Football result sweep registered (every 30m)")
     else:
         logger.info("FOOTBALL_API_KEY not set — football sync skipped")
 
