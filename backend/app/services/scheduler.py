@@ -320,17 +320,28 @@ def schedule_football_result_sync(match) -> None:
 
 
 def _run_football_result_sweep() -> None:
-    """Periodic reconciler: sync any linked, past-kickoff football match that
-    isn't result_synced yet.
+    """Periodic reconciler for football result scoring. Two jobs:
 
-    A safety net that needs no server restart and no surviving per-match job — it
-    covers ties linked between restarts, in-memory jobs lost on restart, and any
-    missed one-shot. Idempotent: matches already synced are excluded by
-    sync_state, and get_fixture_result returns None for anything not yet finished
-    (so an in-progress match is simply retried on the next sweep).
+    1. **Missing sync** — sync any linked, past-kickoff match not yet
+       result_synced. Covers ties linked between restarts, in-memory jobs lost on
+       restart, and any missed one-shot.
+    2. **Stale minutes** — re-sync a recently-finished match whose stored player
+       minutes look like a mid-match snapshot. api-football can mark a fixture
+       finished while its per-player minutes are still stale, which silently
+       sinks appearance/clean-sheet points (a finished match always has an
+       unsubbed player at the full duration — 90, or ~120 after extra time).
+       Bounded to ~12h post-kickoff so a permanently-incomplete fixture can't
+       loop, and self-limiting: a match drops out as soon as its minutes look
+       plausible, so a correctly-synced match is never touched.
+
+    Needs no server restart and no surviving per-match job (re-derived from DB).
+    get_fixture_result returns None for anything not finished, so an in-progress
+    match is simply retried next sweep.
     """
     from app.services.football_sync import get_provider, sync_match_result
     from app.models.tournament import Tournament
+    from app.models.football_match_result import FootballMatchResult, FootballPlayerMatchEvent
+    from sqlalchemy import func
 
     if not get_provider():
         return
@@ -338,38 +349,63 @@ def _run_football_result_sweep() -> None:
     db: Session = SessionLocal()
     try:
         now = datetime.now(timezone.utc)
-        candidates = (
+        matches = (
             db.query(Match)
             .join(Tournament, Match.tournament_id == Tournament.id)
             .filter(
                 Tournament.sport == "football",
                 Match.external_match_id.isnot(None),
-                Match.sync_state != "result_synced",
             )
             .all()
         )
+        # Stored max minutes per match + whether it went to extra time (drives the
+        # plausibility floor). Two grouped queries, not one per match.
+        max_min = dict(
+            db.query(
+                FootballPlayerMatchEvent.match_id,
+                func.max(FootballPlayerMatchEvent.minutes_played),
+            )
+            .group_by(FootballPlayerMatchEvent.match_id)
+            .all()
+        )
+        went_et = {
+            mid for (mid,) in db.query(FootballMatchResult.match_id)
+            .filter(FootballMatchResult.team1_goals_et.isnot(None))
+            .all()
+        }
 
-        synced = 0
-        overdue = 0
-        for match in candidates:
+        to_sync: list[tuple[str, Match]] = []
+        for match in matches:
             start = match.start_time
             if start.tzinfo is None:
                 start = start.replace(tzinfo=timezone.utc)
-            # Only touch matches that should be over (~2h post-kickoff) to avoid
-            # pointless API calls on in-progress games.
-            if start > now - timedelta(hours=2):
-                continue
-            overdue += 1
+            age = now - start
+            if age < timedelta(hours=2):
+                continue  # not over yet — avoid pointless API calls
+
+            if match.sync_state != "result_synced":
+                to_sync.append(("missing", match))
+            elif age < timedelta(hours=12):
+                floor = 105 if match.id in went_et else 90
+                if (max_min.get(match.id) or 0) < floor:
+                    to_sync.append(("stale", match))
+
+        synced = 0
+        for reason, match in to_sync:
             try:
                 res = sync_match_result(db, match.id)
                 if res.get("status") == "synced":
                     synced += 1
             except Exception as e:
-                logger.warning(f"result sweep: match {match.id} failed: {e}")
+                logger.warning(f"result sweep ({reason}): match {match.id} failed: {e}")
                 db.rollback()
 
-        if overdue:
-            logger.info(f"Football result sweep: synced {synced}/{overdue} overdue match(es)")
+        if to_sync:
+            stale_n = sum(1 for r, _ in to_sync if r == "stale")
+            logger.info(
+                f"Football result sweep: synced {synced}/{len(to_sync)} match(es)"
+                + (f" ({stale_n} stale-minutes)" if stale_n else "")
+            )
     except Exception as e:
         logger.error(f"Football result sweep failed: {e}")
     finally:
