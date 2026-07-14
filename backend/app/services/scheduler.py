@@ -320,8 +320,13 @@ def schedule_football_result_sync(match) -> None:
 
 
 def _run_football_result_sweep() -> None:
-    """Periodic reconciler for football result scoring. Two jobs:
+    """Periodic reconciler for football knockout results. Three jobs:
 
+    0. **Bracket fill** — link any knockout tie api-football has newly published.
+       fill_knockout_teams otherwise only runs at the end of a result sync, so a
+       tie published *between rounds* (all quarter-finals done, semis not played)
+       has nothing to trigger it and sits TBD — blocking predictions. Running it
+       here links it within a sweep interval (and schedules its own result sync).
     1. **Missing sync** — sync any linked, past-kickoff match not yet
        result_synced. Covers ties linked between restarts, in-memory jobs lost on
        restart, and any missed one-shot.
@@ -338,7 +343,7 @@ def _run_football_result_sweep() -> None:
     get_fixture_result returns None for anything not finished, so an in-progress
     match is simply retried next sweep.
     """
-    from app.services.football_sync import get_provider, sync_match_result
+    from app.services.football_sync import get_provider, sync_match_result, fill_knockout_teams
     from app.models.tournament import Tournament
     from app.models.football_match_result import FootballMatchResult, FootballPlayerMatchEvent
     from sqlalchemy import func
@@ -348,6 +353,14 @@ def _run_football_result_sweep() -> None:
 
     db: Session = SessionLocal()
     try:
+        # Link any newly-published knockout tie (schedules its own result sync).
+        try:
+            fill = fill_knockout_teams(db)
+            if fill.get("filled"):
+                logger.info(f"Football result sweep: filled {fill['filled']} knockout tie(s)")
+        except Exception as e:
+            logger.warning(f"result sweep: knockout fill failed: {e}")
+
         now = datetime.now(timezone.utc)
         matches = (
             db.query(Match)
