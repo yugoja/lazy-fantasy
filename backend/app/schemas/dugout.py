@@ -10,7 +10,18 @@ class DugoutEventType(str, Enum):
     RANK_SHIFT = "rank_shift"
     MATCH_VERDICT = "match_verdict"
     TOURNAMENT_PICKS = "tournament_picks"
+    TOURNAMENT_VERDICT = "tournament_verdict"
     ANNOUNCEMENT = "announcement"
+
+
+class TournamentVerdictLine(BaseModel):
+    """One row of a Mega Picks recap: what the user picked vs the actual result."""
+    category: str            # "semi" | "boot" | "ball" | "glove"
+    label: str               # display label, e.g. "Golden Boot"
+    pick: str | None = None      # user's pick (team short name or player name)
+    actual: str | None = None    # actual winner (players only; semis are a set)
+    correct: bool = False
+    points: int = 0
 
 
 class VerdictHits(BaseModel):
@@ -84,6 +95,11 @@ class DugoutEvent(BaseModel):
     tournament_name: str | None = None
     picks_lock_at: datetime | None = None
     has_picks: bool | None = None
+    # Tournament-verdict (Mega Picks recap) fields
+    tv_points: int | None = None          # total tournament-pick points earned
+    tv_semis_correct: int | None = None   # correct semi-finalists (0-4)
+    tv_semis_total: int | None = None     # how many semis the user picked (usually 4)
+    tv_lines: list[TournamentVerdictLine] | None = None
     # One-off announcement fields (system message, not tied to a member/match)
     announcement_title: str | None = None
     announcement_body: str | None = None

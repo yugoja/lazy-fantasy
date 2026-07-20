@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, TrendingDown, CheckCheck, Users, X, Trophy, ArrowRight, Megaphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MatchVerdictCard } from '@/components/MatchVerdictCard';
+import { TournamentVerdictCard } from '@/components/TournamentVerdictCard';
 import { useAuth } from '@/lib/auth';
 import { analytics } from '@/lib/analytics';
 
@@ -361,6 +362,7 @@ export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] })
 
   const announcementEvents = events.filter(e => e.type === 'announcement');
   const pickEvents = events.filter(e => e.type === 'tournament_picks');
+  const tournamentVerdictEvents = events.filter(e => e.type === 'tournament_verdict');
   const verdictEvents = events.filter(e => e.type === 'match_verdict');
   const cardEvents = events.filter(e => e.type === 'contrarian' || e.type === 'streak');
   const rowEvents = events.filter(e => e.type === 'agreement' || e.type === 'rank_shift');
@@ -382,6 +384,11 @@ export function DugoutFeed({ events: initialEvents }: { events: DugoutEvent[] })
         {/* Tournament-picks CTA — marquee item, surfaces first */}
         {pickEvents.map((event) => (
           <TournamentPicksCard key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />
+        ))}
+
+        {/* Mega Picks recap — full-width, once results are in */}
+        {tournamentVerdictEvents.map((event) => (
+          <TournamentVerdictCard key={eventKey(event)} event={event} onDismiss={() => handleDismiss(event)} />
         ))}
 
         {/* Verdict cards — full-width, own row */}

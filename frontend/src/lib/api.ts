@@ -582,8 +582,17 @@ export interface VerdictRunner {
     new_rank: number;
 }
 
+export interface TournamentVerdictLine {
+    category: 'semi' | 'boot' | 'ball' | 'glove' | string;
+    label: string;
+    pick: string | null;
+    actual: string | null;
+    correct: boolean;
+    points: number;
+}
+
 export interface DugoutEvent {
-    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift' | 'match_verdict' | 'tournament_picks' | 'announcement';
+    type: 'contrarian' | 'agreement' | 'streak' | 'rank_shift' | 'match_verdict' | 'tournament_picks' | 'tournament_verdict' | 'announcement';
     league_name: string;
     league_id: number;
     match_id: number | null;
@@ -617,6 +626,11 @@ export interface DugoutEvent {
     tournament_name?: string | null;
     picks_lock_at?: string | null;
     has_picks?: boolean | null;
+    // Tournament-verdict (Mega Picks recap) fields
+    tv_points?: number | null;
+    tv_semis_correct?: number | null;
+    tv_semis_total?: number | null;
+    tv_lines?: TournamentVerdictLine[] | null;
     // One-off announcement fields
     announcement_title?: string | null;
     announcement_body?: string | null;

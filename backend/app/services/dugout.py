@@ -25,11 +25,12 @@ MAX_EVENTS_PER_TYPE = 3
 _PRIORITY = {
     DugoutEventType.ANNOUNCEMENT: -1,
     DugoutEventType.TOURNAMENT_PICKS: 0,
-    DugoutEventType.MATCH_VERDICT: 1,
-    DugoutEventType.RANK_SHIFT: 2,
-    DugoutEventType.CONTRARIAN: 3,
-    DugoutEventType.AGREEMENT: 4,
-    DugoutEventType.STREAK: 5,
+    DugoutEventType.TOURNAMENT_VERDICT: 1,
+    DugoutEventType.MATCH_VERDICT: 2,
+    DugoutEventType.RANK_SHIFT: 3,
+    DugoutEventType.CONTRARIAN: 4,
+    DugoutEventType.AGREEMENT: 5,
+    DugoutEventType.STREAK: 6,
 }
 
 
@@ -109,6 +110,7 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
         events: list[DugoutEvent] = []
         events.extend(_announcement_events(db, user_id, leagues))
         events.extend(_tournament_picks_events(db, user_id, leagues))
+        events.extend(_tournament_verdict_events(db, user_id, leagues))
         events.extend(_match_verdict_events(db, user_id, leagues))
         events.extend(_rank_shift_events(db, user_id, leagues, members_by_league))
         events = [
@@ -146,6 +148,7 @@ def get_dugout_events(db: Session, user_id: int) -> list[DugoutEvent]:
     events = []
     events.extend(_announcement_events(db, user_id, leagues))
     events.extend(_tournament_picks_events(db, user_id, leagues))
+    events.extend(_tournament_verdict_events(db, user_id, leagues))
     events.extend(_match_verdict_events(db, user_id, leagues))
     events.extend(_contrarian_events(db, user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map, matches_by_id))
     events.extend(_agreement_events(user_id, leagues, members_by_league, locked_match_ids_by_league, preds_by_match_user, user_map, league_map, matches_by_id))
@@ -266,6 +269,99 @@ def _tournament_picks_events(
             tournament_name=target.name,
             picks_lock_at=deadline,
             has_picks=has_picks,
+        )
+    ]
+
+
+def _tournament_verdict_events(
+    db: Session,
+    user_id: int,
+    leagues: list,
+) -> list[DugoutEvent]:
+    """A single recap card of how the user's Mega Picks scored, once results are
+    in (the tournament pick is processed). Not league-specific in content —
+    anchored to one league for display/dismissal, mirroring the CTA card.
+    """
+    from app.models import Tournament
+    from app.models.tournament_pick import TournamentPick
+    from app.models.team import Team
+    from app.models.player import Player
+    from app.schemas.dugout import TournamentVerdictLine
+
+    if not leagues:
+        return []
+    league = next((l for l in leagues if l.sport == "football"), leagues[0])
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return []
+
+    pick = (
+        db.query(TournamentPick)
+        .join(Tournament, TournamentPick.tournament_id == Tournament.id)
+        .filter(
+            TournamentPick.user_id == user_id,
+            TournamentPick.is_processed == True,
+            Tournament.sport == "football",
+        )
+        .order_by(Tournament.start_date.desc())
+        .first()
+    )
+    if not pick:
+        return []
+    tournament = db.query(Tournament).filter(Tournament.id == pick.tournament_id).first()
+
+    def _team_short(tid):
+        t = db.query(Team).filter(Team.id == tid).first() if tid else None
+        return t.short_name if t else None
+
+    def _player_name(pid):
+        p = db.query(Player).filter(Player.id == pid).first() if pid else None
+        return p.name if p else None
+
+    result_semis = {
+        tournament.result_top4_team1_id, tournament.result_top4_team2_id,
+        tournament.result_top4_team3_id, tournament.result_top4_team4_id,
+    } - {None}
+    pick_semis = [t for t in (
+        pick.top4_team1_id, pick.top4_team2_id, pick.top4_team3_id, pick.top4_team4_id,
+    ) if t]
+    semis_correct = len([t for t in pick_semis if t in result_semis])
+
+    lines: list[TournamentVerdictLine] = []
+    for tid in pick_semis:
+        hit = tid in result_semis
+        lines.append(TournamentVerdictLine(
+            category="semi", label="Semi-finalist",
+            pick=_team_short(tid), actual=None, correct=hit, points=25 if hit else 0,
+        ))
+    for cat, label, pick_pid, res_pid in (
+        ("boot", "Golden Boot", pick.golden_boot_player_id, tournament.result_golden_boot_player_id),
+        ("ball", "Golden Ball", pick.golden_ball_player_id, tournament.result_golden_ball_player_id),
+        ("glove", "Golden Glove", pick.golden_glove_player_id, tournament.result_golden_glove_player_id),
+    ):
+        hit = bool(pick_pid and pick_pid == res_pid)
+        lines.append(TournamentVerdictLine(
+            category=cat, label=label,
+            pick=_player_name(pick_pid), actual=_player_name(res_pid),
+            correct=hit, points=50 if hit else 0,
+        ))
+
+    return [
+        DugoutEvent(
+            type=DugoutEventType.TOURNAMENT_VERDICT,
+            league_name=league.name,
+            league_id=league.id,
+            match_id=None,
+            username=user.username,
+            display_name=user.display_name,
+            is_me=True,
+            tournament_id=tournament.id,
+            tournament_name=tournament.name,
+            tv_points=pick.points_earned,
+            tv_semis_correct=semis_correct,
+            tv_semis_total=len(pick_semis),
+            tv_lines=lines,
         )
     ]
 
