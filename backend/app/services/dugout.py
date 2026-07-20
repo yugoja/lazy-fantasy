@@ -273,14 +273,21 @@ def _tournament_picks_events(
     ]
 
 
+# How long the Mega Picks recap lingers in the dugout after a tournament ends
+# (anchored to the last match, not Tournament.end_date — that's the picks-lock
+# date, not the final). After this it stops surfacing on its own.
+VERDICT_EXPIRE_DAYS = 5
+
+
 def _tournament_verdict_events(
     db: Session,
     user_id: int,
     leagues: list,
 ) -> list[DugoutEvent]:
     """A single recap card of how the user's Mega Picks scored, once results are
-    in (the tournament pick is processed). Not league-specific in content —
-    anchored to one league for display/dismissal, mirroring the CTA card.
+    in (the tournament pick is processed). Auto-expires VERDICT_EXPIRE_DAYS after
+    the tournament's final match. Not league-specific in content — anchored to
+    one league for display/dismissal, mirroring the CTA card.
     """
     from app.models import Tournament
     from app.models.tournament_pick import TournamentPick
@@ -310,6 +317,21 @@ def _tournament_verdict_events(
     if not pick:
         return []
     tournament = db.query(Tournament).filter(Tournament.id == pick.tournament_id).first()
+
+    # Auto-expire the recap a few days after the tournament actually ends. Anchor
+    # on the last match (the final); Tournament.end_date is the picks-lock date.
+    last_match = (
+        db.query(Match.start_time)
+        .filter(Match.tournament_id == tournament.id)
+        .order_by(Match.start_time.desc())
+        .first()
+    )
+    if last_match and last_match[0]:
+        end = last_match[0]
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > end + timedelta(days=VERDICT_EXPIRE_DAYS):
+            return []
 
     def _team_short(tid):
         t = db.query(Team).filter(Team.id == tid).first() if tid else None
